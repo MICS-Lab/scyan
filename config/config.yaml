@@ -1,0 +1,16 @@
+defaults:
+  - _self_
+  - trainer: default
+  - sweeper: optuna
+  - model: scyan
+
+wandb:
+  project: "scyan"
+  mode: "online" # online, offline, disabled
+
+marker_pop_path: ${oc.env:marker_pop_path}
+data_path: ${oc.env:data_path}
+
+work_dir: ${hydra:runtime.cwd}
+
+seed: 0
