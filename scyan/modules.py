@@ -23,8 +23,8 @@ class CouplingLayer(nn.Module):
 
         self.mask = mask
 
-    def forward(self, input):
-        x, ldj_sum = input
+    def forward(self, inputs):
+        x, ldj_sum = inputs
 
         x_m = x * self.mask
         s_out = self.sfun(x_m)
