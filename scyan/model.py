@@ -8,6 +8,7 @@ import pandas as pd
 from scipy.stats import wasserstein_distance
 import umap
 from sklearn.metrics.pairwise import euclidean_distances
+import scanpy as sc
 
 from scyan.modules import RealNVP
 
@@ -55,7 +56,7 @@ class Scyan(pl.LightningModule):
     def init_metrics(self, n_obs=10000):
         self.X_subsample = sc.pp.subsample(self.adata, n_obs=n_obs, copy=True).X
         X_subsample_umap = umap.UMAP(n_components=5).fit_transform(self.X_subsample)
-        self.pairwise_distances = euclidean_distances(X_subsample)
+        self.pairwise_distances = euclidean_distances(X_subsample_umap)
 
     def forward(self, x):
         return self.real_nvp(x)

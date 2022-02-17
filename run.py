@@ -8,7 +8,6 @@ from omegaconf import DictConfig, OmegaConf
 import dotenv
 
 from scyan.utils import wandb_plt_image
-from scyan.datamodule import AdataDataModule
 
 dotenv.load_dotenv()
 
@@ -32,8 +31,6 @@ def main(config: DictConfig) -> None:
     adata = sc.read_h5ad(config.data_path)
     adata = adata[:, marker_pop_matrix.index]
 
-    datamodule = AdataDataModule(adata)
-
     model = hydra.utils.instantiate(
         config.model, marker_pop_matrix=marker_pop_matrix, _convert_="partial"
     )
@@ -41,7 +38,7 @@ def main(config: DictConfig) -> None:
     trainer = hydra.utils.instantiate(
         config.trainer, logger=wandb_logger, _convert_="partial"
     )
-    trainer.fit(model, datamodule)
+    trainer.fit(model)
 
     predictions = model.predict(adata)
 
