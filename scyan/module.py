@@ -3,25 +3,29 @@ from torch import nn
 
 
 class CouplingLayer(nn.Module):
-    def __init__(self, input_size, hidden_size, mask):
+    def __init__(self, input_size, hidden_size, n_hidden_layers, mask):
         super().__init__()
         self.sfun = nn.Sequential(
             nn.Linear(input_size, hidden_size),
             nn.ReLU(inplace=True),
-            nn.Linear(hidden_size, hidden_size),
-            nn.ReLU(inplace=True),
+            *self._hidden_layers(hidden_size, n_hidden_layers),
             nn.Linear(hidden_size, input_size),
             nn.Tanh(),
         )
         self.tfun = nn.Sequential(
             nn.Linear(input_size, hidden_size),
             nn.ReLU(inplace=True),
-            nn.Linear(hidden_size, hidden_size),
-            nn.ReLU(inplace=True),
+            *self._hidden_layers(hidden_size, n_hidden_layers),
             nn.Linear(hidden_size, input_size),
         )
-
         self.mask = mask
+
+    def _hidden_layers(self, hidden_size, n_hidden_layers):
+        return [
+            module
+            for _ in range(n_hidden_layers)
+            for module in [nn.Linear(hidden_size, hidden_size), nn.ReLU(inplace=True)]
+        ]
 
     def forward(self, inputs):
         x, ldj_sum = inputs
@@ -46,11 +50,16 @@ class CouplingLayer(nn.Module):
 
 
 class RealNVP(nn.Module):
-    def __init__(self, input_size, hidden_size, mask, n_layers):
+    def __init__(self, input_size, hidden_size, n_hidden_layers, mask, n_layers):
         super().__init__()
         self.module_list = nn.ModuleList(
             [
-                CouplingLayer(input_size, hidden_size, mask if i % 2 else 1 - mask)
+                CouplingLayer(
+                    input_size,
+                    hidden_size,
+                    n_hidden_layers,
+                    mask if i % 2 else 1 - mask,
+                )
                 for i in range(n_layers)
             ]
         )

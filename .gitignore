@@ -12,16 +12,10 @@ multirun
 .ipynb_checkpoints
 *.ipynb
 exploration/*
-
-# IPython
-profile_default/
-ipython_config.py
+!exploration/.gitkeep
 
 # pyenv
 .python-version
-
-# PEP 582; used by e.g. github.com/David-OConnor/pyflow
-__pypackages__/
 
 ### VisualStudioCode
 .vscode/*
@@ -33,7 +27,6 @@ __pypackages__/
 **/.vscode
 
 # Lightning-Hydra-Template
-data/
 logs/
 wandb/
 .env
