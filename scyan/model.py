@@ -1,4 +1,5 @@
 import torch
+from torch import nn
 from torch import Tensor
 import pytorch_lightning as pl
 from anndata import AnnData
@@ -40,6 +41,8 @@ class Scyan(pl.LightningModule):
             batch_size,
         )
 
+        self.init_weights()
+
     def training_step(self, x: Tensor, _):
         loss = self.module.loss(x)
         self.log("loss", loss, on_epoch=True, on_step=True)
@@ -67,3 +70,32 @@ class Scyan(pl.LightningModule):
 
     def train_dataloader(self):
         return torch.utils.data.DataLoader(self.x, batch_size=self.hparams.batch_size)
+
+    def init_weights(self) -> None:
+        activation = {}
+
+        def get_activation(name):
+            def hook(model, input, output):
+                activation[name] = output.detach()
+
+            return hook
+
+        for k in [-2, -1]:
+            self.module.real_nvp.module_list[k].tfun[-2].register_forward_hook(
+                get_activation(k)
+            )
+
+            x_ = torch.zeros((2, self.adata.n_vars))
+            x_[1] = 1
+            h_neg, h_pos = self.module(x_)[0]
+            t_neg, t_pos = activation[k]
+            x = t_pos - t_neg
+            u = 2 - h_pos + h_neg
+            delta_weight = (x / x.dot(x))[None, :] * u[:, None]
+            b = 1 - h_pos - t_pos @ delta_weight.T
+
+            linear = self.module.real_nvp.module_list[k].tfun[-1]
+            linear.weight = nn.Parameter(
+                linear.weight + delta_weight, requires_grad=True
+            )
+            linear.bias = nn.Parameter(linear.bias + b, requires_grad=True)

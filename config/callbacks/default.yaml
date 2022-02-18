@@ -9,3 +9,6 @@ early_stopping:
   mode: "min"
   patience: 10
   min_delta: 0
+
+swa:
+  _target_: pytorch_lightning.callbacks.StochasticWeightAveraging
