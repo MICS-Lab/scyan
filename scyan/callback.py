@@ -1,12 +1,10 @@
-from pytorch_lightning.callbacks import Callback
+from pytorch_lightning.callbacks import Callback, EarlyStopping
 import torch
 from sklearn.metrics import silhouette_score
 from scipy.stats import wasserstein_distance
 import scanpy as sc
 import umap
 from sklearn.metrics.pairwise import euclidean_distances
-
-from .model import Scyan
 
 
 class AnnotationMetrics(Callback):
@@ -15,7 +13,7 @@ class AnnotationMetrics(Callback):
         self.n_samples = n_samples
         self.n_components = n_components
 
-    def setup(self, trainer, scyan: Scyan) -> None:
+    def setup(self, trainer, scyan) -> None:
         self.n_obs, self.n_vars = scyan.adata.shape
 
         self.X_subsample = torch.Tensor(
@@ -26,10 +24,10 @@ class AnnotationMetrics(Callback):
         )
         self.pairwise_distances = euclidean_distances(X_subsample_umap)
 
-    def on_train_epoch_end(self, trainer, scyan: Scyan) -> None:
-        X_sample, _ = scyan.sample(self.n_obs)
+    def on_train_epoch_end(self, trainer, scyan) -> None:
+        X_sample, _ = scyan.module.sample(self.n_samples)
         wd_sum = sum(
-            wasserstein_distance(X_sample[:, i], scyan.adata.X[:, i])
+            wasserstein_distance(X_sample[:, i], self.X_subsample[:, i])
             for i in range(self.n_vars)
         )
         scyan.log("wasserstein_distance_sum", wd_sum)
