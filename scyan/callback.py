@@ -10,12 +10,12 @@ from .model import Scyan
 
 
 class AnnotationMetrics(Callback):
-    def __init__(self, n_samples=10000, n_components=5) -> None:
+    def __init__(self, n_samples: int = 10000, n_components: int = 5) -> None:
         super().__init__()
         self.n_samples = n_samples
         self.n_components = n_components
 
-    def setup(self, trainer, scyan: Scyan):
+    def setup(self, trainer, scyan: Scyan) -> None:
         self.n_obs, self.n_vars = scyan.adata.shape
 
         self.X_subsample = torch.Tensor(
@@ -26,7 +26,7 @@ class AnnotationMetrics(Callback):
         )
         self.pairwise_distances = euclidean_distances(X_subsample_umap)
 
-    def on_train_epoch_end(self, trainer, scyan: Scyan):
+    def on_train_epoch_end(self, trainer, scyan: Scyan) -> None:
         X_sample, _ = scyan.sample(self.n_obs)
         wd_sum = sum(
             wasserstein_distance(X_sample[:, i], scyan.adata.X[:, i])
