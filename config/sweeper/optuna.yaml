@@ -3,6 +3,8 @@
 defaults:
   - override /hydra/sweeper: optuna
 
+optimized_metric: "mean_wasserstein_distance"
+
 hydra:
   sweeper:
     sampler:

@@ -1,0 +1,11 @@
+annotation_metrics:
+  _target_: scyan.callback.AnnotationMetrics
+  n_samples: 10000
+  n_components: 5
+
+early_stopping:
+  _target_: pytorch_lightning.callbacks.EarlyStopping
+  monitor: "val/acc"
+  mode: "min"
+  patience: 10
+  min_delta: 0

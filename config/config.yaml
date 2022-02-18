@@ -3,10 +3,16 @@ defaults:
   - trainer: default
   - sweeper: optuna
   - model: scyan
+  - callbacks: default
+
+  - override hydra/job_logging: colorlog
+  - override hydra/hydra_logging: colorlog
 
 wandb:
   project: "scyan"
-  mode: "online" # online, offline, disabled
+  mode: "disabled" # online, offline, disabled
+  save_marker_pop_matrix: false
+  save_umap: true
 
 marker_pop_path: ${oc.env:marker_pop_path}
 data_path: ${oc.env:data_path}
