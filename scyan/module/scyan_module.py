@@ -24,12 +24,15 @@ class ScyanModule(pl.LightningModule):
         batch_size: int,
     ):
         super().__init__()
-        self.save_hyperparameters()
+        self.save_hyperparameters(ignore=["rho"])
 
         self.n_pop, self.n_markers = rho.shape
         self.rho = nn.Parameter(rho[None, :, :], requires_grad=False)
 
-        self.mask = nn.Parameter(torch.arange(self.n_markers) % 2, requires_grad=False)
+        self.rho_mask = self.rho == 0
+        self.rho_logit = nn.Parameter(
+            torch.randn(self.rho.shape) * self.rho_mask, requires_grad=True
+        )
 
         self.prior_h = distributions.multivariate_normal.MultivariateNormal(
             torch.zeros(self.n_markers),
@@ -40,9 +43,8 @@ class ScyanModule(pl.LightningModule):
         )
 
         self.log_pi = torch.log(torch.ones(self.n_pop) / self.n_pop)
-        self.log_softmax = torch.nn.LogSoftmax(dim=0)
-        self.softmax = nn.Softmax(dim=1)
 
+        self.mask = nn.Parameter(torch.arange(self.n_markers) % 2, requires_grad=False)
         self.real_nvp = RealNVP(
             self.n_markers,
             self.hparams.hidden_size,
@@ -50,7 +52,6 @@ class ScyanModule(pl.LightningModule):
             self.mask,
             self.hparams.n_layers,
         )
-        self.mse = nn.MSELoss()
 
     def forward(self, x: Tensor) -> Tuple[Tensor, Tensor]:
         return self.real_nvp(x)
@@ -66,6 +67,10 @@ class ScyanModule(pl.LightningModule):
     def pi(self) -> Tensor:
         return torch.exp(self.log_pi)
 
+    @property
+    def rho_inferred(self) -> Tensor:
+        return self.rho + torch.tanh(10 * self.rho_logit * self.rho_mask)
+
     @torch.no_grad()
     def sample(self, n_samples: int) -> Tuple[Tensor, Tensor]:
         sample_shape = torch.Size([n_samples])
@@ -77,8 +82,10 @@ class ScyanModule(pl.LightningModule):
     def compute_probabilities(self, x: Tensor) -> Tuple[Tensor, Tensor, Tensor, Tensor]:
         h, ldj_sum = self(x)
 
-        log_probs = self.prior_h.log_prob(h[:, None, :] - self.rho) + self.log_pi
-        probs = self.softmax(log_probs)
+        log_probs = (
+            self.prior_h.log_prob(h[:, None, :] - self.rho_inferred) + self.log_pi
+        )
+        probs = torch.softmax(log_probs, dim=1)  # Expectation step
 
         log_prob_pi = self.prior_pi.log_prob(probs.mean(dim=0))  # self.pi + self.eps)
         self.log_pi = torch.log(probs.mean(dim=0).detach() + self.eps)
