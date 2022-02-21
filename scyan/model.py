@@ -5,9 +5,8 @@ import pytorch_lightning as pl
 from anndata import AnnData
 import pandas as pd
 from typing import Union
-import os
 
-from scyan.module.scyan_module import ScyanModule
+from .module.scyan_module import ScyanModule
 
 
 class Scyan(pl.LightningModule):
@@ -81,8 +80,10 @@ class Scyan(pl.LightningModule):
             return hook
 
         for k in [-2, -1]:
-            self.module.real_nvp.module_list[k].tfun[-2].register_forward_hook(
-                get_activation(k)
+            handle = (
+                self.module.real_nvp.module_list[k]
+                .tfun[-2]
+                .register_forward_hook(get_activation(k))
             )
 
             x_ = torch.zeros((2, self.adata.n_vars))
@@ -99,3 +100,4 @@ class Scyan(pl.LightningModule):
                 linear.weight + delta_weight, requires_grad=True
             )
             linear.bias = nn.Parameter(linear.bias + b, requires_grad=True)
+            handle.remove()
