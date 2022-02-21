@@ -7,6 +7,7 @@ import pandas as pd
 from typing import Union
 
 from .module.scyan_module import ScyanModule
+from .metric import AnnotationMetrics
 
 
 class Scyan(pl.LightningModule):
@@ -21,13 +22,18 @@ class Scyan(pl.LightningModule):
         prior_var: float = 0.2,
         lr: float = 5e-3,
         batch_size: int = 16384,
+        n_samples: int = 10000,
+        n_components: int = 5,
     ):
         super().__init__()
         self.adata = adata
         self.marker_pop_matrix = marker_pop_matrix
+
         self.save_hyperparameters(ignore=["adata", "marker_pop_matrix"])
 
         self.x = torch.tensor(adata.X)
+
+        self.metric = AnnotationMetrics(self, n_samples, n_components)
 
         self.module = ScyanModule(
             torch.tensor(marker_pop_matrix.values.T),
@@ -40,12 +46,13 @@ class Scyan(pl.LightningModule):
             batch_size,
         )
 
-        self.init_weights()
-
     def training_step(self, x: Tensor, _):
         loss = self.module.loss(x)
         self.log("loss", loss, on_epoch=True, on_step=True)
         return loss
+
+    def training_epoch_end(self, outputs):
+        self.metric()
 
     @torch.no_grad()
     def predict(
@@ -69,35 +76,3 @@ class Scyan(pl.LightningModule):
 
     def train_dataloader(self):
         return torch.utils.data.DataLoader(self.x, batch_size=self.hparams.batch_size)
-
-    def init_weights(self) -> None:
-        activation = {}
-
-        def get_activation(name):
-            def hook(model, input, output):
-                activation[name] = output.detach()
-
-            return hook
-
-        for k in [-2, -1]:
-            handle = (
-                self.module.real_nvp.module_list[k]
-                .tfun[-2]
-                .register_forward_hook(get_activation(k))
-            )
-
-            x_ = torch.zeros((2, self.adata.n_vars))
-            x_[1] = 1
-            h_neg, h_pos = self.module(x_)[0]
-            t_neg, t_pos = activation[k]
-            x = t_pos - t_neg
-            u = 2 - h_pos + h_neg
-            delta_weight = (x / x.dot(x))[None, :] * u[:, None]
-            b = 1 - h_pos - t_pos @ delta_weight.T
-
-            linear = self.module.real_nvp.module_list[k].tfun[-1]
-            linear.weight = nn.Parameter(
-                linear.weight + delta_weight, requires_grad=True
-            )
-            linear.bias = nn.Parameter(linear.bias + b, requires_grad=True)
-            handle.remove()

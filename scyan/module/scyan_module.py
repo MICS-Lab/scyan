@@ -39,7 +39,7 @@ class ScyanModule(pl.LightningModule):
             torch.tensor([self.hparams.alpha_dirichlet] * self.n_pop)
         )
 
-        self.pi_logit = nn.Parameter(torch.randn(self.n_pop))
+        self.log_pi = torch.log(torch.ones(self.n_pop) / self.n_pop)
         self.log_softmax = torch.nn.LogSoftmax(dim=0)
         self.softmax = nn.Softmax(dim=1)
 
@@ -60,7 +60,11 @@ class ScyanModule(pl.LightningModule):
 
     @property
     def prior_z(self) -> distributions.distribution.Distribution:
-        return distributions.categorical.Categorical(F.softmax(self.pi_logit, dim=0))
+        return distributions.categorical.Categorical(self.pi)
+
+    @property
+    def pi(self) -> Tensor:
+        return torch.exp(self.log_pi)
 
     @torch.no_grad()
     def sample(self, n_samples: int) -> Tuple[Tensor, Tensor]:
@@ -71,12 +75,13 @@ class ScyanModule(pl.LightningModule):
         return x, z
 
     def compute_probabilities(self, x: Tensor) -> Tuple[Tensor, Tensor, Tensor, Tensor]:
-        log_pi = self.log_softmax(self.pi_logit)
-        log_prob_pi = self.prior_pi.log_prob(torch.exp(log_pi) + self.eps)
-
         h, ldj_sum = self(x)
-        log_probs = self.prior_h.log_prob(h[:, None, :] - self.rho) + log_pi
-        probs = self.softmax(log_probs).detach()
+
+        log_probs = self.prior_h.log_prob(h[:, None, :] - self.rho) + self.log_pi
+        probs = self.softmax(log_probs)
+
+        log_prob_pi = self.prior_pi.log_prob(probs.mean(dim=0))  # self.pi + self.eps)
+        self.log_pi = torch.log(probs.mean(dim=0).detach() + self.eps)
         return probs, log_probs, ldj_sum, log_prob_pi
 
     def loss(self, x: Tensor):

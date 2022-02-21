@@ -1,11 +1,7 @@
-annotation_metrics:
-  _target_: scyan.callback.AnnotationMetrics
-  n_samples: 10000
-  n_components: 5
-
 early_stopping:
   _target_: pytorch_lightning.callbacks.EarlyStopping
-  monitor: "val/acc"
+  monitor: "mean_wasserstein_distance"
   mode: "min"
-  patience: 10
+  patience: 5
   min_delta: 0
+  check_on_train_epoch_end: True

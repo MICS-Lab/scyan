@@ -29,7 +29,7 @@ hydra:
     search_space:
       model.hidden_size:
         type: categorical
-        choices: [16, 32, 64, 128]
+        choices: [16, 32, 64]
       model.lr:
         type: float
         low: 0.0001
@@ -38,4 +38,4 @@ hydra:
       model.n_layers:
         type: int
         low: 4
-        high: 15
+        high: 8
