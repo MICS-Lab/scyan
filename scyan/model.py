@@ -1,10 +1,9 @@
 import torch
-from torch import nn
 from torch import Tensor
 import pytorch_lightning as pl
 from anndata import AnnData
 import pandas as pd
-from typing import Union
+from typing import Union, Tuple
 
 from .module.scyan_module import ScyanModule
 from .metric import AnnotationMetrics
@@ -45,6 +44,13 @@ class Scyan(pl.LightningModule):
             lr,
             batch_size,
         )
+
+    def forward(self) -> Tensor:
+        return self.module(self.x)[0]
+
+    @torch.no_grad()
+    def sample(self, n_samples: int) -> Tuple[Tensor, Tensor]:
+        return self.module.sample(n_samples)
 
     def training_step(self, x: Tensor, _):
         loss = self.module.loss(x)

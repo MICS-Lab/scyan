@@ -12,7 +12,6 @@ multirun
 .ipynb_checkpoints
 *.ipynb
 exploration/*
-!exploration/.gitkeep
 
 # pyenv
 .python-version
