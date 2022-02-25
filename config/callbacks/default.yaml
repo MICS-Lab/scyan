@@ -2,6 +2,6 @@ early_stopping:
   _target_: pytorch_lightning.callbacks.EarlyStopping
   monitor: "accuracy_score"
   mode: "max"
-  patience: 5
+  patience: 7
   min_delta: 0
   check_on_train_epoch_end: True

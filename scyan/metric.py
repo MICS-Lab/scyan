@@ -25,25 +25,30 @@ class AnnotationMetrics:
             )
         self.n_obs, self.n_vars = self.model.adata.shape
 
-        self.x_subsample = torch.tensor(
-            sc.pp.subsample(self.model.adata, n_obs=self.n_samples, copy=True).X
+        self.adata_sample = sc.pp.subsample(
+            self.model.adata, n_obs=self.n_samples, copy=True
         )
-        x_subsample_umap = umap.UMAP(n_components=self.n_components).fit_transform(
-            self.x_subsample
+
+        self.x_sample = torch.tensor(self.adata_sample.X, dtype=torch.float32)
+        self.cov_sample = torch.tensor(
+            self.adata_sample.obsm["covariates"], dtype=torch.float32
         )
-        self.pairwise_distances = euclidean_distances(x_subsample_umap)
+        x_sample_umap = umap.UMAP(n_components=self.n_components).fit_transform(
+            self.x_sample
+        )
+        self.pairwise_distances = euclidean_distances(x_sample_umap)
 
     def __call__(self) -> None:
-        X_sample, _ = self.model.module.sample(self.n_samples)
+        X_sample, _ = self.model.sample(self.n_samples)
         wd_sum = sum(
-            wasserstein_distance(X_sample[:, i], self.x_subsample[:, i])
+            wasserstein_distance(X_sample[:, i], self.x_sample[:, i])
             for i in range(self.n_vars)
         )
         self.model.log("mean_wasserstein_distance", wd_sum / self.n_vars, prog_bar=True)
 
         _silhouette_score = silhouette_score(
             self.pairwise_distances,
-            self.model.predict(x=self.x_subsample, key_added=None).values,
+            self.model.predict(self.x_sample, self.cov_sample, key_added=None).values,
             metric="precomputed",
         )
         self.model.log("silhouette_score", _silhouette_score, prog_bar=True)

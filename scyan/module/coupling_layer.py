@@ -9,6 +9,7 @@ class CouplingLayer(nn.Module):
         self,
         input_size: int,
         hidden_size: int,
+        output_size: int,
         n_hidden_layers: int,
         mask: Tensor,
     ):
@@ -17,14 +18,14 @@ class CouplingLayer(nn.Module):
             nn.Linear(input_size, hidden_size),
             nn.ReLU(inplace=True),
             *self._hidden_layers(hidden_size, n_hidden_layers),
-            nn.Linear(hidden_size, input_size),
+            nn.Linear(hidden_size, output_size),
             nn.Tanh(),
         )
         self.tfun = nn.Sequential(
             nn.Linear(input_size, hidden_size),
             nn.ReLU(inplace=True),
             *self._hidden_layers(hidden_size, n_hidden_layers),
-            nn.Linear(hidden_size, input_size),
+            nn.Linear(hidden_size, output_size),
         )
         self.mask = mask
 
@@ -36,24 +37,27 @@ class CouplingLayer(nn.Module):
         ]
 
     def forward(
-        self, inputs: Tuple[Tensor, Union[Tensor, None]]
+        self, inputs: Tuple[Tensor, Tensor, Union[Tensor, None]]
     ) -> Tuple[Tensor, Tensor]:
-        x, ldj_sum = inputs
+        x, covariates, ldj_sum = inputs
 
         x_m = x * self.mask
-        s_out = self.sfun(x_m)
-        t_out = self.tfun(x_m)
+        st_input = torch.cat([x_m, covariates], dim=1)
+
+        s_out = self.sfun(st_input)
+        t_out = self.tfun(st_input)
 
         y = x_m + (1 - self.mask) * (x * torch.exp(s_out) + t_out)
         ldj_sum = (
             ldj_sum + s_out.sum(dim=1) if ldj_sum is not None else s_out.sum(dim=1)
         )
 
-        return y, ldj_sum
+        return y, covariates, ldj_sum
 
-    def inverse(self, y: Tensor) -> Tensor:
+    def inverse(self, y: Tensor, covariates: Tensor) -> Tensor:
         y_m = y * self.mask
-        x = y_m + (1 - self.mask) * (y * (1 - self.mask) - self.tfun(y_m)) * torch.exp(
-            -self.sfun(y_m)
-        )
-        return x
+        st_input = torch.cat([y_m, covariates], dim=1)
+
+        return y_m + (1 - self.mask) * (
+            y * (1 - self.mask) - self.tfun(st_input)
+        ) * torch.exp(-self.sfun(st_input))
