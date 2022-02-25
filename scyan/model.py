@@ -93,7 +93,7 @@ class Scyan(pl.LightningModule):
         self.dataset = AdataDataset(self.x, self.covariates)
 
     def forward(self) -> Tensor:
-        return self.module(self.x)[0]
+        return self.module(self.x, self.covariates)[0]
 
     @torch.no_grad()
     def sample(self, n_samples: int) -> Tuple[Tensor, Tensor]:

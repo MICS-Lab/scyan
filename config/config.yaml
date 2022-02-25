@@ -2,17 +2,35 @@ defaults:
   - _self_
   - trainer: default
   - sweeper: optuna
-  - model: scyan
-  - callbacks: default
+  - project: scyan
 
   - override hydra/job_logging: colorlog
   - override hydra/hydra_logging: colorlog
 
 wandb:
-  project: "aml"
   mode: "disabled" # online, offline, disabled
-  save_marker_pop_matrix: false
   save_umap: true
+  save_umap_latent_space: true
+
+model:
+  _target_: scyan.model.Scyan
+  hidden_size: 16
+  alpha_dirichlet: 1.05
+  n_layers: 5
+  prior_var: 0.2
+  lr: 0.001
+  n_hidden_layers: 6
+  n_samples: 100
+  n_components: 5
+
+callbacks:
+  early_stopping:
+    _target_: pytorch_lightning.callbacks.EarlyStopping
+    monitor: "mean_wasserstein_distance"
+    mode: "min"
+    patience: 7
+    min_delta: 0
+    check_on_train_epoch_end: True
 
 marker_pop_path: ${oc.env:marker_pop_path}
 data_path: ${oc.env:data_path}

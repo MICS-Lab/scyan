@@ -19,22 +19,21 @@ def main(config: DictConfig) -> None:
     pl.seed_everything(config.seed)
 
     wandb.init(
-        project=config.wandb.project,
+        project=config.project.name,
         mode=config.wandb.mode,
         config=OmegaConf.to_container(config, resolve=True, throw_on_missing=True),
     )
     wandb_logger = WandbLogger()
 
     marker_pop_matrix = pd.read_csv(config.marker_pop_path, index_col=0)
-    if config.wandb.save_marker_pop_matrix:
-        wandb.log({"marker_pop_matrix": marker_pop_matrix})
-
     adata = sc.read_h5ad(config.data_path)
 
     model = hydra.utils.instantiate(
         config.model,
         adata=adata,
         marker_pop_matrix=marker_pop_matrix,
+        continuous_covariate_keys=config.project.get("continuous_covariate_keys", []),
+        categorical_covariate_keys=config.project.get("categorical_covariate_keys", []),
         _convert_="partial",
     )
 
@@ -47,34 +46,41 @@ def main(config: DictConfig) -> None:
     trainer = hydra.utils.instantiate(
         config.trainer, logger=wandb_logger, callbacks=callbacks, _convert_="partial"
     )
-    trainer.fit(model)
 
+    trainer.fit(model)
     model.predict()
 
+    palette = config.project.get("palette")
+    covariate_keys = list(config.project.get("continuous_covariate_keys") or []) + list(
+        config.project.get("categorical_covariate_keys") or []
+    )
+
     if config.wandb.save_umap:
-        umap = wandb_plt_image(
-            lambda: sc.pl.umap(
-                model.adata,
-                color="scyan_pop",
-                show=False,
-                # palette={
-                #     "NA": "gray",
-                #     "B-Cell": "C10",
-                #     "PMN/Mono/Macro": "C1",
-                #     "Dendritic-Cell": "C11",
-                #     "Epcam+": "C7",
-                #     "Tcd4_naive/SCM": "C3",
-                #     "Tcd4_CM": "C4",
-                #     "Tcd4_EF/EM/activ": "C5",
-                #     "Tcd4_reg": "C6",
-                #     "Tcd8_naive/SCM": "C9",
-                #     "Tcd8_CM": "C8",
-                #     "Tcd8_EF/EM/activ": "C0",
-                #     "Tcd8_RM": "C2",
-                # },
-            )
+        wandb.log(
+            {
+                "umap": wandb_plt_image(
+                    lambda: sc.pl.umap(
+                        model.adata, color="scyan_pop", show=False, palette=palette
+                    )
+                )
+            }
         )
-        wandb.log({"umap": umap})
+
+    if config.wandb.save_umap_latent_space:
+        model.adata.obsm["X_scyan"] = model().detach().numpy()
+        sc.pp.neighbors(model.adata, use_rep="X_scyan")
+        sc.tl.umap(model.adata, min_dist=0.05)
+        wandb.log(
+            {
+                "umap_latent_space": wandb_plt_image(
+                    lambda: sc.pl.umap(
+                        model.adata,
+                        color=["scyan_pop"] + covariate_keys,
+                        show=False,
+                    )
+                )
+            }
+        )
 
     metric = trainer.logged_metrics.get(config.optimized_metric)
     wandb.finish()
