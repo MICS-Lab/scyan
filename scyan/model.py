@@ -52,6 +52,10 @@ class Scyan(pl.LightningModule):
     def sample(self, n_samples: int) -> Tuple[Tensor, Tensor]:
         return self.module.sample(n_samples)
 
+    @torch.no_grad()
+    def on_train_epoch_start(self):
+        self.module._update_log_pi(self.x)
+
     def training_step(self, x: Tensor, _):
         loss = self.module.loss(x)
         self.log("loss", loss, on_epoch=True, on_step=True)

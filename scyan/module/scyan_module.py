@@ -44,12 +44,10 @@ class ScyanModule(pl.LightningModule):
 
         self.log_pi = torch.log(torch.ones(self.n_pop) / self.n_pop)
 
-        self.mask = nn.Parameter(torch.arange(self.n_markers) % 2, requires_grad=False)
         self.real_nvp = RealNVP(
             self.n_markers,
             self.hparams.hidden_size,
             self.hparams.n_hidden_layers,
-            self.mask,
             self.hparams.n_layers,
         )
 
@@ -86,10 +84,13 @@ class ScyanModule(pl.LightningModule):
             self.prior_h.log_prob(h[:, None, :] - self.rho_inferred) + self.log_pi
         )
         probs = torch.softmax(log_probs, dim=1)  # Expectation step
-
         log_prob_pi = self.prior_pi.log_prob(probs.mean(dim=0))  # self.pi + self.eps)
-        self.log_pi = torch.log(probs.mean(dim=0).detach() + self.eps)
+
         return probs, log_probs, ldj_sum, log_prob_pi
+
+    def _update_log_pi(self, x: Tensor) -> None:
+        probs, *_ = self.compute_probabilities(x)
+        self.log_pi = torch.log(probs.mean(dim=0).detach() + self.eps)
 
     def loss(self, x: Tensor):
         probs, log_probs, ldj_sum, log_prob_pi = self.compute_probabilities(x)
