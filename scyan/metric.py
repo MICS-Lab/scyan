@@ -6,6 +6,7 @@ import scanpy as sc
 import umap
 from sklearn.metrics.pairwise import euclidean_distances
 import logging
+from sklearn.metrics import accuracy_score
 
 log = logging.getLogger(__name__)
 
@@ -46,3 +47,13 @@ class AnnotationMetrics:
             metric="precomputed",
         )
         self.model.log("silhouette_score", _silhouette_score, prog_bar=True)
+
+        if "cell_type" in self.model.adata.obs:
+            self.model.log(
+                "accuracy_score",
+                accuracy_score(
+                    self.model.adata.obs.cell_type,
+                    self.model.predict(key_added=None).values,
+                ),
+                prog_bar=True,
+            )

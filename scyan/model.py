@@ -25,17 +25,17 @@ class Scyan(pl.LightningModule):
         n_components: int = 5,
     ):
         super().__init__()
-        self.adata = adata
         self.marker_pop_matrix = marker_pop_matrix
+        self.adata = adata[:, self.marker_pop_matrix.columns]
 
         self.save_hyperparameters(ignore=["adata", "marker_pop_matrix"])
 
-        self.x = torch.tensor(adata.X)
+        self.x = torch.tensor(self.adata.X)
 
         self.metric = AnnotationMetrics(self, n_samples, n_components)
 
         self.module = ScyanModule(
-            torch.tensor(marker_pop_matrix.values.T),
+            torch.tensor(marker_pop_matrix.values, dtype=torch.float32),
             hidden_size,
             n_hidden_layers,
             alpha_dirichlet,
@@ -75,7 +75,7 @@ class Scyan(pl.LightningModule):
     @torch.no_grad()
     def predict_proba(self, x: Union[Tensor, None] = None) -> pd.DataFrame:
         predictions, *_ = self.module.compute_probabilities(self.x if x is None else x)
-        return pd.DataFrame(predictions.numpy(), columns=self.marker_pop_matrix.columns)
+        return pd.DataFrame(predictions.numpy(), columns=self.marker_pop_matrix.index)
 
     def configure_optimizers(self):
         return torch.optim.Adam(self.parameters(), lr=self.hparams.lr)

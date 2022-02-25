@@ -9,7 +9,7 @@ defaults:
   - override hydra/hydra_logging: colorlog
 
 wandb:
-  project: "scyan"
+  project: "aml"
   mode: "disabled" # online, offline, disabled
   save_marker_pop_matrix: false
   save_umap: true

@@ -4,4 +4,7 @@ hidden_size: 64
 alpha_dirichlet: 1.2
 n_layers: 10
 prior_var: 0.2
-lr: 0.0005
+lr: 0.002
+n_hidden_layers: 1
+n_samples: 100
+n_components: 5
