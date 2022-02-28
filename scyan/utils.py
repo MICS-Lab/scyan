@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import io
 from PIL import Image
 from typing import Callable, Tuple
+import scanpy as sc
 
 
 def wandb_plt_image(fun: Callable, figsize: Tuple[int, int] = [7, 5]) -> wandb.Image:
@@ -22,3 +23,9 @@ def wandb_plt_image(fun: Callable, figsize: Tuple[int, int] = [7, 5]) -> wandb.I
     img_buf = io.BytesIO()
     plt.savefig(img_buf, format="png")
     return wandb.Image(Image.open(img_buf))
+
+
+def process_umap_latent(scyan, min_dist=0.05):
+    scyan.adata.obsm["X_scyan"] = scyan().detach().numpy()
+    sc.pp.neighbors(scyan.adata, use_rep="X_scyan")
+    sc.tl.umap(scyan.adata, min_dist=min_dist)

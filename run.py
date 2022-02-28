@@ -7,9 +7,11 @@ import hydra
 from omegaconf import DictConfig, OmegaConf
 import dotenv
 from typing import List
-from pytorch_lightning import Callback
+from pytorch_lightning import Callback, Trainer
+from anndata import AnnData
 
-from scyan.utils import wandb_plt_image
+from scyan.model import Scyan
+from scyan.utils import wandb_plt_image, process_umap_latent
 
 dotenv.load_dotenv()
 
@@ -18,6 +20,7 @@ dotenv.load_dotenv()
 def main(config: DictConfig) -> None:
     pl.seed_everything(config.seed)
 
+    ### Init Weight & Biases (if config.wandb.mode="online")
     wandb.init(
         project=config.project.name,
         mode=config.wandb.mode,
@@ -25,10 +28,11 @@ def main(config: DictConfig) -> None:
     )
     wandb_logger = WandbLogger()
 
-    marker_pop_matrix = pd.read_csv(config.marker_pop_path, index_col=0)
-    adata = sc.read_h5ad(config.data_path)
+    ### Instantiate everything
+    marker_pop_matrix: pd.DataFrame = pd.read_csv(config.marker_pop_path, index_col=0)
+    adata: AnnData = sc.read_h5ad(config.data_path)
 
-    model = hydra.utils.instantiate(
+    model: Scyan = hydra.utils.instantiate(
         config.model,
         adata=adata,
         marker_pop_matrix=marker_pop_matrix,
@@ -43,17 +47,17 @@ def main(config: DictConfig) -> None:
         else []
     )
 
-    trainer = hydra.utils.instantiate(
+    trainer: Trainer = hydra.utils.instantiate(
         config.trainer, logger=wandb_logger, callbacks=callbacks, _convert_="partial"
     )
 
+    ### Training
     trainer.fit(model)
     model.predict()
 
+    ### Compute UMAP after training
     palette = config.project.get("palette")
-    covariate_keys = list(config.project.get("continuous_covariate_keys") or []) + list(
-        config.project.get("categorical_covariate_keys") or []
-    )
+    covariate_keys = model.categorical_covariate_keys + model.continuous_covariate_keys
 
     if config.wandb.save_umap:
         wandb.log(
@@ -67,9 +71,7 @@ def main(config: DictConfig) -> None:
         )
 
     if config.wandb.save_umap_latent_space:
-        model.adata.obsm["X_scyan"] = model().detach().numpy()
-        sc.pp.neighbors(model.adata, use_rep="X_scyan")
-        sc.tl.umap(model.adata, min_dist=0.05)
+        process_umap_latent(model)
         wandb.log(
             {
                 "umap_latent_space": wandb_plt_image(
@@ -82,6 +84,7 @@ def main(config: DictConfig) -> None:
             }
         )
 
+    ### Finishing
     metric = trainer.logged_metrics.get(config.optimized_metric)
     wandb.finish()
 
