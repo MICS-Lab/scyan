@@ -20,7 +20,8 @@ class ScyanModule(pl.LightningModule):
         n_hidden_layers: int,
         alpha_dirichlet: float,
         n_layers: int,
-        prior_var: float,
+        prior_std: float,
+        prior_std_nan: float,
         lr: float,
         batch_size: int,
     ):
@@ -28,16 +29,21 @@ class ScyanModule(pl.LightningModule):
         self.save_hyperparameters(ignore=["rho", "n_covariates"])
 
         self.n_pop, self.n_markers = rho.shape
-        self.rho = nn.Parameter(rho[None, :, :], requires_grad=False)
+        self.rho = nn.Parameter(rho, requires_grad=False)
 
-        self.rho_mask = self.rho == 0
-        self.rho_logit = nn.Parameter(
-            torch.randn(self.rho.shape) * self.rho_mask, requires_grad=True
-        )
+        self.rho_mask = self.rho.isnan()
+        self.rho[self.rho_mask] = 0
+
+        self.std_diags = prior_std + (prior_std_nan - prior_std) * self.rho_mask
+        self.log_det_sigma = torch.log(self.std_diags).sum(dim=1)
+
+        # self.rho_logit = nn.Parameter(
+        #     torch.randn(self.rho.shape) * self.rho_mask, requires_grad=True
+        # )
 
         self.prior_h = distributions.multivariate_normal.MultivariateNormal(
             torch.zeros(self.n_markers),
-            self.hparams.prior_var * torch.eye(self.n_markers),
+            torch.eye(self.n_markers),
         )
         self.prior_pi = distributions.dirichlet.Dirichlet(
             torch.tensor([self.hparams.alpha_dirichlet] * self.n_pop)
@@ -67,15 +73,15 @@ class ScyanModule(pl.LightningModule):
     def pi(self) -> Tensor:
         return torch.exp(self.log_pi)
 
-    @property
-    def rho_inferred(self) -> Tensor:
-        return self.rho + torch.tanh(10 * self.rho_logit * self.rho_mask)
+    # @property
+    # def rho_inferred(self) -> Tensor:
+    #     return self.rho + torch.tanh(10 * self.rho_logit * self.rho_mask)
 
     @torch.no_grad()
     def sample(self, n_samples: int, covariates: Tensor) -> Tuple[Tensor, Tensor]:
         sample_shape = torch.Size([n_samples])
         z = self.prior_z.sample(sample_shape)
-        h = self.prior_h.sample(sample_shape) + self.rho[0, z]
+        h = self.prior_h.sample(sample_shape) * self.std_diags[z] + self.rho[z]
         x = self.inverse(h, covariates).detach()
         return x, z
 
@@ -85,7 +91,11 @@ class ScyanModule(pl.LightningModule):
         h, _, ldj_sum = self(x, covariates)
 
         log_probs = (
-            self.prior_h.log_prob(h[:, None, :] - self.rho_inferred) + self.log_pi
+            self.prior_h.log_prob(
+                (h[:, None, :] - self.rho[None, ...]) / self.std_diags
+            )
+            - self.log_det_sigma
+            + self.log_pi
         )
         probs = torch.softmax(log_probs, dim=1)  # Expectation step
         log_prob_pi = self.prior_pi.log_prob(probs.mean(dim=0))  # self.pi + self.eps)

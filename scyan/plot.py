@@ -18,3 +18,12 @@ def matrix_pop_reconstruction(scyan: Scyan, show=True):
     )
     if show:
         plt.show()
+
+
+def kde_per_population(adata, cell_type_key, markers=None):
+    df = adata.to_df()
+    df["pop"] = adata.obs[cell_type_key]
+
+    markers = adata.var_names if markers is None else markers
+    for marker in markers:
+        sns.displot(df, x=marker, hue="pop", kind="kde")

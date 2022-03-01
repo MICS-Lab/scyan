@@ -3,7 +3,7 @@
 defaults:
   - override /hydra/sweeper: optuna
 
-optimized_metric: "mean_wasserstein_distance"
+optimized_metric: "accuracy_score"
 
 hydra:
   sweeper:
@@ -21,7 +21,7 @@ hydra:
 
     _target_: hydra_plugins.hydra_optuna_sweeper.optuna_sweeper.OptunaSweeper
 
-    direction: minimize
+    direction: maximize
     storage: null
     n_trials: 10
     n_jobs: 1
@@ -38,7 +38,7 @@ hydra:
         type: float
         low: 1.03
         high: 1.05
-      model.prior_var:
+      model.prior_std:
         type: float
         low: 0.15
         high: 0.25

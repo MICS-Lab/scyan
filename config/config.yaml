@@ -2,7 +2,7 @@ defaults:
   - _self_
   - trainer: default
   - sweeper: optuna
-  - project: scyan
+  - project: aml
 
   - override hydra/job_logging: colorlog
   - override hydra/hydra_logging: colorlog
@@ -17,7 +17,7 @@ model:
   hidden_size: 16
   alpha_dirichlet: 1.05
   n_layers: 5
-  prior_var: 0.2
+  prior_std: 0.2
   lr: 0.001
   n_hidden_layers: 6
   n_samples: 100
@@ -26,8 +26,8 @@ model:
 callbacks:
   early_stopping:
     _target_: pytorch_lightning.callbacks.EarlyStopping
-    monitor: "mean_wasserstein_distance"
-    mode: "min"
+    monitor: "accuracy_score"
+    mode: "max"
     patience: 7
     min_delta: 0
     check_on_train_epoch_end: True
