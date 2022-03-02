@@ -6,10 +6,14 @@ import pandas as pd
 from typing import Union, Tuple, List
 import numpy as np
 import random
+from sklearn.neighbors import KNeighborsClassifier
+import logging
 
 from .module.scyan_module import ScyanModule
 from .metric import AnnotationMetrics
 from .data import AdataDataset
+
+log = logging.getLogger(__name__)
 
 
 class Scyan(pl.LightningModule):
@@ -31,10 +35,13 @@ class Scyan(pl.LightningModule):
         n_components: int = 5,
     ):
         super().__init__()
+        log.info("The provided adata is copied, prefer to use model.adata from now on.")
+
         self.marker_pop_matrix = marker_pop_matrix
         self.adata = adata[:, self.marker_pop_matrix.columns].copy()
-        self.continuous_covariate_keys = continuous_covariate_keys
-        self.categorical_covariate_keys = categorical_covariate_keys
+        self.continuous_covariate_keys = list(continuous_covariate_keys)
+        self.categorical_covariate_keys = list(categorical_covariate_keys)
+        self.n_pops = len(self.marker_pop_matrix.index)
 
         self.save_hyperparameters(
             ignore=[
@@ -46,7 +53,6 @@ class Scyan(pl.LightningModule):
         )
 
         self.init_dataset()
-        self.metric = AnnotationMetrics(self, n_samples, n_components)
 
         self.module = ScyanModule(
             torch.tensor(marker_pop_matrix.values, dtype=torch.float32),
@@ -60,6 +66,17 @@ class Scyan(pl.LightningModule):
             lr,
             batch_size,
         )
+
+        self.metric = AnnotationMetrics(self, n_samples, n_components)
+
+        log.info(f"Initialized {self}")
+
+    def __repr__(self):
+        if not self.continuous_covariate_keys and not self.categorical_covariate_keys:
+            cov_repr = "No covariate provided."
+        else:
+            cov_repr = f"Covariates: {', '.join(self.continuous_covariate_keys + self.categorical_covariate_keys)}"
+        return f"Scyan model with N={self.adata.n_obs} cells, P={self.n_pops} populations and M={self.adata.n_vars} markers. {cov_repr}"
 
     def init_dataset(self) -> None:
         self.x = torch.tensor(self.adata.X)
@@ -127,6 +144,15 @@ class Scyan(pl.LightningModule):
             self.adata.obs[key_added] = populations.values
 
         return populations
+
+    def knn_predict(self, n_neighbors: int = 64, key_added: str = "scyan_knn_pop"):
+        assert (
+            "scyan_pop" in self.adata.obs
+        ), "Key scyan_pop must be in model.adata.obs - Have you run model.predict before?"
+
+        neigh = KNeighborsClassifier(n_neighbors=n_neighbors)
+        neigh.fit(self.adata.X, self.adata.obs.scyan_pop)
+        self.adata.obs[key_added] = neigh.predict(self.adata.X)
 
     @torch.no_grad()
     def predict_proba(self, x=None, covariates=None) -> pd.DataFrame:
