@@ -6,5 +6,5 @@ sc.set_figure_params(facecolor="white", fontsize=10)
 
 logging.basicConfig(level=logging.INFO)
 
-from scyan.model import Scyan
-import scyan.plot
+from .model import Scyan
+from . import plot, utils
