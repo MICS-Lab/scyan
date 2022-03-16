@@ -25,25 +25,26 @@ def _optional_show(f):
 
 @_optional_show
 def marker_matrix_reconstruction(
-    scyan: Scyan, show_diff: bool = False, show: bool = True
+    model: Scyan, show_diff: bool = False, show: bool = True
 ):
-    predictions = scyan.predict(key_added=None)
+    predictions = model.predict(key_added=None)
     predictions.name = "Population"
-    h = scyan().detach().numpy()
+    h = model().detach().numpy()
     df = pd.concat(
-        [predictions, pd.DataFrame(h, columns=scyan.marker_pop_matrix.columns)], axis=1
+        [predictions, pd.DataFrame(h, columns=model.marker_pop_matrix.columns)], axis=1
     )
     df = df.groupby("Population").median()
-    heatmap = df.loc[scyan.marker_pop_matrix.index]
+    heatmap = df.loc[model.marker_pop_matrix.index]
     if show_diff:
-        heatmap -= scyan.marker_pop_matrix
+        heatmap -= model.marker_pop_matrix
     sns.heatmap(heatmap, cmap="coolwarm", center=0)
     plt.title("Marker matrix approximation by the model embedding space")
 
 
 @_optional_show
 def kde_per_population(
-    adata: AnnData,
+    model,
+    where,
     cell_type_key: str,
     markers: Union[List[str], None] = None,
     ncols: int = 4,
@@ -52,6 +53,7 @@ def kde_per_population(
     value_name: str = "Expression",
     show: bool = True,
 ):
+    adata = model.adata[where]
     markers = adata.var_names if markers is None else markers
 
     df = adata.to_df()
@@ -67,23 +69,23 @@ def kde_per_population(
     grid = sns.FacetGrid(
         df, col=var_name, hue=hue_name, col_wrap=ncols, sharex=False, sharey=False
     )
-    grid.map(sns.kdeplot, value_name)
+    grid.map(sns.histplot, value_name, kde=True)
     grid.add_legend()
 
 
 @_optional_show
-def probs_per_marker(scyan: Scyan, where, prob_name: str = "Prob", show: bool = True):
-    h = scyan.module(scyan.x[where], scyan.covariates[where])[0]
+def probs_per_marker(model: Scyan, where, prob_name: str = "Prob", show: bool = True):
+    h = model.module(model.x[where], model.covariates[where])[0]
     normal = torch.distributions.normal.Normal(0, 1)
 
     _probs_per_marker = normal.log_prob(
-        (h[:, None, :] - scyan.module.rho_inferred[None, ...]) / scyan.module.std_diags
-    ) - torch.log(scyan.module.std_diags)
+        (h[:, None, :] - model.module.rho_inferred[None, ...]) / model.module.std_diags
+    ) - torch.log(model.module.std_diags)
 
     df_probs = pd.DataFrame(
         _probs_per_marker.mean(dim=0).detach().numpy(),
-        columns=scyan.adata.var_names,
-        index=scyan.marker_pop_matrix.index,
+        columns=model.adata.var_names,
+        index=model.marker_pop_matrix.index,
     )
     df_probs = df_probs.reindex(
         df_probs.mean().sort_values(ascending=False).index, axis=1

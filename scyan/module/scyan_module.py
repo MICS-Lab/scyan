@@ -49,7 +49,7 @@ class ScyanModule(pl.LightningModule):
             torch.tensor([self.hparams.alpha_dirichlet] * self.n_pop)
         )
 
-        self.log_pi = torch.log(torch.ones(self.n_pop) / self.n_pop)
+        self.pi_logit = nn.Parameter(torch.randn(self.n_pop))
 
         self.real_nvp = RealNVP(
             self.n_markers + n_covariates,
@@ -68,6 +68,10 @@ class ScyanModule(pl.LightningModule):
     @property
     def prior_z(self) -> distributions.distribution.Distribution:
         return distributions.categorical.Categorical(self.pi)
+
+    @property
+    def log_pi(self) -> Tensor:
+        return torch.log_softmax(self.pi_logit, dim=0)
 
     @property
     def pi(self) -> Tensor:
@@ -107,8 +111,7 @@ class ScyanModule(pl.LightningModule):
         self.log_pi = torch.log(probs.mean(dim=0).detach() + self.eps)
 
     def loss(self, x: Tensor, covariates: Tensor) -> Tensor:
-        n_samples = x.shape[0]
         probs, log_probs, ldj_sum, log_prob_pi = self.compute_probabilities(
             x, covariates
         )
-        return -(ldj_sum.mean() + log_prob_pi + (probs * log_probs).sum() / n_samples)
+        return -(ldj_sum + torch.logsumexp(log_probs, dim=1) + log_prob_pi).mean()

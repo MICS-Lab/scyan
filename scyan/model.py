@@ -123,7 +123,8 @@ class Scyan(pl.LightningModule):
 
     @torch.no_grad()
     def on_train_epoch_start(self):
-        self.module._update_log_pi(self.x, self.covariates)
+        # self.module._update_log_pi(self.x, self.covariates)
+        pass
 
     def training_step(self, batch, _):
         loss = self.module.loss(*batch)

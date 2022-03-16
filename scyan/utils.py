@@ -25,7 +25,7 @@ def wandb_plt_image(fun: Callable, figsize: Tuple[int, int] = [7, 5]) -> wandb.I
     return wandb.Image(Image.open(img_buf))
 
 
-def process_umap_latent(scyan, min_dist=0.05):
-    scyan.adata.obsm["X_scyan"] = scyan().detach().numpy()
-    sc.pp.neighbors(scyan.adata, use_rep="X_scyan")
-    sc.tl.umap(scyan.adata, min_dist=min_dist)
+def process_umap_latent(model, min_dist=0.05):
+    model.adata.obsm["X_scyan"] = model().detach().numpy()
+    sc.pp.neighbors(model.adata, use_rep="X_scyan")
+    sc.tl.umap(model.adata, min_dist=min_dist)
