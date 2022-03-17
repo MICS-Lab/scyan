@@ -27,8 +27,7 @@ class Scyan(pl.LightningModule):
         n_hidden_layers: int = 1,
         alpha_dirichlet: float = 1.02,
         n_layers: int = 6,
-        prior_std: float = 0.5,
-        prior_std_nan: float = 2,
+        prior_std: float = 0.25,
         lr: float = 5e-3,
         batch_size: int = 16384,
         n_samples: int = 100,
@@ -62,7 +61,6 @@ class Scyan(pl.LightningModule):
             alpha_dirichlet,
             n_layers,
             prior_std,
-            prior_std_nan,
             lr,
             batch_size,
         )
@@ -115,16 +113,14 @@ class Scyan(pl.LightningModule):
         return self.module(self.x, self.covariates)[0]
 
     @torch.no_grad()
-    def sample(self, n_samples: int) -> Tuple[Tensor, Tensor]:
-        # TODO: allow to choose sampling method for covariates
-        indices = torch.tensor(random.sample(range(len(self.x)), n_samples))
-        covariates_sample = self.covariates[indices]
-        return self.module.sample(n_samples, covariates_sample)
+    def sample(
+        self, n_samples: int, covariates_sample: Union[Tensor, None] = None
+    ) -> Tuple[Tensor, Tensor]:
+        if covariates_sample is None:
+            indices = torch.tensor(random.sample(range(len(self.x)), n_samples))
+            covariates_sample = self.covariates[indices]
 
-    @torch.no_grad()
-    def on_train_epoch_start(self):
-        # self.module._update_log_pi(self.x, self.covariates)
-        pass
+        return self.module.sample(n_samples, covariates_sample)
 
     def training_step(self, batch, _):
         loss = self.module.loss(*batch)
