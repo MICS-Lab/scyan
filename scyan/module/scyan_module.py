@@ -41,7 +41,7 @@ class ScyanModule(pl.LightningModule):
             torch.tensor([self.hparams.alpha_dirichlet] * self.n_pop)
         )
 
-        self.pi_logit = nn.Parameter(torch.randn(self.n_pop))
+        self.pi_logit = nn.Parameter(torch.zeros(self.n_pop))
 
         self.real_nvp = RealNVP(
             self.n_markers + n_covariates,
@@ -63,31 +63,44 @@ class ScyanModule(pl.LightningModule):
 
     @property
     def log_pi(self) -> Tensor:
-        return torch.log_softmax(self.pi_logit, dim=0)
+        return torch.log_softmax(10 * self.pi_logit, dim=0)
 
     @property
     def pi(self) -> Tensor:
         return torch.exp(self.log_pi)
 
     @torch.no_grad()
-    def sample(self, n_samples: int, covariates: Tensor) -> Tuple[Tensor, Tensor]:
+    def sample(
+        self, n_samples: int, covariates: Tensor, z_pop=None
+    ) -> Tuple[Tensor, Tensor]:
         sample_shape = torch.Size([n_samples])
-        z = self.prior_z.sample(sample_shape)
-        h = self.prior_h.sample(sample_shape) + self.rho[z]  # TODO: use kde for NaN
-        x = self.inverse(h, covariates).detach()
+
+        if z_pop is None:
+            z = self.prior_z.sample(sample_shape)
+        else:
+            z = torch.full(sample_shape, z_pop)
+
+        u = self.prior_h.sample(sample_shape) + self.rho[z]  # TODO: use kde for NaN
+        x = self.inverse(u, covariates).detach()
         return x, z
+
+    def difference_to_modes(self, u):
+        h = u[:, None, :] - self.rho[None, ...]
+        h[:, self.rho_mask] = 0
+        return h
 
     def compute_probabilities(
         self, x: Tensor, covariates: Tensor
     ) -> Tuple[Tensor, Tensor, Tensor, Tensor]:
         u, _, ldj_sum = self(x, covariates)
 
-        h = u[:, None, :] - self.rho[None, ...]
-        h[:, self.rho_mask] = 0
+        h = self.difference_to_modes(u)
 
         log_probs = self.prior_h.log_prob(h) + self.log_pi
         probs = torch.softmax(log_probs, dim=1)
-        log_prob_pi = self.prior_pi.log_prob(self.pi + self.eps)
+        log_prob_pi = self.prior_pi.log_prob(
+            self.pi + self.eps
+        )  # probs.mean(dim=0) + self.eps
 
         return probs, log_probs, ldj_sum, log_prob_pi
 
@@ -95,4 +108,11 @@ class ScyanModule(pl.LightningModule):
         probs, log_probs, ldj_sum, log_prob_pi = self.compute_probabilities(
             x, covariates
         )
-        return -(ldj_sum + torch.logsumexp(log_probs, dim=1) + log_prob_pi).mean()
+        return -(ldj_sum + torch.logsumexp(log_probs, dim=1)).mean()
+
+    def _update_log_pi(self, x: Tensor, covariates: Tensor) -> None:
+        # probs, *_ = self.compute_probabilities(x, covariates)
+        # self._log_pi = torch.log(
+        #     torch.ones(self.n_pop) / self.n_pop
+        # )  # probs.mean(dim=0).detach() + self.eps
+        pass

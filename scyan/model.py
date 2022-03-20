@@ -114,13 +114,17 @@ class Scyan(pl.LightningModule):
 
     @torch.no_grad()
     def sample(
-        self, n_samples: int, covariates_sample: Union[Tensor, None] = None
+        self, n_samples: int, covariates_sample: Union[Tensor, None] = None, pop=None
     ) -> Tuple[Tensor, Tensor]:
         if covariates_sample is None:
-            indices = torch.tensor(random.sample(range(len(self.x)), n_samples))
+            indices = torch.tensor(
+                random.sample(range(len(self.x)), n_samples)
+            )  # TODO: sample where pop
             covariates_sample = self.covariates[indices]
 
-        return self.module.sample(n_samples, covariates_sample)
+        z_pop = None if pop is None else self.marker_pop_matrix.index.get_loc(pop)
+
+        return self.module.sample(n_samples, covariates_sample, z_pop=z_pop)
 
     def training_step(self, batch, _):
         loss = self.module.loss(*batch)
@@ -129,6 +133,10 @@ class Scyan(pl.LightningModule):
 
     def training_epoch_end(self, _):
         self.metric()
+
+    @torch.no_grad()
+    def on_train_epoch_start(self):
+        self.module._update_log_pi(self.x, self.covariates)
 
     @torch.no_grad()
     def predict(
@@ -158,6 +166,12 @@ class Scyan(pl.LightningModule):
             self.covariates if covariates is None else covariates,
         )
         return pd.DataFrame(predictions.numpy(), columns=self.marker_pop_matrix.index)
+
+    @property
+    @torch.no_grad()
+    def pi_hat(self):
+        predictions, *_ = self.module.compute_probabilities(self.x, self.covariates)
+        return predictions.mean(dim=0)
 
     def configure_optimizers(self):
         return torch.optim.Adam(self.parameters(), lr=self.hparams.lr)

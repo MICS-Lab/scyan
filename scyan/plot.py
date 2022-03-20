@@ -8,6 +8,7 @@ import numpy as np
 from scipy.stats import norm
 import matplotlib.patheffects as pe
 import matplotlib
+from scipy import stats
 
 from . import Scyan
 
@@ -75,12 +76,12 @@ def kde_per_population(
 
 @_optional_show
 def probs_per_marker(model: Scyan, where, prob_name: str = "Prob", show: bool = True):
-    h = model.module(model.x[where], model.covariates[where])[0]
-    normal = torch.distributions.normal.Normal(0, 1)
+    u = model.module(model.x[where], model.covariates[where])[0]
+    normal = torch.distributions.normal.Normal(0, model.hparams.prior_std)
 
-    _probs_per_marker = normal.log_prob(
-        (h[:, None, :] - model.module.rho_inferred[None, ...]) / model.module.std_diags
-    ) - torch.log(model.module.std_diags)
+    h = model.module.difference_to_modes(u)
+
+    _probs_per_marker = normal.log_prob(h)
 
     df_probs = pd.DataFrame(
         _probs_per_marker.mean(dim=0).detach().numpy(),
@@ -128,3 +129,37 @@ def latent_expressions(model, where, show=True):
             path_effects=[pe.withStroke(linewidth=3, foreground="white")],
         )
     plt.legend()
+
+
+@_optional_show
+def pop_weighted_kde(
+    model,
+    pop: str,
+    n_samples: int = 5000,
+    alpha: float = 0.2,
+    thresh: float = 0.05,
+    show: bool = True,
+):
+    adata1 = model.adata[model.adata.obs.cell_type == pop]
+    adata2 = model.adata[model.adata.obs.cell_type != pop]
+
+    markers_statistics = [
+        (
+            stats.kstest(
+                adata1[:, marker].X.flatten(), adata2[:, marker].X.flatten()
+            ).statistic,
+            marker,
+        )
+        for marker in model.marker_pop_matrix.columns
+    ]
+    markers = [marker for _, marker in sorted(markers_statistics, reverse=True)]
+
+    df = model.adata.to_df()
+    df["proba"] = model.predict_proba()[pop].values
+    df = df.sample(n=n_samples, random_state=0)
+
+    sns.kdeplot(
+        data=df, x=markers[0], y=markers[1], weights="proba", fill=True, thresh=thresh
+    )
+    sns.scatterplot(data=df, x=markers[0], y=markers[1], alpha=alpha, color=".0", s=5)
+    plt.title(f"KDE of cells weighted by the probability of {pop}")

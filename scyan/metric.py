@@ -19,39 +19,42 @@ class AnnotationMetrics:
         self.n_components = n_components
 
         log.info(f"AnnotationMetrics callback setup with n_samples={self.n_samples}")
-        if self.n_samples >= 1e4:
-            log.info(
-                "n_samples is high, which leads to better metrics approximation, but longer callback setup"
-            )
-        self.n_obs, self.n_vars = self.model.adata.shape
+        # if self.n_samples >= 1e4:
+        #     log.info(
+        #         "n_samples is high, which leads to better metrics approximation, but longer callback setup"
+        #     )
+        # self.n_obs, self.n_vars = self.model.adata.shape
 
-        self.adata_sample = sc.pp.subsample(
-            self.model.adata, n_obs=self.n_samples, copy=True
-        )
+        # self.adata_sample = sc.pp.subsample(
+        #     self.model.adata, n_obs=self.n_samples, copy=True
+        # )
 
-        self.x_sample = torch.tensor(self.adata_sample.X, dtype=torch.float32)
-        self.cov_sample = torch.tensor(
-            self.adata_sample.obsm["covariates"], dtype=torch.float32
-        )
-        x_sample_umap = umap.UMAP(n_components=self.n_components).fit_transform(
-            self.x_sample
-        )
-        self.pairwise_distances = euclidean_distances(x_sample_umap)
+        # self.x_sample = torch.tensor(self.adata_sample.X, dtype=torch.float32)
+        # self.cov_sample = torch.tensor(
+        #     self.adata_sample.obsm["covariates"], dtype=torch.float32
+        # )
+        # x_sample_umap = umap.UMAP(n_components=self.n_components).fit_transform(
+        #     self.x_sample
+        # )
+        # self.pairwise_distances = euclidean_distances(x_sample_umap)
 
     def __call__(self) -> None:
-        X_sample, _ = self.model.sample(self.n_samples)
-        wd_sum = sum(
-            wasserstein_distance(X_sample[:, i], self.x_sample[:, i])
-            for i in range(self.n_vars)
-        )
-        self.model.log("mean_wasserstein_distance", wd_sum / self.n_vars, prog_bar=True)
+        # X_sample, _ = self.model.sample(self.n_samples)
+        # wd_sum = sum(
+        #     wasserstein_distance(X_sample[:, i], self.x_sample[:, i])
+        #     for i in range(self.n_vars)
+        # )
+        # self.model.log("mean_wasserstein_distance", wd_sum / self.n_vars, prog_bar=True)
 
-        _silhouette_score = silhouette_score(
-            self.pairwise_distances,
-            self.model.predict(self.x_sample, self.cov_sample, key_added=None).values,
-            metric="precomputed",
-        )
-        self.model.log("silhouette_score", _silhouette_score, prog_bar=True)
+        # _silhouette_score = silhouette_score(
+        #     self.pairwise_distances,
+        #     self.model.predict(self.x_sample, self.cov_sample, key_added=None).values,
+        #     metric="precomputed",
+        # )
+        # self.model.log("silhouette_score", _silhouette_score, prog_bar=True)
+
+        pi_rmse = torch.sqrt(((self.model.pi_hat - self.model.module.pi) ** 2).sum())
+        self.model.log("pi_rmse", pi_rmse, prog_bar=True)
 
         if "cell_type" in self.model.adata.obs:
             self.model.log(
