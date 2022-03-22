@@ -4,6 +4,11 @@ import io
 from PIL import Image
 from typing import Callable, Tuple
 import scanpy as sc
+from pathlib import Path
+
+
+def root_path() -> Path:
+    return Path(__file__).parent.parent
 
 
 def wandb_plt_image(fun: Callable, figsize: Tuple[int, int] = [7, 5]) -> wandb.Image:

@@ -8,6 +8,10 @@ docs/_build/
 outputs
 multirun
 
+# Data files
+data/*
+!data/aml.csv
+
 # Jupyter Notebook
 .ipynb_checkpoints
 exploration/*
