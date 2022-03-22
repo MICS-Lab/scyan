@@ -25,7 +25,7 @@ class Scyan(pl.LightningModule):
         categorical_covariate_keys: List[str] = [],
         hidden_size: int = 64,
         n_hidden_layers: int = 1,
-        alpha_dirichlet: float = 1.02,
+        ratio_threshold: float = 1e-4,
         n_layers: int = 6,
         prior_std: float = 0.25,
         lr: float = 5e-3,
@@ -58,11 +58,11 @@ class Scyan(pl.LightningModule):
             self.covariates.shape[1],
             hidden_size,
             n_hidden_layers,
-            alpha_dirichlet,
             n_layers,
             prior_std,
             lr,
             batch_size,
+            ratio_threshold,
         )
 
         self.metric = AnnotationMetrics(self, n_samples, n_components)
@@ -133,10 +133,6 @@ class Scyan(pl.LightningModule):
 
     def training_epoch_end(self, _):
         self.metric()
-
-    @torch.no_grad()
-    def on_train_epoch_start(self):
-        self.module._update_log_pi(self.x, self.covariates)
 
     @torch.no_grad()
     def predict(

@@ -18,11 +18,11 @@ class ScyanModule(pl.LightningModule):
         n_covariates: int,
         hidden_size: int,
         n_hidden_layers: int,
-        alpha_dirichlet: float,
         n_layers: int,
         prior_std: float,
         lr: float,
         batch_size: int,
+        ratio_threshold: float,
     ):
         super().__init__()
         self.save_hyperparameters(ignore=["rho", "n_covariates"])
@@ -36,9 +36,6 @@ class ScyanModule(pl.LightningModule):
         self.prior_h = distributions.multivariate_normal.MultivariateNormal(
             torch.zeros(self.n_markers),
             prior_std ** 2 * torch.eye(self.n_markers),
-        )
-        self.prior_pi = distributions.dirichlet.Dirichlet(
-            torch.tensor([self.hparams.alpha_dirichlet] * self.n_pop)
         )
 
         self.pi_logit = nn.Parameter(torch.zeros(self.n_pop))
@@ -98,21 +95,15 @@ class ScyanModule(pl.LightningModule):
 
         log_probs = self.prior_h.log_prob(h) + self.log_pi
         probs = torch.softmax(log_probs, dim=1)
-        log_prob_pi = self.prior_pi.log_prob(
-            self.pi + self.eps
-        )  # probs.mean(dim=0) + self.eps
 
-        return probs, log_probs, ldj_sum, log_prob_pi
+        return probs, log_probs, ldj_sum
+
+    def compute_constraint(self, probs):
+        threshold = self.hparams.ratio_threshold
+        return torch.relu(threshold - probs.mean(dim=0)).sum() / threshold
 
     def loss(self, x: Tensor, covariates: Tensor) -> Tensor:
-        probs, log_probs, ldj_sum, log_prob_pi = self.compute_probabilities(
-            x, covariates
-        )
-        return -(ldj_sum + torch.logsumexp(log_probs, dim=1)).mean()
+        probs, log_probs, ldj_sum = self.compute_probabilities(x, covariates)
+        penalty = self.compute_constraint(probs)
 
-    def _update_log_pi(self, x: Tensor, covariates: Tensor) -> None:
-        # probs, *_ = self.compute_probabilities(x, covariates)
-        # self._log_pi = torch.log(
-        #     torch.ones(self.n_pop) / self.n_pop
-        # )  # probs.mean(dim=0).detach() + self.eps
-        pass
+        return -(ldj_sum + torch.logsumexp(log_probs, dim=1)).mean() + penalty
