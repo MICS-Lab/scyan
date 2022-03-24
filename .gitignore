@@ -11,6 +11,8 @@ multirun
 # Data files
 data/*
 !data/aml.csv
+!data/bmmc.csv
+!data/README.md
 
 # Jupyter Notebook
 .ipynb_checkpoints

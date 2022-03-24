@@ -81,10 +81,10 @@ def probs_per_marker(model: Scyan, where, prob_name: str = "Prob", show: bool = 
 
     h = model.module.difference_to_modes(u)
 
-    _probs_per_marker = normal.log_prob(h)
+    _probs_per_marker = normal.log_prob(h).mean(dim=0).detach().numpy()
 
     df_probs = pd.DataFrame(
-        _probs_per_marker.mean(dim=0).detach().numpy(),
+        _probs_per_marker,
         columns=model.adata.var_names,
         index=model.marker_pop_matrix.index,
     )
@@ -96,7 +96,7 @@ def probs_per_marker(model: Scyan, where, prob_name: str = "Prob", show: bool = 
     df_probs.insert(0, prob_name, means)
     df_probs.insert(1, " ", np.nan)
     df_probs.sort_values(by=prob_name, inplace=True, ascending=False)
-    sns.heatmap(df_probs, cmap="magma")
+    sns.heatmap(df_probs, cmap="magma", vmin=max(-100, _probs_per_marker.min()))
     plt.title("Log probabilities per marker for each population")
 
 

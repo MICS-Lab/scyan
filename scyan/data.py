@@ -1,4 +1,6 @@
+from matplotlib.style import available
 import torch
+from torch import Tensor
 import pandas as pd
 import scanpy as sc
 from anndata import AnnData
@@ -8,7 +10,7 @@ from .utils import root_path
 
 
 class AdataDataset(torch.utils.data.Dataset):
-    def __init__(self, x, covariates):
+    def __init__(self, x: Tensor, covariates: Tensor):
         super().__init__()
         self.x = x
         self.covariates = covariates
@@ -21,6 +23,11 @@ class AdataDataset(torch.utils.data.Dataset):
 
 
 def load(dataset: str) -> Union[AnnData, pd.DataFrame]:
+    available_datasets = ["aml", "bmmc"]
+    assert (
+        dataset in available_datasets
+    ), f"Provided dataset is not available. It has to be one of {available_datasets} but found {dataset}"
+
     data_path = root_path() / "data"
 
     adata = sc.read_h5ad(data_path / f"{dataset}.h5ad")

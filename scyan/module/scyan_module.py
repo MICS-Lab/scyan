@@ -99,11 +99,10 @@ class ScyanModule(pl.LightningModule):
         return probs, log_probs, ldj_sum
 
     def compute_constraint(self, probs):
-        threshold = self.hparams.ratio_threshold
-        return torch.relu(threshold - probs.mean(dim=0)).sum() / threshold
+        return torch.relu(1 - probs.mean(dim=0) / self.hparams.ratio_threshold).sum()
 
     def loss(self, x: Tensor, covariates: Tensor) -> Tensor:
         probs, log_probs, ldj_sum = self.compute_probabilities(x, covariates)
-        penalty = self.compute_constraint(probs)
+        constraint = self.compute_constraint(probs)
 
-        return -(ldj_sum + torch.logsumexp(log_probs, dim=1)).mean() + penalty
+        return -(torch.logsumexp(log_probs, dim=1) + ldj_sum).mean() + constraint
