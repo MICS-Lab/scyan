@@ -110,6 +110,7 @@ class Scyan(pl.LightningModule):
         self.dataset = AdataDataset(self.x, self.covariates)
 
     def forward(self) -> Tensor:
+        """TODO"""
         return self.module(self.x, self.covariates)[0]
 
     @torch.no_grad()
@@ -127,17 +128,20 @@ class Scyan(pl.LightningModule):
         return self.module.sample(n_samples, covariates_sample, z_pop=z_pop)
 
     def training_step(self, batch, _):
+        """TODO"""
         loss = self.module.loss(*batch)
         self.log("loss", loss, on_epoch=True, on_step=True)
         return loss
 
     def training_epoch_end(self, _):
+        """TODO"""
         self.metric()
 
     @torch.no_grad()
     def predict(
         self, x=None, covariates=None, key_added: str = "scyan_pop"
     ) -> pd.Series:
+        """TODO"""
         df = self.predict_proba(x, covariates)
         populations = df.idxmax(axis=1).astype("category")
 
@@ -170,9 +174,11 @@ class Scyan(pl.LightningModule):
         return predictions.mean(dim=0)
 
     def configure_optimizers(self):
+        """TODO"""
         return torch.optim.Adam(self.parameters(), lr=self.hparams.lr)
 
     def train_dataloader(self):
+        """TODO"""
         return torch.utils.data.DataLoader(
             self.dataset, batch_size=self.hparams.batch_size
         )
