@@ -1,4 +1,4 @@
-﻿scyan.data.AdataDataset
+scyan.data.AdataDataset
 =======================
 
 .. currentmodule:: scyan.data

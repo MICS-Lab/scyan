@@ -1,4 +1,4 @@
-scyan.metric
+﻿scyan.metric
 ============
 
 .. automodule:: scyan.metric

@@ -1,7 +1,7 @@
-﻿scyan.model
-===========
+scyan.module.coupling\_layer
+============================
 
-.. automodule:: scyan.model
+.. automodule:: scyan.module.coupling_layer
   
    
    
@@ -19,7 +19,7 @@
       :toctree:
       :template: custom-class-template.rst
    
-      Scyan
+      CouplingLayer
    
    
 

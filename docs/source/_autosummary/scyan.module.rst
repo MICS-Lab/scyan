@@ -1,7 +1,7 @@
-﻿scyan
-=====
+﻿scyan.module
+============
 
-.. automodule:: scyan
+.. automodule:: scyan.module
   
    
    
@@ -28,9 +28,7 @@
    :template: custom-module-template.rst
    :recursive:
 
-   scyan.data
-   scyan.metric
-   scyan.model
-   scyan.plot
-   scyan.utils
+   scyan.module.coupling_layer
+   scyan.module.real_nvp
+   scyan.module.scyan_module
 

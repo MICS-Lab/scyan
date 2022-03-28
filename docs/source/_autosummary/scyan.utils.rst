@@ -1,4 +1,4 @@
-scyan.utils
+﻿scyan.utils
 ===========
 
 .. automodule:: scyan.utils

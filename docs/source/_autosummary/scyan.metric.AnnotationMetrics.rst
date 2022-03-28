@@ -1,4 +1,4 @@
-﻿scyan.metric.AnnotationMetrics
+scyan.metric.AnnotationMetrics
 ==============================
 
 .. currentmodule:: scyan.metric

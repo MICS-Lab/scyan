@@ -1,4 +1,4 @@
-scyan.data
+﻿scyan.data
 ==========
 
 .. automodule:: scyan.data

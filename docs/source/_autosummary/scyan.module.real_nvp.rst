@@ -1,7 +1,7 @@
-﻿scyan.model
-===========
+scyan.module.real\_nvp
+======================
 
-.. automodule:: scyan.model
+.. automodule:: scyan.module.real_nvp
   
    
    
@@ -19,7 +19,7 @@
       :toctree:
       :template: custom-class-template.rst
    
-      Scyan
+      RealNVP
    
    
 

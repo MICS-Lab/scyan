@@ -9,7 +9,7 @@ import random
 from sklearn.neighbors import KNeighborsClassifier
 import logging
 
-from .module.scyan_module import ScyanModule
+from .module import ScyanModule
 from .metric import AnnotationMetrics
 from .data import AdataDataset
 

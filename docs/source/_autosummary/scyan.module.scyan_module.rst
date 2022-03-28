@@ -1,7 +1,7 @@
-﻿scyan.model
-===========
+scyan.module.scyan\_module
+==========================
 
-.. automodule:: scyan.model
+.. automodule:: scyan.module.scyan_module
   
    
    
@@ -19,7 +19,7 @@
       :toctree:
       :template: custom-class-template.rst
    
-      Scyan
+      ScyanModule
    
    
 
