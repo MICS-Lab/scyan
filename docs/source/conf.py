@@ -26,7 +26,8 @@ extensions = [
 ]
 autosummary_generate = True
 
-html_logo = "../_static/logo.png"
+html_logo = "../_static/medium.png"
+html_favicon = "../_static/favicon.png"
 
 napoleon_google_docstring = True  # for pytorch lightning
 napoleon_numpy_docstring = True
