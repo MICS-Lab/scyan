@@ -7,6 +7,7 @@ from anndata import AnnData
 import numpy as np
 from scipy.stats import norm
 import matplotlib.patheffects as pe
+import matplotlib.lines as mlines
 import matplotlib
 from scipy import stats
 
@@ -138,10 +139,14 @@ def pop_weighted_kde(
     n_samples: int = 5000,
     alpha: float = 0.2,
     thresh: float = 0.05,
+    ref: Union[str, None] = None,
     show: bool = True,
 ):
     adata1 = model.adata[model.adata.obs.cell_type == pop]
-    adata2 = model.adata[model.adata.obs.cell_type != pop]
+    if ref is None:
+        adata2 = model.adata[model.adata.obs.cell_type != pop]
+    else:
+        adata2 = model.adata[model.adata.obs.cell_type == ref]
 
     markers_statistics = [
         (
@@ -156,10 +161,36 @@ def pop_weighted_kde(
 
     df = model.adata.to_df()
     df["proba"] = model.predict_proba()[pop].values
+    if ref is not None:
+        df["proba_ref"] = model.predict_proba()[ref].values
     df = df.sample(n=n_samples, random_state=0)
 
+    if ref is not None:
+        sns.kdeplot(
+            data=df,
+            x=markers[0],
+            y=markers[1],
+            weights="proba_ref",
+            fill=True,
+            thresh=thresh,
+            color="C1",
+        )
+        plt.legend(
+            handles=[
+                mlines.Line2D([], [], color="C1", marker="s", ls="", label=ref),
+                mlines.Line2D([], [], color="C0", marker="s", ls="", label=pop),
+            ]
+        )
     sns.kdeplot(
-        data=df, x=markers[0], y=markers[1], weights="proba", fill=True, thresh=thresh
+        data=df,
+        x=markers[0],
+        y=markers[1],
+        weights="proba",
+        fill=True,
+        thresh=thresh,
+        color="C0",
     )
     sns.scatterplot(data=df, x=markers[0], y=markers[1], alpha=alpha, color=".0", s=5)
-    plt.title(f"KDE of cells weighted by the probability of {pop}")
+    plt.title(
+        f"KDE of cells weighted by the probability of {pop}{'' if ref is None else f' and ref {ref}'}"
+    )
