@@ -13,6 +13,15 @@ class CouplingLayer(nn.Module):
         n_hidden_layers: int,
         mask: Tensor,
     ):
+        """One single coupling layer module.
+
+        Args:
+            input_size (int): Input size, i.e. number of markers + covariates
+            hidden_size (int): Neural networks hidden size
+            output_size (int): Output size, i.e. number of markers
+            n_hidden_layers (int): Number of s and t hidden layers
+            mask (Tensor): Mask used to separate x into (x1, x2)
+        """
         super().__init__()
         self.sfun = nn.Sequential(
             nn.Linear(input_size, hidden_size),
@@ -38,7 +47,15 @@ class CouplingLayer(nn.Module):
 
     def forward(
         self, inputs: Tuple[Tensor, Tensor, Union[Tensor, None]]
-    ) -> Tuple[Tensor, Tensor]:
+    ) -> Tuple[Tensor, Tensor, Tensor]:
+        """Coupling layer forward function
+
+        Args:
+            inputs (Tuple[Tensor, Tensor, Union[Tensor, None]]): Tuple of (inputs, covariates, lod_det_jacobian sum)
+
+        Returns:
+            Tuple[Tensor, Tensor, Tensor]: Tuple of (outputs, covariates, lod_det_jacobian sum)
+        """
         x, covariates, ldj_sum = inputs
 
         x_m = x * self.mask
@@ -55,6 +72,15 @@ class CouplingLayer(nn.Module):
         return y, covariates, ldj_sum
 
     def inverse(self, y: Tensor, covariates: Tensor) -> Tensor:
+        """Goes through the coupling layer in reverse direction
+
+        Args:
+            y (Tensor): Inputs
+            covariates (Tensor): Covariates
+
+        Returns:
+            Tensor: Outputs
+        """
         y_m = y * self.mask
         st_input = torch.cat([y_m, covariates], dim=1)
 

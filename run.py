@@ -11,7 +11,7 @@ from pytorch_lightning import Callback, Trainer
 from anndata import AnnData
 
 from scyan.model import Scyan
-from scyan.utils import wandb_plt_image, process_umap_latent
+from scyan.utils import _wandb_plt_image, process_umap_latent
 
 dotenv.load_dotenv()
 
@@ -62,7 +62,7 @@ def main(config: DictConfig) -> None:
     if config.wandb.save_umap:
         wandb.log(
             {
-                "umap": wandb_plt_image(
+                "umap": _wandb_plt_image(
                     lambda: sc.pl.umap(
                         model.adata, color="scyan_pop", show=False, palette=palette
                     )
@@ -74,7 +74,7 @@ def main(config: DictConfig) -> None:
         process_umap_latent(model)
         wandb.log(
             {
-                "umap_latent_space": wandb_plt_image(
+                "umap_latent_space": _wandb_plt_image(
                     lambda: sc.pl.umap(
                         model.adata,
                         color=["scyan_pop"] + covariate_keys,

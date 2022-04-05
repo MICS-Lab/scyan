@@ -2,9 +2,10 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import torch
-from typing import List, Union
+from typing import Callable, List, Union
 from anndata import AnnData
 import numpy as np
+from numpy.typing import ArrayLike
 from scipy.stats import norm
 import matplotlib.patheffects as pe
 import matplotlib.lines as mlines
@@ -14,7 +15,7 @@ from scipy import stats
 from . import Scyan
 
 
-def _optional_show(f):
+def _optional_show(f: Callable) -> Callable:
     """Decorator that shows a matplotlib figure if the provided 'show' argument is True"""
 
     def wrapper(*args, **kwargs):
@@ -29,6 +30,13 @@ def _optional_show(f):
 def marker_matrix_reconstruction(
     model: Scyan, show_diff: bool = False, show: bool = True
 ):
+    """Reconstructs the marker matrix based on predictions
+
+    Args:
+        model (Scyan): Scyan model
+        show_diff (bool, optional): Whether do show the difference with the actual marker-population matrix. Defaults to False.
+        show (bool, optional): Whether to plt.show() or not. Defaults to True.
+    """
     predictions = model.predict(key_added=None)
     predictions.name = "Population"
     h = model().detach().numpy()
@@ -45,8 +53,8 @@ def marker_matrix_reconstruction(
 
 @_optional_show
 def kde_per_population(
-    model,
-    where,
+    model: Scyan,
+    where: ArrayLike,
     cell_type_key: str,
     markers: Union[List[str], None] = None,
     ncols: int = 4,
@@ -55,6 +63,19 @@ def kde_per_population(
     value_name: str = "Expression",
     show: bool = True,
 ):
+    """Plots a KDE for each population for a given marker
+
+    Args:
+        model (Scyan): Scyan model
+        where (ArrayLike): Array where cells have to be considered.
+        cell_type_key (str): Key that gets the cell_type, e.g. 'scyan_knn_pop'
+        markers (Union[List[str], None], optional): List of markers to consider. None means all markers being considered. Defaults to None.
+        ncols (int, optional): Number of columns to be displayed. Defaults to 4.
+        hue_name (str, optional): Hue name. Defaults to "Population".
+        var_name (str, optional): Var name. Defaults to "Marker".
+        value_name (str, optional): Value name. Defaults to "Expression".
+        show (bool, optional): Whether to plt.show() or not. Defaults to True.
+    """
     adata = model.adata[where]
     markers = adata.var_names if markers is None else markers
 
@@ -76,7 +97,17 @@ def kde_per_population(
 
 
 @_optional_show
-def probs_per_marker(model: Scyan, where, prob_name: str = "Prob", show: bool = True):
+def probs_per_marker(
+    model: Scyan, where: ArrayLike, prob_name: str = "Prob", show: bool = True
+):
+    """Plots a heatmap of marker pronbabilities for each population
+
+    Args:
+        model (Scyan): Scyan model
+        where (ArrayLike): Array where cells have to be considered
+        prob_name (str, optional): Name displayed on the plot. Defaults to "Prob".
+        show (bool, optional): Whether to plt.show() or not. Defaults to True.
+    """
     u = model.module(model.x[where], model.covariates[where])[0]
     normal = torch.distributions.normal.Normal(0, model.hparams.prior_std)
 
@@ -102,7 +133,14 @@ def probs_per_marker(model: Scyan, where, prob_name: str = "Prob", show: bool = 
 
 
 @_optional_show
-def latent_expressions(model, where, show=True):
+def latent_expressions(model: Scyan, where: ArrayLike, show: bool = True):
+    """Plots all markers in one graph
+
+    Args:
+        model (Scyan): Scyan model
+        where (ArrayLike): Array where cells have to be considered
+        show (bool, optional): Whether to plt.show() or not. Defaults to True.
+    """
     h_mean = model.module(model.x[where], model.covariates[where])[0].mean(dim=0)
 
     labels = model.marker_pop_matrix.columns
@@ -134,7 +172,7 @@ def latent_expressions(model, where, show=True):
 
 @_optional_show
 def pop_weighted_kde(
-    model,
+    model: Scyan,
     pop: str,
     n_samples: int = 5000,
     alpha: float = 0.2,
@@ -142,6 +180,17 @@ def pop_weighted_kde(
     ref: Union[str, None] = None,
     show: bool = True,
 ):
+    """Plots a Kernel Density Estimation on a scatterplot
+
+    Args:
+        model (Scyan): Scyan model
+        pop (str): Population considered
+        n_samples (int, optional): Number of dots to be plot. Defaults to 5000.
+        alpha (float, optional): Scatter plot transparancy. Defaults to 0.2.
+        thresh (float, optional): KDE threshold. Defaults to 0.05.
+        ref (Union[str, None], optional): Population reference. None means no population reference. Defaults to None.
+        show (bool, optional): Whether to plt.show() or not. Defaults to True.
+    """
     adata1 = model.adata[model.adata.obs.cell_type == pop]
     if ref is None:
         adata2 = model.adata[model.adata.obs.cell_type != pop]

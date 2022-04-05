@@ -6,26 +6,35 @@ from anndata import AnnData
 import numpy as np
 import pandas as pd
 import flowio
+from typing import Union, List
+import torch
+from torch import Tensor
 
 
 def root_path() -> Path:
+    """Gets the library root path
+
+    Returns:
+        Path: scyan library root path
+    """
     return Path(__file__).parent.parent
 
 
-def wandb_plt_image(fun: Callable, figsize: Tuple[int, int] = [7, 5]):
-    from PIL import Image
-    import wandb
-    import io
-
-    """Transform a matplotlib figure into a wandb Image
+def _wandb_plt_image(fun: Callable, figsize: Tuple[int, int] = [7, 5]):
+    """Transforms a matplotlib figure into a wandb Image
 
     Args:
-        fun: function that makes the plot - do not plt.show().
-        figsize: Matplotlib figure size
+        fun (Callable): Function that makes the plot - do not plt.show().
+        figsize (Tuple[int, int], optional): Matplotlib figure size. Defaults to [7, 5].
 
     Returns:
         wandb.Image: the wandb Image to be logged
     """
+
+    from PIL import Image
+    import wandb
+    import io
+
     plt.rcParams["figure.figsize"] = figsize
     plt.rcParams["figure.autolayout"] = True
     plt.figure()
@@ -35,13 +44,27 @@ def wandb_plt_image(fun: Callable, figsize: Tuple[int, int] = [7, 5]):
     return wandb.Image(Image.open(img_buf))
 
 
-def process_umap_latent(model, min_dist=0.05):
+def process_umap_latent(model, min_dist: float = 0.05):
+    """Computes the UMAP based on Scyan's latent space
+
+    Args:
+        model (Scyan): Scyan model
+        min_dist (float, optional): min_dist parameter for the UMAP. Defaults to 0.05.
+    """
     model.adata.obsm["X_scyan"] = model().detach().numpy()
     sc.pp.neighbors(model.adata, use_rep="X_scyan")
     sc.tl.umap(model.adata, min_dist=min_dist)
 
 
 def read_fcs(path: str) -> AnnData:
+    """Reads a FCS file and return an AnnData instance
+
+    Args:
+        path (str): Path to the FCS file
+
+    Returns:
+        AnnData: AnnData instance containing the FCS data
+    """
     fcs_data = flowio.FlowData(str(path))
     data = np.reshape(fcs_data.events, (-1, fcs_data.channel_count))
 
@@ -59,3 +82,43 @@ def read_fcs(path: str) -> AnnData:
     )
 
     return AnnData(X=X, var=var, obs=obs)
+
+
+def _markers_to_indices(model, markers: List[str]) -> Tensor:
+    """Transforms a list of markers into their corresponding indices in the marker-population matrix
+
+    Args:
+        model (Scyan): Scyan model
+        markers (List[str]): List of marker names
+
+    Returns:
+        Tensor: Tensor of marker indices
+    """
+    return torch.tensor(
+        [model.marker_pop_matrix.columns.get_loc(marker) for marker in markers],
+        dtype=int,
+    )
+
+
+def _pops_to_indices(model, pops: List[str]) -> Tensor:
+    """Transforms a list of populations into their corresponding indices in the marker-population matrix
+
+    Args:
+        model (Scyan): Scyan model
+        pops (List[str]): List of population names
+
+    Returns:
+        Tensor: Tensor of population indices
+    """
+    return torch.tensor(
+        [model.marker_pop_matrix.index.get_loc(pop) for pop in pops], dtype=int
+    )
+
+
+def _process_pop_sample(model, pop: Union[str, List[str], int, Tensor, None]):
+    if isinstance(pop, str):
+        return model.marker_pop_matrix.index.get_loc(pop)
+    if isinstance(pop, list):
+        return _pops_to_indices(model, pop)
+    else:
+        return pop

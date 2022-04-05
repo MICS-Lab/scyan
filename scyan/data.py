@@ -10,6 +10,12 @@ from .utils import root_path
 
 class AdataDataset(torch.utils.data.Dataset):
     def __init__(self, x: Tensor, covariates: Tensor):
+        """PyTorch dataset
+
+        Args:
+            x (Tensor): Inputs
+            covariates (Tensor): Covariates
+        """
         super().__init__()
         self.x = x
         self.covariates = covariates
@@ -22,6 +28,14 @@ class AdataDataset(torch.utils.data.Dataset):
 
 
 def load(dataset: str) -> Union[AnnData, pd.DataFrame]:
+    """Loads a dataset
+
+    Args:
+        dataset (str): Name of the dataset. Either "AML" or "BMMC".
+
+    Returns:
+        Union[AnnData, pd.DataFrame]: AnnData instance and the marker-population matrix
+    """
     available_datasets = ["aml", "bmmc"]
     assert (
         dataset in available_datasets

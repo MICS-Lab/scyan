@@ -8,3 +8,5 @@ logging.basicConfig(level=logging.INFO)
 
 from .model import Scyan
 from . import plot, utils
+
+# pl.seed_everything(0)
