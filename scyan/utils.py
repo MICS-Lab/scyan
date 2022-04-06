@@ -5,6 +5,7 @@ from pathlib import Path
 from anndata import AnnData
 import numpy as np
 import pandas as pd
+from pandas.api.types import is_numeric_dtype
 import flowio
 from typing import Union, List
 import torch
@@ -57,7 +58,7 @@ def process_umap_latent(model, min_dist: float = 0.05):
 
 
 def read_fcs(path: str) -> AnnData:
-    """Reads a FCS file and return an AnnData instance
+    """Reads a FCS file and returns an AnnData instance
 
     Args:
         path (str): Path to the FCS file
@@ -82,6 +83,31 @@ def read_fcs(path: str) -> AnnData:
     )
 
     return AnnData(X=X, var=var, obs=obs)
+
+
+def write_fcs(adata: AnnData, path: str) -> None:
+    """Converts an adata instance into a FCS file
+
+    Args:
+        adata (AnnData): AnnData instance containing all the data
+        path (str): Path where the FCS file will be saved
+    """
+    X = adata.X
+    channel_names = list(adata.var_names)
+
+    for column in adata.obs.columns:
+        if is_numeric_dtype(adata.obs[column].dtype):
+            X = np.c_[X, adata.obs[column].values]
+            channel_names.append(column)
+
+    for key in adata.obsm:
+        X = np.concatenate((X, adata.obsm[key]), axis=1)
+        channel_names += [f"{key}{i+1}" for i in range(adata.obsm[key].shape[1])]
+
+    print(f"Found {len(channel_names)} channels: {', '.join(channel_names)}")
+
+    with open(path, "wb") as f:
+        flowio.create_fcs(X.flatten(), channel_names, f)
 
 
 def _markers_to_indices(model, markers: List[str]) -> Tensor:
