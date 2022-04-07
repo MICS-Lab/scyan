@@ -9,6 +9,7 @@ import dotenv
 from typing import List
 from pytorch_lightning import Callback, Trainer
 from anndata import AnnData
+from sklearn.metrics import accuracy_score, cohen_kappa_score
 
 import scyan
 from scyan.model import Scyan
@@ -18,7 +19,17 @@ dotenv.load_dotenv()
 
 
 @hydra.main(config_path="config", config_name="config")
-def main(config: DictConfig) -> None:
+def main(config: DictConfig) -> float:
+    """Runs scyan on a dataset specified by the config/config.yaml file.
+    It can be used for optuna hyperparameter search together with Weight&Biases to monitor the model.
+    Note that using this file is not optional, you can use the library as such.
+
+    Args:
+        config (DictConfig): Hydra generated configuration (automatic)
+
+    Returns:
+        float: metric chosen by the config to be optimized for hyperparameter search, e.g. the loss
+    """
     pl.seed_everything(config.seed)
 
     ### Init Weight & Biases (if config.wandb.mode="online")
@@ -82,6 +93,18 @@ def main(config: DictConfig) -> None:
                     )
                 )
             }
+        )
+
+    ### Print model accuracy and cohen's kappa if there are some known labels
+    if config.project.get("label", None):
+        model.predict()
+        model.knn_predict()
+
+        print(
+            f"Model accuracy: {accuracy_score(model.adata.obs[config.project.label], model.adata.obs.scyan_knn_pop):.4f}"
+        )
+        print(
+            f"Model Cohen's kappa: {cohen_kappa_score(model.adata.obs[config.project.label], model.adata.obs.scyan_knn_pop):.4f}"
         )
 
     ### Finishing
