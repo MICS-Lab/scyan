@@ -24,15 +24,15 @@ class Scyan(pl.LightningModule):
         marker_pop_matrix: pd.DataFrame,
         continuous_covariate_keys: List[str] = [],
         categorical_covariate_keys: List[str] = [],
-        hidden_size: int = 64,
-        n_hidden_layers: int = 1,
-        ratio_threshold: float = 1e-4,
-        n_layers: int = 6,
-        prior_std: float = 0.25,
-        lr: float = 5e-3,
+        hidden_size: int = 16,
+        n_hidden_layers: int = 5,
+        ratio_threshold: float = 5e-4,
+        n_layers: int = 5,
+        prior_std: float = 0.2,
+        lr: float = 1e-3,
         batch_size: int = 16384,
-        n_samples: int = 100,
-        n_components: int = 5,
+        n_samples: int = 100,  # TODO: remove
+        n_components: int = 5,  # TODO: remove
         alpha: float = 1.0,
     ):
         """Scyan model

@@ -14,25 +14,14 @@ wandb:
 
 model:
   _target_: scyan.model.Scyan
-  hidden_size: 16
-  alpha_dirichlet: 1.05
-  n_layers: 5
-  prior_std: 0.2
-  lr: 0.001
-  n_hidden_layers: 6
-  n_samples: 100
-  n_components: 5
 
 callbacks:
   early_stopping:
     _target_: pytorch_lightning.callbacks.EarlyStopping
     monitor: "loss_epoch"
-    patience: 3
+    patience: 4
     min_delta: 0.5
     check_on_train_epoch_end: True
-
-marker_pop_path: ${oc.env:marker_pop_path}
-data_path: ${oc.env:data_path}
 
 work_dir: ${hydra:runtime.cwd}
 

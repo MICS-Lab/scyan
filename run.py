@@ -10,6 +10,7 @@ from typing import List
 from pytorch_lightning import Callback, Trainer
 from anndata import AnnData
 
+import scyan
 from scyan.model import Scyan
 from scyan.utils import _wandb_plt_image, process_umap_latent
 
@@ -29,8 +30,7 @@ def main(config: DictConfig) -> None:
     wandb_logger = WandbLogger()
 
     ### Instantiate everything
-    marker_pop_matrix: pd.DataFrame = pd.read_csv(config.marker_pop_path, index_col=0)
-    adata: AnnData = sc.read_h5ad(config.data_path)
+    adata, marker_pop_matrix = scyan.data.load(config.project.name)
 
     model: Scyan = hydra.utils.instantiate(
         config.model,
@@ -56,10 +56,10 @@ def main(config: DictConfig) -> None:
     model.predict()
 
     ### Compute UMAP after training
-    palette = config.project.get("palette")
+    palette = adata.uns.get("palette", None)  # Get color palette if existing
     covariate_keys = model.categorical_covariate_keys + model.continuous_covariate_keys
 
-    if config.wandb.save_umap:
+    if config.wandb.mode != "disabled" and config.wandb.save_umap:
         wandb.log(
             {
                 "umap": _wandb_plt_image(
@@ -70,7 +70,7 @@ def main(config: DictConfig) -> None:
             }
         )
 
-    if config.wandb.save_umap_latent_space:
+    if config.wandb.mode != "disabled" and config.wandb.save_umap_latent_space:
         process_umap_latent(model)
         wandb.log(
             {
