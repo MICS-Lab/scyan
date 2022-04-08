@@ -5,7 +5,6 @@ import pytorch_lightning as pl
 from pytorch_lightning.loggers import WandbLogger
 import hydra
 from omegaconf import DictConfig, OmegaConf
-import dotenv
 from typing import List
 from pytorch_lightning import Callback, Trainer
 from anndata import AnnData
@@ -14,8 +13,6 @@ from sklearn.metrics import accuracy_score, cohen_kappa_score
 import scyan
 from scyan.model import Scyan
 from scyan.utils import _wandb_plt_image, process_umap_latent
-
-dotenv.load_dotenv()
 
 
 @hydra.main(config_path="config", config_name="config")
@@ -101,7 +98,7 @@ def main(config: DictConfig) -> float:
         model.knn_predict()
 
         print(
-            f"Model accuracy: {accuracy_score(model.adata.obs[config.project.label], model.adata.obs.scyan_knn_pop):.4f}"
+            f"\nModel accuracy: {accuracy_score(model.adata.obs[config.project.label], model.adata.obs.scyan_knn_pop):.4f}"
         )
         print(
             f"Model Cohen's kappa: {cohen_kappa_score(model.adata.obs[config.project.label], model.adata.obs.scyan_knn_pop):.4f}"

@@ -7,6 +7,7 @@ docs/_build/
 # Logs
 outputs
 multirun
+lightning_logs
 
 # Data files
 data/*
