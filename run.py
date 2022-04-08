@@ -1,5 +1,4 @@
 import wandb
-import pandas as pd
 import scanpy as sc
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import WandbLogger
@@ -7,12 +6,11 @@ import hydra
 from omegaconf import DictConfig, OmegaConf
 from typing import List
 from pytorch_lightning import Callback, Trainer
-from anndata import AnnData
 from sklearn.metrics import accuracy_score, cohen_kappa_score
 
 import scyan
 from scyan.model import Scyan
-from scyan.utils import _wandb_plt_image, process_umap_latent
+from scyan.utils import _wandb_plt_image
 
 
 @hydra.main(config_path="config", config_name="config")
@@ -60,43 +58,42 @@ def main(config: DictConfig) -> float:
     )
 
     ### Training
-    trainer.fit(model)
+    model.fit(trainer=trainer)
     model.predict()
+    model.knn_predict()
 
-    ### Compute UMAP after training
+    ### Compute UMAP after training (if wandb is enabled and if the save parameters are True)
     palette = adata.uns.get("palette", None)  # Get color palette if existing
-    covariate_keys = model.categorical_covariate_keys + model.continuous_covariate_keys
 
     if config.wandb.mode != "disabled" and config.wandb.save_umap:
         wandb.log(
             {
                 "umap": _wandb_plt_image(
                     lambda: sc.pl.umap(
-                        model.adata, color="scyan_pop", show=False, palette=palette
+                        model.adata, color="scyan_knn_pop", show=False, palette=palette
                     )
                 )
             }
         )
 
     if config.wandb.mode != "disabled" and config.wandb.save_umap_latent_space:
-        process_umap_latent(model)
+        scyan.utils.process_umap_latent(model)
         wandb.log(
             {
                 "umap_latent_space": _wandb_plt_image(
                     lambda: sc.pl.umap(
                         model.adata,
-                        color=["scyan_pop"] + covariate_keys,
+                        color=["scyan_knn_pop"]
+                        + model.categorical_covariate_keys
+                        + model.continuous_covariate_keys,
                         show=False,
                     )
                 )
             }
         )
 
-    ### Print model accuracy and cohen's kappa if there are some known labels
+    ### Printing model accuracy and cohen's kappa (if there are some known labels)
     if config.project.get("label", None):
-        model.predict()
-        model.knn_predict()
-
         print(
             f"\nModel accuracy: {accuracy_score(model.adata.obs[config.project.label], model.adata.obs.scyan_knn_pop):.4f}"
         )

@@ -1,6 +1,7 @@
 import torch
 from torch import Tensor
 import pytorch_lightning as pl
+from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from anndata import AnnData
 import pandas as pd
 from typing import Union, Tuple, List
@@ -255,3 +256,33 @@ class Scyan(pl.LightningModule):
         return torch.utils.data.DataLoader(
             self.dataset, batch_size=self.hparams.batch_size
         )
+
+    def fit(
+        self,
+        max_epochs: int = 100,
+        min_delta: float = 0.5,
+        patience: int = 4,
+        callbacks: List[pl.Callback] = [],
+        trainer: Union[pl.Trainer, None] = None,
+    ) -> None:
+        """Train Scyan
+
+        Args:
+            max_epochs (int, optional): Maximum number of epochs. Defaults to 100.
+            min_delta (float, optional): min_delta parameters used for EarlyStopping. See Pytorch Lightning docs. Defaults to 0.5.
+            patience (int, optional): Number of epochs with no loss improvement before to stop training. Defaults to 4.
+            callbacks (List[pl.Callback], optional): Additionnal Pytorch Lightning callbacks.
+            trainer (Union[pl.Trainer, None], optional): Pytorch Lightning Trainer. Warning: it will replace the default Trainer and all ther arguments will be unused. Defaults to None.
+        """
+        if trainer is not None:
+            trainer.fit(self)
+            return
+
+        esc = EarlyStopping(
+            monitor="loss_epoch",
+            min_delta=min_delta,
+            patience=patience,
+            check_on_train_epoch_end=True,
+        )
+        trainer = pl.Trainer(max_epochs=max_epochs, callbacks=[esc] + callbacks)
+        trainer.fit(self)
