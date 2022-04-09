@@ -47,9 +47,12 @@ class ScyanModule(pl.LightningModule):
         self.rho_mask = self.rho.isnan()
         self.rho[self.rho_mask] = 0
 
+        self.register_buffer("h_mean", torch.zeros(self.n_markers))
+        self.register_buffer("h_var", prior_std ** 2 * torch.eye(self.n_markers))
+
         self.prior_h = distributions.multivariate_normal.MultivariateNormal(
-            torch.zeros(self.n_markers),
-            prior_std ** 2 * torch.eye(self.n_markers),
+            self.h_mean,
+            self.h_var,
         )
 
         self.pi_logit = nn.Parameter(torch.zeros(self.n_pop))
