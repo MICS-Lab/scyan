@@ -72,7 +72,7 @@ class Scyan(pl.LightningModule):
             ]
         )
 
-        self.init_dataset()
+        self.init_data_covariates()
 
         self.module = ScyanModule(
             torch.tensor(marker_pop_matrix.values, dtype=torch.float32),
@@ -98,10 +98,9 @@ class Scyan(pl.LightningModule):
             cov_repr = f"Covariates: {', '.join(self.continuous_covariate_keys + self.categorical_covariate_keys)}"
         return f"Scyan model with N={self.adata.n_obs} cells, P={self.n_pops} populations and M={self.adata.n_vars} markers. {cov_repr}"
 
-    def init_dataset(self) -> None:
+    def init_data_covariates(self) -> None:
         """Initializes the data and the covariates"""
-        print(self.device)
-        self.x = torch.tensor(self.adata.X).to(self.device)
+        self.x = torch.tensor(self.adata.X)
 
         for key in self.categorical_covariate_keys:  # enforce dtype category
             self.adata.obs[key] = self.adata.obs[key].astype("category")
@@ -129,9 +128,7 @@ class Scyan(pl.LightningModule):
         self.covariates = torch.tensor(
             self.adata.obsm["covariates"],
             dtype=torch.float32,
-        ).to(self.device)
-
-        self.dataset = AdataDataset(self.x, self.covariates)
+        )
 
     def forward(self) -> Tensor:
         """Model forward function
@@ -254,6 +251,11 @@ class Scyan(pl.LightningModule):
 
     def train_dataloader(self):
         """PyTorch lightning train_dataloader implementation"""
+        print(self.device)
+        self.x = self.x.to(self.device)
+        self.covariates = self.covariates.to(self.device)
+        self.dataset = AdataDataset(self.x, self.covariates)
+
         return torch.utils.data.DataLoader(
             self.dataset, batch_size=self.hparams.batch_size
         )
