@@ -16,7 +16,12 @@ class AnnotationMetrics:
 
     @torch.no_grad()
     def __call__(self) -> None:
-        pi_rmse = torch.sqrt(((self.model.pi_hat - self.model.module.pi) ** 2).sum())
+        pi_rmse = torch.sqrt(
+            (
+                (self.model.pi_hat.type_as(self.model.module.pi) - self.model.module.pi)
+                ** 2
+            ).sum()
+        )
         self.model.log("pi_rmse", pi_rmse, prog_bar=True)
 
         if "cell_type" in self.model.adata.obs:
