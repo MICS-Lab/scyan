@@ -42,7 +42,7 @@ class ScyanModule(pl.LightningModule):
         self.save_hyperparameters(ignore=["rho", "n_covariates"])
 
         self.n_pop, self.n_markers = rho.shape
-        self.rho = nn.Parameter(rho, requires_grad=False)
+        self.register_buffer("rho", rho)
 
         self.rho_mask = self.rho.isnan()
         self.rho[self.rho_mask] = 0

@@ -36,7 +36,7 @@ class CouplingLayer(nn.Module):
             *self._hidden_layers(hidden_size, n_hidden_layers),
             nn.Linear(hidden_size, output_size),
         )
-        self.mask = mask
+        self.register_buffer("mask", mask)
 
     def _hidden_layers(self, hidden_size: int, n_hidden_layers: int) -> List[nn.Module]:
         return [
