@@ -14,6 +14,7 @@ class AnnotationMetrics:
 
         log.info(f"AnnotationMetrics callback setup with n_samples={self.n_samples}")
 
+    @torch.no_grad()
     def __call__(self) -> None:
         pi_rmse = torch.sqrt(((self.model.pi_hat - self.model.module.pi) ** 2).sum())
         self.model.log("pi_rmse", pi_rmse, prog_bar=True)
