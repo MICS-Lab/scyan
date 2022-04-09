@@ -2,11 +2,12 @@ import torch
 from torch import Tensor
 from torch import nn
 from typing import Tuple
+import pytorch_lightning as pl
 
 from .coupling_layer import CouplingLayer
 
 
-class RealNVP(nn.Module):
+class RealNVP(pl.LightningModule):
     def __init__(
         self,
         input_size: int,

@@ -2,9 +2,10 @@ import torch
 from torch import Tensor
 from torch import nn
 from typing import Tuple, List, Union
+import pytorch_lightning as pl
 
 
-class CouplingLayer(nn.Module):
+class CouplingLayer(pl.LightningModule):
     def __init__(
         self,
         input_size: int,
