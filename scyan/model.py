@@ -100,6 +100,7 @@ class Scyan(pl.LightningModule):
 
     def init_dataset(self) -> None:
         """Initializes the data and the covariates"""
+        print(self.device)
         self.x = torch.tensor(self.adata.X).to(self.device)
 
         for key in self.categorical_covariate_keys:  # enforce dtype category
@@ -230,7 +231,6 @@ class Scyan(pl.LightningModule):
         Returns:
             pd.DataFrame: Dataframe of probabilities for each population
         """
-        print(self.x.device)
         predictions, *_ = self.module.compute_probabilities(
             self.x if x is None else x,
             self.covariates if covariates is None else covariates,
