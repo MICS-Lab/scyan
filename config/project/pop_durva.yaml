@@ -1,0 +1,4 @@
+name: scyan
+categorical_covariate_keys:
+  - batch
+label: "cell_type"
