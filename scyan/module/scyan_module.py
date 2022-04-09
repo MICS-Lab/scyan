@@ -50,11 +50,6 @@ class ScyanModule(pl.LightningModule):
         self.register_buffer("h_mean", torch.zeros(self.n_markers))
         self.register_buffer("h_var", prior_std ** 2 * torch.eye(self.n_markers))
 
-        self.prior_h = distributions.multivariate_normal.MultivariateNormal(
-            self.h_mean,
-            self.h_var,
-        )
-
         self.pi_logit = nn.Parameter(torch.zeros(self.n_pop))
 
         self.real_nvp = RealNVP(
@@ -88,6 +83,18 @@ class ScyanModule(pl.LightningModule):
             Tensor: Outputs
         """
         return self.real_nvp.inverse(z, covariates)
+
+    @property
+    def prior_h(self) -> distributions.distribution.Distribution:
+        """Cell-specific term prior (H)
+
+        Returns:
+            distributions.distribution.Distribution: Distribution of H
+        """
+        return distributions.multivariate_normal.MultivariateNormal(
+            self.h_mean,
+            self.h_var,
+        )
 
     @property
     def prior_z(self) -> distributions.distribution.Distribution:
