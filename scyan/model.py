@@ -230,6 +230,7 @@ class Scyan(pl.LightningModule):
         Returns:
             pd.DataFrame: Dataframe of probabilities for each population
         """
+        print(self.x.device)
         predictions, *_ = self.module.compute_probabilities(
             self.x if x is None else x,
             self.covariates if covariates is None else covariates,
