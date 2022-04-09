@@ -6,7 +6,7 @@ import hydra
 from omegaconf import DictConfig, OmegaConf
 from typing import List
 from pytorch_lightning import Callback, Trainer
-from sklearn.metrics import accuracy_score, cohen_kappa_score
+from sklearn.metrics import accuracy_score, cohen_kappa_score, f1_score
 
 import scyan
 from scyan.model import Scyan
@@ -94,12 +94,18 @@ def main(config: DictConfig) -> float:
 
     ### Printing model accuracy and cohen's kappa (if there are some known labels)
     if config.project.get("label", None):
-        print(
-            f"\nModel accuracy: {accuracy_score(model.adata.obs[config.project.label], model.adata.obs.scyan_knn_pop):.4f}"
-        )
-        print(
-            f"Model Cohen's kappa: {cohen_kappa_score(model.adata.obs[config.project.label], model.adata.obs.scyan_knn_pop):.4f}"
-        )
+        y_true = model.adata.obs[config.project.label]
+        y_pred = model.adata.obs.scyan_knn_pop
+
+        accuracy = accuracy_score(y_true, y_pred)
+        f1 = f1_score(y_true, y_pred, average="macro")
+        kappa = cohen_kappa_score(y_true, y_pred)
+
+        print("\nMetrics:")
+        print(f"Accuracy: {accuracy:.4f}\nF1-score: {f1:.4f}\nKappa: {kappa:.4f}")
+        wandb.run.summary["accuracy"] = accuracy
+        wandb.run.summary["f1_score"] = f1
+        wandb.run.summary["kappa"] = kappa
 
     ### Finishing
     metric = trainer.logged_metrics.get(config.optimized_metric)

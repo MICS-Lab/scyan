@@ -9,8 +9,8 @@ defaults:
 
 wandb:
   mode: "disabled" # online, offline, disabled
-  save_umap: true
-  save_umap_latent_space: true
+  save_umap: false
+  save_umap_latent_space: false
 
 model:
   _target_: scyan.model.Scyan
