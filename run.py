@@ -116,11 +116,11 @@ def main(config: DictConfig) -> float:
 
         X, labels = model.adata.X, model.adata.obs.scyan_knn_pop
 
-        if len(set(labels.values)) > 1:
+        if len(set(labels.values)) == len(model.marker_pop_matrix.index):
             silhouette = silhouette_score(X, labels)
             dbs = davies_bouldin_score(X, labels)
         else:
-            print("Warning: only one label")
+            print("Warning: not all populations are present. Setting classification metrics to 0.")
             silhouette, dbs = 0, 0
 
         print(f"\nClustering metrics:")
