@@ -6,7 +6,14 @@ import hydra
 from omegaconf import DictConfig, OmegaConf
 from typing import List
 from pytorch_lightning import Callback, Trainer
-from sklearn.metrics import accuracy_score, cohen_kappa_score, f1_score
+from sklearn.metrics import (
+    accuracy_score,
+    cohen_kappa_score,
+    f1_score,
+    silhouette_score,
+    davies_bouldin_score,
+)
+import numpy as np
 
 import scyan
 from scyan.model import Scyan
@@ -101,11 +108,20 @@ def main(config: DictConfig) -> float:
         f1 = f1_score(y_true, y_pred, average="macro")
         kappa = cohen_kappa_score(y_true, y_pred)
 
-        print("\nMetrics:")
+        print("\nClassification metrics:")
         print(f"Accuracy: {accuracy:.4f}\nF1-score: {f1:.4f}\nKappa: {kappa:.4f}")
         wandb.run.summary["accuracy"] = accuracy
         wandb.run.summary["f1_score"] = f1
         wandb.run.summary["kappa"] = kappa
+
+        X, labels = model.adata.X, model.adata.obs.scyan_knn_pop
+        silhouette = silhouette_score(X, labels)
+        dbs = davies_bouldin_score(X, labels)
+
+        print(f"\nClustering metrics:")
+        print(f"Silhouette score: {silhouette:.4f}\nDavies Bouldin Score: {dbs:.4f}")
+        wandb.run.summary["silhouette_score"] = silhouette
+        wandb.run.summary["dbs"] = dbs
 
     ### Finishing
     metric = trainer.logged_metrics.get(config.optimized_metric)
