@@ -23,26 +23,26 @@ hydra:
 
     direction: minimize
     storage: null
-    n_trials: 10
+    n_trials: 100
     n_jobs: 1
 
     search_space:
       model.hidden_size:
         type: categorical
-        choices: [32, 64, 128, 256, 512]
+        choices: [16, 32, 64, 128, 256]
       model.n_layers:
         type: int
         low: 4
-        high: 10
-      model.alpha_dirichlet:
-        type: float
-        low: 1.03
-        high: 1.05
-      model.prior_std:
-        type: float
-        low: 0.15
-        high: 0.25
+        high: 12
       model.n_hidden_layers:
         type: int
         low: 4
-        high: 6
+        high: 12
+      model.lr:
+        type: float
+        low: 0.0001
+        high: 0.005
+        log: true
+      model.batch_size:
+        type: categorical
+        choices: [1024, 4096, 16384, 65536]

@@ -15,6 +15,12 @@ wandb:
 model:
   _target_: scyan.model.Scyan
 
+  hidden_size: 16
+  n_layers: 5
+  n_hidden_layers: 5
+  lr: 0.001
+  batch_size: 16384
+
 callbacks:
   early_stopping:
     _target_: pytorch_lightning.callbacks.EarlyStopping

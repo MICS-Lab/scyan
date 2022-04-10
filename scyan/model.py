@@ -27,9 +27,9 @@ class Scyan(pl.LightningModule):
         categorical_covariate_keys: List[str] = [],
         hidden_size: int = 16,
         n_hidden_layers: int = 5,
-        ratio_threshold: float = 5e-4,
+        ratio_threshold: float = 1e-3,
         n_layers: int = 5,
-        prior_std: float = 0.2,
+        prior_std: float = 0.1,
         lr: float = 1e-3,
         batch_size: int = 16384,
         n_samples: int = 100,  # TODO: remove
@@ -251,7 +251,6 @@ class Scyan(pl.LightningModule):
 
     def train_dataloader(self):
         """PyTorch lightning train_dataloader implementation"""
-        print(self.device)
         self.x = self.x.to(self.device)
         self.covariates = self.covariates.to(self.device)
         self.dataset = AdataDataset(self.x, self.covariates)
