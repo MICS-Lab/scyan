@@ -115,8 +115,13 @@ def main(config: DictConfig) -> float:
         wandb.run.summary["kappa"] = kappa
 
         X, labels = model.adata.X, model.adata.obs.scyan_knn_pop
-        silhouette = silhouette_score(X, labels)
-        dbs = davies_bouldin_score(X, labels)
+
+        if len(set(labels.values)) > 1:
+            silhouette = silhouette_score(X, labels)
+            dbs = davies_bouldin_score(X, labels)
+        else:
+            print("Warning: only one label")
+            silhouette, dbs = 0, 0
 
         print(f"\nClustering metrics:")
         print(f"Silhouette score: {silhouette:.4f}\nDavies Bouldin Score: {dbs:.4f}")
