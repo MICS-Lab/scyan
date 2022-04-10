@@ -124,7 +124,7 @@ def main(config: DictConfig) -> float:
         wandb.run.summary["dbs"] = dbs
 
     ### Finishing
-    metric = trainer.logged_metrics.get(config.optimized_metric)
+    metric = wandb.run.summary[config.optimized_metric]
     wandb.finish()
 
     return metric
