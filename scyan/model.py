@@ -100,7 +100,7 @@ class Scyan(pl.LightningModule):
 
     def init_data_covariates(self) -> None:
         """Initializes the data and the covariates"""
-        self.x = torch.tensor(self.adata.X)
+        self.register_buffer("x", torch.tensor(self.adata.X))
 
         for key in self.categorical_covariate_keys:  # enforce dtype category
             self.adata.obs[key] = self.adata.obs[key].astype("category")
@@ -125,9 +125,12 @@ class Scyan(pl.LightningModule):
             axis=1,
         )
 
-        self.covariates = torch.tensor(
-            self.adata.obsm["covariates"],
-            dtype=torch.float32,
+        self.register_buffer(
+            "covariates",
+            torch.tensor(
+                self.adata.obsm["covariates"],
+                dtype=torch.float32,
+            ),
         )
 
     def forward(self) -> Tensor:
@@ -251,8 +254,6 @@ class Scyan(pl.LightningModule):
 
     def train_dataloader(self):
         """PyTorch lightning train_dataloader implementation"""
-        self.x = self.x.to(self.device)
-        self.covariates = self.covariates.to(self.device)
         self.dataset = AdataDataset(self.x, self.covariates)
 
         return torch.utils.data.DataLoader(
