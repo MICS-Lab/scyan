@@ -36,7 +36,7 @@ def main(config: DictConfig) -> float:
 
     ### Init Weight & Biases (if config.wandb.mode="online")
     wandb.init(
-        project=config.project.name,
+        project=config.wandb.project_name,
         mode=config.wandb.mode,
         config=OmegaConf.to_container(config, resolve=True, throw_on_missing=True),
     )
@@ -120,7 +120,9 @@ def main(config: DictConfig) -> float:
             silhouette = silhouette_score(X, labels)
             dbs = davies_bouldin_score(X, labels)
         else:
-            print("Warning: not all populations are present. Setting classification metrics to 0.")
+            print(
+                "Warning: not all populations are present. Setting classification metrics to 0."
+            )
             silhouette, dbs = 0, 0
 
         print(f"\nClustering metrics:")
