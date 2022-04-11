@@ -20,8 +20,8 @@ model:
   n_hidden_layers: 7
   lr: 0.001
   batch_size: 16384
-  ratio_threshold: 0.001
-  prior_std: 0.1
+  ratio_threshold: 0.005
+  prior_std: 0.15
   alpha: 1
 
 callbacks:
