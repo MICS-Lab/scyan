@@ -32,13 +32,6 @@ def main(config: DictConfig) -> float:
     Returns:
         float: metric chosen by the config to be optimized for hyperparameter search, e.g. the loss
     """
-    ### Init Weight & Biases (if config.wandb.mode="online")
-    wandb.init(
-        project=config.wandb.project_name,
-        mode=config.wandb.mode,
-        config=OmegaConf.to_container(config, resolve=True, throw_on_missing=True),
-    )
-    wandb_logger = WandbLogger()
 
     ### Instantiate everything
     adata, marker_pop_matrix = scyan.data.load(config.project.name)
@@ -46,10 +39,17 @@ def main(config: DictConfig) -> float:
     scores = []
     i = 0
     while len(scores) < 20:
+        ### Init Weight & Biases (if config.wandb.mode="online")
+        wandb.init(
+            project=config.wandb.project_name,
+            mode=config.wandb.mode,
+            config=OmegaConf.to_container(config, resolve=True, throw_on_missing=True),
+            reinit=True,
+        )
+        wandb_logger = WandbLogger()
+
         i += 1
         pl.seed_everything(i)
-
-        run = wandb.init(reinit=True)
 
         model: Scyan = hydra.utils.instantiate(
             config.model,
@@ -106,7 +106,7 @@ def main(config: DictConfig) -> float:
             )
             wandb.run.summary["success"] = False
 
-        run.finish()
+        wandb.finish()
 
     scores = np.array(scores)
     print("FINISH")
