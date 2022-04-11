@@ -3,7 +3,7 @@
 defaults:
   - override /hydra/sweeper: optuna
 
-optimized_metric: "silhouette_score"
+optimized_metric: silhouette_score
 
 hydra:
   sweeper:
@@ -27,15 +27,31 @@ hydra:
     n_jobs: 1
 
     search_space:
+      model.hidden_size:
+        type: categorical
+        choices: [16, 32]
+      model.n_layers:
+        type: int
+        low: 5
+        high: 8
+      model.n_hidden_layers:
+        type: int
+        low: 5
+        high: 8
+      model.lr:
+        type: float
+        low: 0.0005
+        high: 0.002
+        log: true
       model.alpha:
         type: float
-        low: 1
-        high: 20
+        low: 0.5
+        high: 2
         log: true
       model.prior_std:
         type: float
-        low: 0.05
-        high: 0.5
+        low: 0.1
+        high: 0.3
         log: true
       model.ratio_threshold:
         type: float

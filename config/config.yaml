@@ -8,7 +8,8 @@ defaults:
   - override hydra/hydra_logging: colorlog
 
 wandb:
-  mode: "disabled" # online, offline, disabled
+  mode: disabled # online, offline, disabled
+  project_name: aml_testing
   save_umap: false
   save_umap_latent_space: false
 
@@ -27,7 +28,7 @@ model:
 callbacks:
   early_stopping:
     _target_: pytorch_lightning.callbacks.EarlyStopping
-    monitor: "loss_epoch"
+    monitor: loss_epoch
     patience: 4
     min_delta: 0.5
     check_on_train_epoch_end: True
