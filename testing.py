@@ -34,7 +34,7 @@ def main(config: DictConfig) -> float:
     """
     ### Init Weight & Biases (if config.wandb.mode="online")
     wandb.init(
-        project=config.project.name,
+        project=config.wandb.project_name,
         mode=config.wandb.mode,
         config=OmegaConf.to_container(config, resolve=True, throw_on_missing=True),
     )
@@ -44,7 +44,9 @@ def main(config: DictConfig) -> float:
     adata, marker_pop_matrix = scyan.data.load(config.project.name)
 
     scores = []
-    for i in range(20):
+    i = 0
+    while len(scores) < 20:
+        i += 1
         pl.seed_everything(i)
 
         run = wandb.init(reinit=True)
@@ -93,23 +95,16 @@ def main(config: DictConfig) -> float:
         wandb.run.summary["f1_score"] = f1
         wandb.run.summary["kappa"] = kappa
 
-        X, labels = model.adata.X, model.adata.obs.scyan_knn_pop
+        labels = model.adata.obs.scyan_knn_pop
 
         if len(set(labels.values)) == len(model.marker_pop_matrix.index):
-            silhouette = silhouette_score(X, labels)
-            dbs = davies_bouldin_score(X, labels)
+            scores.append([accuracy, f1, kappa])
+            wandb.run.summary["success"] = True
         else:
             print(
                 "Warning: not all populations are present. Setting classification metrics to 0."
             )
-            silhouette, dbs = 0, 0
-
-        print(f"\nClustering metrics:")
-        print(f"Silhouette score: {silhouette:.4f}\nDavies Bouldin Score: {dbs:.4f}")
-        wandb.run.summary["silhouette_score"] = silhouette
-        wandb.run.summary["dbs"] = dbs
-
-        scores.append([accuracy, f1, kappa])
+            wandb.run.summary["success"] = False
 
         run.finish()
 
