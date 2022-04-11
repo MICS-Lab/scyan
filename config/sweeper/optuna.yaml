@@ -45,8 +45,8 @@ hydra:
         log: true
       model.alpha:
         type: float
-        low: 0.5
-        high: 2
+        low: 0.1
+        high: 5
         log: true
       model.prior_std:
         type: float
@@ -55,6 +55,6 @@ hydra:
         log: true
       model.ratio_threshold:
         type: float
-        low: 0.0005
+        low: 0.0001
         high: 0.01
         log: true

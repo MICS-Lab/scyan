@@ -2,16 +2,18 @@ defaults:
   - _self_
   - trainer: default
   - sweeper: optuna
-  - project: aml
+  - project: bmmc
 
   - override hydra/job_logging: colorlog
   - override hydra/hydra_logging: colorlog
 
 wandb:
   mode: disabled # online, offline, disabled
-  project_name: aml_testing
+  project_name: bmmc_hyper
   save_umap: false
   save_umap_latent_space: false
+
+force_all_populations: false
 
 model:
   _target_: scyan.model.Scyan

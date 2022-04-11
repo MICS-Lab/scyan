@@ -116,14 +116,17 @@ def main(config: DictConfig) -> float:
 
         X, labels = model.adata.X, model.adata.obs.scyan_knn_pop
 
-        if len(set(labels.values)) == len(model.marker_pop_matrix.index):
-            silhouette = silhouette_score(X, labels)
-            dbs = davies_bouldin_score(X, labels)
-        else:
+        if config.force_all_populations and (
+            len(set(labels.values)) < len(model.marker_pop_matrix.index)
+        ):
             print(
                 "Warning: not all populations are present. Setting classification metrics to 0."
             )
             silhouette, dbs = 0, 0
+        else:
+            silhouette = silhouette_score(X, labels)
+            dbs = davies_bouldin_score(X, labels)
+            wandb.run.summary["n_labels"] = len(set(labels.values))
 
         print(f"\nClustering metrics:")
         print(f"Silhouette score: {silhouette:.4f}\nDavies Bouldin Score: {dbs:.4f}")
