@@ -32,7 +32,7 @@ class Scyan(pl.LightningModule):
         prior_std: float = 0.15,
         lr: float = 1e-3,
         batch_size: int = 16384,
-        n_samples: int = 100,  # TODO: remove
+        n_samples: int = 2048,  # TODO: remove
         n_components: int = 5,  # TODO: remove
         alpha: float = 1.0,
     ):
@@ -97,6 +97,10 @@ class Scyan(pl.LightningModule):
         else:
             cov_repr = f"Covariates: {', '.join(self.continuous_covariate_keys + self.categorical_covariate_keys)}"
         return f"Scyan model with N={self.adata.n_obs} cells, P={self.n_pops} populations and M={self.adata.n_vars} markers. {cov_repr}"
+
+    @property
+    def pop_names(self):
+        return self.marker_pop_matrix.index
 
     def init_data_covariates(self) -> None:
         """Initializes the data and the covariates"""

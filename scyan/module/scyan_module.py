@@ -105,6 +105,10 @@ class ScyanModule(pl.LightningModule):
         """
         return distributions.categorical.Categorical(self.pi)
 
+    def sample_u(self, n_samples):
+        z = self.prior_z.sample((n_samples,))
+        return self.rho[z] + self.prior_h.sample((n_samples,))
+
     @property
     def log_pi(self) -> Tensor:
         """Returns the log population weights
@@ -137,12 +141,10 @@ class ScyanModule(pl.LightningModule):
         Returns:
             Tuple[Tensor, Tensor]: Pair of (cell expressions, population)
         """
-        sample_shape = torch.Size([n_samples])
-
         if z_pop is None:
-            z = self.prior_z.sample(sample_shape)
+            z = self.prior_z.sample((n_samples,))
         elif isinstance(z_pop, int):
-            z = torch.full(sample_shape, z_pop)
+            z = torch.full((n_samples,), z_pop)
         elif isinstance(z_pop, torch.Tensor):
             z = z_pop
         else:
@@ -150,7 +152,7 @@ class ScyanModule(pl.LightningModule):
                 f"z_pop has to be 'None', an 'int' or a 'torch.Tensor'. Found type {type(z_pop)}."
             )
 
-        u = self.prior_h.sample(sample_shape) + self.rho[z]  # TODO: use kde for NaN
+        u = self.prior_h.sample((n_samples,)) + self.rho[z]  # TODO: use kde for NaN
         x = self.inverse(u, covariates).detach()
         return x, z
 
