@@ -21,7 +21,6 @@ class ScyanModule(pl.LightningModule):
         prior_std: float,
         lr: float,
         batch_size: int,
-        ratio_threshold: float,
         alpha: float,
     ):
         """Module containing the core logic behind the Scyan model
@@ -35,7 +34,6 @@ class ScyanModule(pl.LightningModule):
             prior_std (float, optional): Standard deviation of the base distribution (H). Defaults to 0.25.
             lr (float, optional): Learning rate. Defaults to 5e-3.
             batch_size (int): Batch size.
-            ratio_threshold (float, optional): Minimum ratio of cells to be observed for each population. Defaults to 1e-4.
             alpha (float, optional): Constraint term weight in the loss function. Defaults to 1.0.
         """
         super().__init__()
@@ -47,9 +45,6 @@ class ScyanModule(pl.LightningModule):
         self.rho_mask = self.rho.isnan()
         self.rho[self.rho_mask] = 0
 
-        self.register_buffer("h_mean", torch.zeros(self.n_markers))
-        self.register_buffer("h_var", prior_std ** 2 * torch.eye(self.n_markers))
-
         self.pi_logit = nn.Parameter(torch.zeros(self.n_pop))
 
         self.real_nvp = RealNVP(
@@ -58,6 +53,28 @@ class ScyanModule(pl.LightningModule):
             self.n_markers,
             self.hparams.n_hidden_layers,
             self.hparams.n_layers,
+        )
+
+        self.init_prior_h()
+
+    def init_prior_h(self):
+        self.uniform_law_radius = 1 - self.hparams.prior_std
+
+        count_markers_na = self.rho_mask.sum(dim=1)
+        gamma = (
+            self.uniform_law_radius
+            / self.hparams.prior_std
+            * torch.sqrt(2 / torch.tensor(torch.pi))
+        )
+        gamma = 1 / (1 + gamma)
+        na_constant_term = count_markers_na * torch.log(gamma)
+
+        log_gaussian_constant = torch.log(torch.tensor(2 * torch.pi)) + torch.log(
+            torch.tensor(self.hparams.prior_std)
+        )
+
+        self.pop_constant_term = (
+            na_constant_term - 0.5 * self.n_markers * log_gaussian_constant
         )
 
     def forward(self, x: Tensor, covariates: Tensor) -> Tuple[Tensor, Tensor, Tensor]:
@@ -83,18 +100,6 @@ class ScyanModule(pl.LightningModule):
             Tensor: Outputs
         """
         return self.real_nvp.inverse(z, covariates)
-
-    @property
-    def prior_h(self) -> distributions.distribution.Distribution:
-        """Cell-specific term prior (H)
-
-        Returns:
-            distributions.distribution.Distribution: Distribution of H
-        """
-        return distributions.multivariate_normal.MultivariateNormal(
-            self.h_mean,
-            self.h_var,
-        )
 
     @property
     def prior_z(self) -> distributions.distribution.Distribution:
@@ -166,7 +171,11 @@ class ScyanModule(pl.LightningModule):
             Tensor: Tensor of difference to all modes
         """
         h = u[:, None, :] - self.rho[None, ...]
-        h[:, self.rho_mask] = 0
+
+        h[:, self.rho_mask] = torch.clamp(
+            h[:, self.rho_mask].abs() - self.uniform_law_radius, min=0
+        )  # Handling NA values
+
         return h
 
     def compute_probabilities(
@@ -183,15 +192,19 @@ class ScyanModule(pl.LightningModule):
         """
         u, _, ldj_sum = self(x, covariates)
 
-        h = self.difference_to_modes(u)
+        h = self.difference_to_modes(u)  # size N x P x M
 
-        log_probs = self.prior_h.log_prob(h) + self.log_pi
+        log_probs = (
+            -0.5 * ((h / self.hparams.prior_std) ** 2).sum(dim=-1)
+            + self.pop_constant_term
+            + self.log_pi
+        )  # size N x P
         probs = torch.softmax(log_probs, dim=1)
 
         return probs, log_probs, ldj_sum
 
-    def compute_constraint(self, probs: Tensor) -> Tensor:
-        """Computes the model constraint
+    def compute_regularization(self, probs: Tensor) -> Tensor:
+        """Computes the model regularization
 
         Args:
             probs (Tensor): Tensor of probabilities
@@ -199,10 +212,11 @@ class ScyanModule(pl.LightningModule):
         Returns:
             Tensor: Contraint
         """
-        soft_ratio = torch.sigmoid((probs - 0.5) * 20).mean(dim=0)
+        empirical_weights = probs.mean(dim=0)
         return (
-            self.hparams.alpha
-            * torch.relu(1 - soft_ratio / self.hparams.ratio_threshold).sum()
+            -self.hparams.alpha
+            / self.n_markers
+            * torch.log(empirical_weights + self.eps).sum()
         )
 
     def loss(self, x: Tensor, covariates: Tensor) -> Tensor:
@@ -216,6 +230,6 @@ class ScyanModule(pl.LightningModule):
             Tensor: Loss
         """
         probs, log_probs, ldj_sum = self.compute_probabilities(x, covariates)
-        constraint = self.compute_constraint(probs)
+        regularization = self.compute_regularization(probs)
 
-        return -(torch.logsumexp(log_probs, dim=1) + ldj_sum).mean() + constraint
+        return -(torch.logsumexp(log_probs, dim=1) + ldj_sum).mean() + regularization

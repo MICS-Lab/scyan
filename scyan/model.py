@@ -27,14 +27,12 @@ class Scyan(pl.LightningModule):
         categorical_covariate_keys: List[str] = [],
         hidden_size: int = 16,
         n_hidden_layers: int = 7,
-        ratio_threshold: float = 5e-3,
         n_layers: int = 7,
         prior_std: float = 0.15,
         lr: float = 1e-3,
         batch_size: int = 16384,
-        n_samples: int = 2048,  # TODO: remove
-        n_components: int = 5,  # TODO: remove
         alpha: float = 1.0,
+        n_samples: int = 2048,  # TODO: remove
     ):
         """Scyan model
 
@@ -45,13 +43,11 @@ class Scyan(pl.LightningModule):
             categorical_covariate_keys (List[str], optional): List of categorical covariable in adata.obs. Defaults to [].
             hidden_size (int, optional): Neural networks (s and t) hidden size. Defaults to 64.
             n_hidden_layers (int, optional): Neural networks (s and t) number of hidden layers. Defaults to 1.
-            ratio_threshold (float, optional): Minimum ratio of cells to be observed for each population. Defaults to 1e-4.
             n_layers (int, optional): Number of coupling layers. Defaults to 6.
             prior_std (float, optional): Standard deviation of the base distribution (H). Defaults to 0.25.
             lr (float, optional): Learning rate. Defaults to 5e-3.
             batch_size (int, optional): Batch size. Defaults to 16384.
             n_samples (int, optional): TODO: remove. Defaults to 100.
-            n_components (int, optional): TODO: remove. Defaults to 5.
             alpha (float, optional): Constraint term weight in the loss function. Defaults to 1.0.
         """
         super().__init__()
@@ -83,11 +79,10 @@ class Scyan(pl.LightningModule):
             prior_std,
             lr,
             batch_size,
-            ratio_threshold,
             alpha,
         )
 
-        self.metric = AnnotationMetrics(self, n_samples, n_components)
+        self.metric = AnnotationMetrics(self, n_samples)
 
         log.info(f"Initialized {self}")
 
