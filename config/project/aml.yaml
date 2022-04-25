@@ -1,2 +1,3 @@
-name: "aml"
-label: "cell_type"
+name: aml
+wandb_project_name: aml
+label: cell_type

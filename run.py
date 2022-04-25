@@ -36,7 +36,7 @@ def main(config: DictConfig) -> float:
 
     ### Init Weight & Biases (if config.wandb.mode="online")
     wandb.init(
-        project=config.wandb.project_name,
+        project=config.project.wandb_project_name,
         mode=config.wandb.mode,
         config=OmegaConf.to_container(config, resolve=True, throw_on_missing=True),
     )
@@ -115,23 +115,22 @@ def main(config: DictConfig) -> float:
         wandb.run.summary["kappa"] = kappa
 
         X, labels = model.adata.X, model.adata.obs.scyan_knn_pop
+        wandb.run.summary["n_labels"] = len(set(labels.values))
 
         if config.force_all_populations and (
             len(set(labels.values)) < len(model.marker_pop_matrix.index)
         ):
-            print(
-                "Warning: not all populations are present. Setting classification metrics to 0."
-            )
+            print("Warning: not all pops are present. Setting clustering metrics to 0.")
             silhouette, dbs = 0, 0
         else:
             silhouette = silhouette_score(X, labels)
             dbs = davies_bouldin_score(X, labels)
-            wandb.run.summary["n_labels"] = len(set(labels.values))
 
         print(f"\nClustering metrics:")
         print(f"Silhouette score: {silhouette:.4f}\nDavies Bouldin Score: {dbs:.4f}")
-        wandb.run.summary["silhouette_score"] = silhouette
-        wandb.run.summary["dbs"] = dbs
+        label_penalty = len(set(labels.values)) - model.n_pops
+        wandb.run.summary["silhouette_score"] = silhouette + label_penalty
+        wandb.run.summary["dbs"] = dbs + label_penalty
 
     ### Finishing
     metric = wandb.run.summary[config.optimized_metric]

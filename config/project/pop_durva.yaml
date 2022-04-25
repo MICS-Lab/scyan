@@ -1,4 +1,5 @@
-name: scyan
+name: pop_durva
+wandb_project_name: pop
 categorical_covariate_keys:
   - batch
-label: "cell_type"
+label: cell_type

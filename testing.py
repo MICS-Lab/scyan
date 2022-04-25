@@ -41,7 +41,7 @@ def main(config: DictConfig) -> float:
     while len(scores) < 20:
         ### Init Weight & Biases (if config.wandb.mode="online")
         wandb.init(
-            project=config.wandb.project_name,
+            project=config.project.wandb_project_name,
             mode=config.wandb.mode,
             config=OmegaConf.to_container(config, resolve=True, throw_on_missing=True),
             reinit=True,

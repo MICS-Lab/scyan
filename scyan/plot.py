@@ -26,6 +26,7 @@ def _optional_show(f: Callable) -> Callable:
     return wrapper
 
 
+# TODO: remove?
 @_optional_show
 def marker_matrix_reconstruction(
     model: Scyan, show_diff: bool = False, show: bool = True
@@ -54,11 +55,10 @@ def marker_matrix_reconstruction(
 @_optional_show
 def kde_per_population(
     model: Scyan,
-    where: ArrayLike,
-    cell_type_key: str,
+    population: str,
+    obs_key: str = "scyan_pop",
     markers: Union[List[str], None] = None,
     ncols: int = 4,
-    hue_name: str = "Population",
     var_name: str = "Marker",
     value_name: str = "Expression",
     show: bool = True,
@@ -76,11 +76,11 @@ def kde_per_population(
         value_name (str, optional): Value name. Defaults to "Expression".
         show (bool, optional): Whether to plt.show() or not. Defaults to True.
     """
-    adata = model.adata[where]
-    markers = adata.var_names if markers is None else markers
+    hue_name = f"{obs_key} is '{population}'"
+    markers = model.adata.var_names if markers is None else markers
 
-    df = adata.to_df()
-    df[hue_name] = adata.obs[cell_type_key]
+    df = model.adata.to_df()
+    df[hue_name] = pd.Categorical(model.adata.obs[obs_key] == population)
     df = pd.melt(
         df,
         id_vars=[hue_name],
@@ -98,7 +98,11 @@ def kde_per_population(
 
 @_optional_show
 def probs_per_marker(
-    model: Scyan, where: ArrayLike, prob_name: str = "Prob", show: bool = True
+    model: Scyan,
+    population: str,
+    obs_key: str = "scyan_pop",
+    prob_name: str = "Prob",
+    show: bool = True,
 ):
     """Plots a heatmap of marker pronbabilities for each population
 
@@ -108,6 +112,7 @@ def probs_per_marker(
         prob_name (str, optional): Name displayed on the plot. Defaults to "Prob".
         show (bool, optional): Whether to plt.show() or not. Defaults to True.
     """
+    where = model.adata.obs[obs_key] == population
     u = model.module(model.x[where], model.covariates[where])[0]
     normal = torch.distributions.normal.Normal(0, model.hparams.prior_std)
 
@@ -133,7 +138,9 @@ def probs_per_marker(
 
 
 @_optional_show
-def latent_expressions(model: Scyan, where: ArrayLike, show: bool = True):
+def latent_expressions(
+    model: Scyan, population: str, obs_key: str = "scyan_pop", show: bool = True
+):
     """Plots all markers in one graph
 
     Args:
@@ -141,6 +148,7 @@ def latent_expressions(model: Scyan, where: ArrayLike, show: bool = True):
         where (ArrayLike): Array where cells have to be considered
         show (bool, optional): Whether to plt.show() or not. Defaults to True.
     """
+    where = model.adata.obs[obs_key] == population
     h_mean = model.module(model.x[where], model.covariates[where])[0].mean(dim=0)
 
     labels = model.marker_pop_matrix.columns
@@ -173,7 +181,8 @@ def latent_expressions(model: Scyan, where: ArrayLike, show: bool = True):
 @_optional_show
 def pop_weighted_kde(
     model: Scyan,
-    pop: str,
+    population: str,
+    obs_key: str = "scyan_pop",
     n_samples: int = 5000,
     alpha: float = 0.2,
     thresh: float = 0.05,
@@ -191,11 +200,11 @@ def pop_weighted_kde(
         ref (Union[str, None], optional): Population reference. None means no population reference. Defaults to None.
         show (bool, optional): Whether to plt.show() or not. Defaults to True.
     """
-    adata1 = model.adata[model.adata.obs.cell_type == pop]
+    adata1 = model.adata[model.adata.obs[obs_key] == population]
     if ref is None:
-        adata2 = model.adata[model.adata.obs.cell_type != pop]
+        adata2 = model.adata[model.adata.obs[obs_key] != population]
     else:
-        adata2 = model.adata[model.adata.obs.cell_type == ref]
+        adata2 = model.adata[model.adata.obs[obs_key] == ref]
 
     markers_statistics = [
         (
@@ -209,7 +218,7 @@ def pop_weighted_kde(
     markers = [marker for _, marker in sorted(markers_statistics, reverse=True)]
 
     df = model.adata.to_df()
-    df["proba"] = model.predict_proba()[pop].values
+    df["proba"] = model.predict_proba()[population].values
     if ref is not None:
         df["proba_ref"] = model.predict_proba()[ref].values
     df = df.sample(n=n_samples, random_state=0)
@@ -227,7 +236,7 @@ def pop_weighted_kde(
         plt.legend(
             handles=[
                 mlines.Line2D([], [], color="C1", marker="s", ls="", label=ref),
-                mlines.Line2D([], [], color="C0", marker="s", ls="", label=pop),
+                mlines.Line2D([], [], color="C0", marker="s", ls="", label=population),
             ]
         )
     sns.kdeplot(
@@ -241,5 +250,5 @@ def pop_weighted_kde(
     )
     sns.scatterplot(data=df, x=markers[0], y=markers[1], alpha=alpha, color=".0", s=5)
     plt.title(
-        f"KDE of cells weighted by the probability of {pop}{'' if ref is None else f' and ref {ref}'}"
+        f"KDE of cells weighted by the probability of {population}{'' if ref is None else f' and ref {ref}'}"
     )
