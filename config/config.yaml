@@ -12,6 +12,7 @@ wandb:
   save_umap: false
   save_umap_latent_space: false
 
+run_knn: false
 force_all_populations: false
 
 model:

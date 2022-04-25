@@ -64,20 +64,22 @@ def main(config: DictConfig) -> float:
         config.trainer, logger=wandb_logger, callbacks=callbacks, _convert_="partial"
     )
 
-    ### Training
+    ### Model running
     model.fit(trainer=trainer)
     model.predict()
-    model.knn_predict()
+    if config.run_knn:
+        model.knn_predict()
 
     ### Compute UMAP after training (if wandb is enabled and if the save parameters are True)
     palette = adata.uns.get("palette", None)  # Get color palette if existing
+    scyan_pop_key = "scyan_knn_pop" if config.run_knn else "scyan_pop"
 
     if config.wandb.mode != "disabled" and config.wandb.save_umap:
         wandb.log(
             {
                 "umap": _wandb_plt_image(
                     lambda: sc.pl.umap(
-                        model.adata, color="scyan_knn_pop", show=False, palette=palette
+                        model.adata, color=scyan_pop_key, show=False, palette=palette
                     )
                 )
             }
@@ -90,7 +92,7 @@ def main(config: DictConfig) -> float:
                 "umap_latent_space": _wandb_plt_image(
                     lambda: sc.pl.umap(
                         model.adata,
-                        color=["scyan_knn_pop"]
+                        color=[scyan_pop_key]
                         + model.categorical_covariate_keys
                         + model.continuous_covariate_keys,
                         show=False,
@@ -102,7 +104,7 @@ def main(config: DictConfig) -> float:
     ### Printing model accuracy and cohen's kappa (if there are some known labels)
     if config.project.get("label", None):
         y_true = model.adata.obs[config.project.label]
-        y_pred = model.adata.obs.scyan_knn_pop
+        y_pred = model.adata.obs[scyan_pop_key]
 
         accuracy = accuracy_score(y_true, y_pred)
         f1 = f1_score(y_true, y_pred, average="macro")
@@ -114,7 +116,7 @@ def main(config: DictConfig) -> float:
         wandb.run.summary["f1_score"] = f1
         wandb.run.summary["kappa"] = kappa
 
-        X, labels = model.adata.X, model.adata.obs.scyan_knn_pop
+        X, labels = model.adata.X, model.adata.obs[scyan_pop_key]
         wandb.run.summary["n_labels"] = len(set(labels.values))
 
         if config.force_all_populations and (

@@ -22,7 +22,7 @@ exploration/*
 # pyenv
 .python-version
 
-### VisualStudioCode
+# VisualStudioCode
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
@@ -89,3 +89,6 @@ coverage.xml
 *.py,cover
 .hypothesis/
 .pytest_cache/
+
+# Misc
+jobs/

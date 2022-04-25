@@ -5,7 +5,6 @@ import torch
 from typing import Callable, List, Union
 from anndata import AnnData
 import numpy as np
-from numpy.typing import ArrayLike
 from scipy.stats import norm
 import matplotlib.patheffects as pe
 import matplotlib.lines as mlines
@@ -89,11 +88,15 @@ def kde_per_population(
         value_name=value_name,
     )
 
-    grid = sns.FacetGrid(
-        df, col=var_name, hue=hue_name, col_wrap=ncols, sharex=False, sharey=False
+    sns.displot(
+        df,
+        x=value_name,
+        col=var_name,
+        hue=hue_name,
+        col_wrap=ncols,
+        kind="kde",
+        common_norm=False,
     )
-    grid.map(sns.histplot, value_name, kde=True)
-    grid.add_legend()
 
 
 @_optional_show
