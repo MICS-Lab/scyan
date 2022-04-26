@@ -62,7 +62,7 @@ class PriorDistribution(pl.LightningModule):
     def sample(self, z: Tensor):
         (n_samples,) = z.shape
 
-        e = self.rho[z] + self.rho_mask * self.uniform.sample(
+        e = self.rho[z] + self.rho_mask[z] * self.uniform.sample(
             (n_samples, self.n_markers)
         )
         h = self.prior_h.sample((n_samples,))

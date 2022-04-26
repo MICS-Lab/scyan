@@ -55,16 +55,16 @@ class RealNVP(pl.LightningModule):
         """
         return self.module((x, covariates, None))
 
-    def inverse(self, h: Tensor, covariates: Tensor) -> Tensor:
+    def inverse(self, u: Tensor, covariates: Tensor) -> Tensor:
         """Goes through the RealNVP in reverse direction
 
         Args:
-            h (Tensor): Inputs
+            u (Tensor): Inputs
             covariates (Tensor): Covariates
 
         Returns:
             Tensor: Outputs
         """
         for module in reversed(self.module_list):
-            h = module.inverse(h, covariates)
-        return h
+            u = module.inverse(u, covariates)
+        return u

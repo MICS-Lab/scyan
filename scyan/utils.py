@@ -141,7 +141,7 @@ def _pops_to_indices(model, pops: List[str]) -> Tensor:
     )
 
 
-def _process_pop_sample(model, pop: Union[str, List[str], int, Tensor, None]):
+def _process_pop_sample(model, pop: Union[str, List[str], int, Tensor, None] = None):
     if isinstance(pop, str):
         return model.marker_pop_matrix.index.get_loc(pop)
     if isinstance(pop, list):

@@ -72,17 +72,17 @@ class ScyanModule(pl.LightningModule):
         """
         return self.real_nvp(x, covariates)
 
-    def inverse(self, z: Tensor, covariates: Tensor) -> Tensor:
+    def inverse(self, u: Tensor, covariates: Tensor) -> Tensor:
         """Goes through the complete flow in reverse direction
 
         Args:
-            h (Tensor): Inputs
+            u (Tensor): Inputs
             covariates (Tensor): Covariates
 
         Returns:
             Tensor: Outputs
         """
-        return self.real_nvp.inverse(z, covariates)
+        return self.real_nvp.inverse(u, covariates)
 
     @property
     def prior_z(self) -> distributions.Distribution:
@@ -137,7 +137,7 @@ class ScyanModule(pl.LightningModule):
             )
 
         u = self.prior.sample(z)
-        x = self.inverse(u, covariates).detach()
+        x = self.inverse(u, covariates)
         return x, z
 
     def compute_probabilities(
