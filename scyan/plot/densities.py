@@ -58,7 +58,7 @@ def kde_per_population(
         col_wrap=ncols,
         kind="kde",
         common_norm=False,
-        sharey=False,
+        facet_kws=dict(sharey=False),
     )
 
 

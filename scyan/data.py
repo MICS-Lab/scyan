@@ -27,7 +27,7 @@ class AdataDataset(torch.utils.data.Dataset):
         return len(self.x)
 
 
-def load(dataset: str) -> Union[AnnData, pd.DataFrame]:
+def load(dataset: str, size: str = "default") -> Union[AnnData, pd.DataFrame]:
     """Loads a dataset
 
     Args:
@@ -36,9 +36,9 @@ def load(dataset: str) -> Union[AnnData, pd.DataFrame]:
     Returns:
         Union[AnnData, pd.DataFrame]: AnnData instance and the marker-population matrix
     """
-    data_path = root_path() / "data"
+    data_path = root_path() / "data" / dataset
 
-    adata = sc.read_h5ad(data_path / f"{dataset}.h5ad")
-    marker_pop_matrix = pd.read_csv(data_path / f"{dataset}.csv", index_col=0)
+    adata = sc.read_h5ad(data_path / f"{size}.h5ad")
+    marker_pop_matrix = pd.read_csv(data_path / "table.csv", index_col=0)
 
     return adata, marker_pop_matrix

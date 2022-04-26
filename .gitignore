@@ -10,9 +10,9 @@ multirun
 lightning_logs
 
 # Data files
-data/*
-!data/aml.csv
-!data/bmmc.csv
+data/*/*
+!data/aml/table.csv
+!data/bmmc/table.csv
 !data/README.md
 
 # Jupyter Notebook
