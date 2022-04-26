@@ -97,6 +97,10 @@ class Scyan(pl.LightningModule):
     def pop_names(self):
         return self.marker_pop_matrix.index
 
+    @property
+    def var_names(self):
+        return self.adata.var_names
+
     def init_data_covariates(self) -> None:
         """Initializes the data and the covariates"""
         self.register_buffer("x", torch.tensor(self.adata.X))

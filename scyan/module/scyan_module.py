@@ -6,6 +6,7 @@ from typing import Tuple, Union
 import pytorch_lightning as pl
 
 from .real_nvp import RealNVP
+from .distribution import PriorDistribution
 
 
 class ScyanModule(pl.LightningModule):
@@ -55,26 +56,8 @@ class ScyanModule(pl.LightningModule):
             self.hparams.n_layers,
         )
 
-        self.init_prior_h()
-
-    def init_prior_h(self):
-        self.uniform_law_radius = 1 - self.hparams.prior_std
-
-        count_markers_na = self.rho_mask.sum(dim=1)
-        gamma = (
-            self.uniform_law_radius
-            / self.hparams.prior_std
-            * torch.sqrt(2 / torch.tensor(torch.pi))
-        )
-        gamma = 1 / (1 + gamma)
-        na_constant_term = count_markers_na * torch.log(gamma)
-
-        log_gaussian_constant = torch.log(torch.tensor(2 * torch.pi)) + torch.log(
-            torch.tensor(self.hparams.prior_std)
-        )
-
-        self.pop_constant_term = (
-            na_constant_term - 0.5 * self.n_markers * log_gaussian_constant
+        self.prior = PriorDistribution(
+            self.rho, self.rho_mask, self.hparams.prior_std, self.n_markers
         )
 
     def forward(self, x: Tensor, covariates: Tensor) -> Tuple[Tensor, Tensor, Tensor]:
@@ -102,17 +85,13 @@ class ScyanModule(pl.LightningModule):
         return self.real_nvp.inverse(z, covariates)
 
     @property
-    def prior_z(self) -> distributions.distribution.Distribution:
+    def prior_z(self) -> distributions.Distribution:
         """Population prior
 
         Returns:
-            distributions.distribution.Distribution: Distribution of the population index prior
+            distributions.Distribution: Distribution of the population index prior
         """
-        return distributions.categorical.Categorical(self.pi)
-
-    def sample_u(self, n_samples):
-        z = self.prior_z.sample((n_samples,))
-        return self.rho[z] + self.prior_h.sample((n_samples,))
+        return distributions.Categorical(self.pi)
 
     @property
     def log_pi(self) -> Tensor:
@@ -157,26 +136,9 @@ class ScyanModule(pl.LightningModule):
                 f"z_pop has to be 'None', an 'int' or a 'torch.Tensor'. Found type {type(z_pop)}."
             )
 
-        u = self.prior_h.sample((n_samples,)) + self.rho[z]  # TODO: use kde for NaN
+        u = self.prior.sample(z)
         x = self.inverse(u, covariates).detach()
         return x, z
-
-    def difference_to_modes(self, u: Tensor) -> Tensor:
-        """Difference between the latent variable U and all the modes
-
-        Args:
-            u (Tensor): Latent variables tensor
-
-        Returns:
-            Tensor: Tensor of difference to all modes
-        """
-        h = u[:, None, :] - self.rho[None, ...]
-
-        h[:, self.rho_mask] = torch.clamp(
-            h[:, self.rho_mask].abs() - self.uniform_law_radius, min=0
-        )  # Handling NA values
-
-        return h
 
     def compute_probabilities(
         self, x: Tensor, covariates: Tensor
@@ -192,13 +154,7 @@ class ScyanModule(pl.LightningModule):
         """
         u, _, ldj_sum = self(x, covariates)
 
-        h = self.difference_to_modes(u)  # size N x P x M
-
-        log_probs = (
-            -0.5 * ((h / self.hparams.prior_std) ** 2).sum(dim=-1)
-            + self.pop_constant_term
-            + self.log_pi
-        )  # size N x P
+        log_probs = self.prior.log_prob(u) + self.log_pi  # size N x P
         probs = torch.softmax(log_probs, dim=1)
 
         return probs, log_probs, ldj_sum

@@ -148,3 +148,14 @@ def _process_pop_sample(model, pop: Union[str, List[str], int, Tensor, None]):
         return _pops_to_indices(model, pop)
     else:
         return pop
+
+
+def _optional_show(f: Callable) -> Callable:
+    """Decorator that shows a matplotlib figure if the provided 'show' argument is True"""
+
+    def wrapper(*args, **kwargs):
+        f(*args, **kwargs)
+        if kwargs.get("show", True):
+            plt.show()
+
+    return wrapper
