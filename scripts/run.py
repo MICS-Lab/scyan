@@ -13,14 +13,13 @@ from sklearn.metrics import (
     silhouette_score,
     davies_bouldin_score,
 )
-import numpy as np
 
 import scyan
 from scyan.model import Scyan
 from scyan.utils import _wandb_plt_image
 
 
-@hydra.main(config_path="config", config_name="config")
+@hydra.main(config_path="../config", config_name="config")
 def main(config: DictConfig) -> float:
     """Runs scyan on a dataset specified by the config/config.yaml file.
     It can be used for optuna hyperparameter search together with Weight&Biases to monitor the model.
