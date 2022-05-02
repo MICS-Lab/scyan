@@ -6,12 +6,10 @@ log = logging.getLogger(__name__)
 
 
 class AnnotationMetrics:
-    def __init__(self, model, n_samples: int) -> None:
+    def __init__(self, model) -> None:
         super().__init__()
         self.model = model
-        self.n_samples = n_samples
-
-        log.info(f"AnnotationMetrics callback setup with n_samples={self.n_samples}")
+        log.info("AnnotationMetrics callback setup.")
 
     @torch.no_grad()
     def __call__(self) -> None:

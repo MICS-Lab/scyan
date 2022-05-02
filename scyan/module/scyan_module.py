@@ -20,8 +20,6 @@ class ScyanModule(pl.LightningModule):
         n_hidden_layers: int,
         n_layers: int,
         prior_std: float,
-        lr: float,
-        batch_size: int,
         alpha: float,
     ):
         """Module containing the core logic behind the Scyan model
@@ -40,13 +38,13 @@ class ScyanModule(pl.LightningModule):
         super().__init__()
         self.save_hyperparameters(ignore=["rho", "n_covariates"])
 
-        self.n_pop, self.n_markers = rho.shape
+        self.n_pops, self.n_markers = rho.shape
         self.register_buffer("rho", rho)
 
         self.rho_mask = self.rho.isnan()
         self.rho[self.rho_mask] = 0
 
-        self.pi_logit = nn.Parameter(torch.zeros(self.n_pop))
+        self.pi_logit = nn.Parameter(torch.zeros(self.n_pops))
 
         self.real_nvp = RealNVP(
             self.n_markers + n_covariates,
@@ -169,12 +167,8 @@ class ScyanModule(pl.LightningModule):
         Returns:
             Tensor: Contraint
         """
-        empirical_weights = probs.mean(dim=0)
-        return (
-            -self.hparams.alpha
-            / self.n_markers
-            * torch.log(empirical_weights + self.eps).sum()
-        )
+        weights = probs.mean(dim=0)
+        return -self.hparams.alpha / self.n_markers * torch.log(weights + self.eps).sum()
 
     def loss(self, x: Tensor, covariates: Tensor) -> Tensor:
         """Loss computation

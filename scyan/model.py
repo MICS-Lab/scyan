@@ -32,7 +32,6 @@ class Scyan(pl.LightningModule):
         lr: float = 1e-3,
         batch_size: int = 16384,
         alpha: float = 1.0,
-        n_samples: int = 2048,  # TODO: remove
     ):
         """Scyan model
 
@@ -47,7 +46,6 @@ class Scyan(pl.LightningModule):
             prior_std (float, optional): Standard deviation of the base distribution (H). Defaults to 0.25.
             lr (float, optional): Learning rate. Defaults to 5e-3.
             batch_size (int, optional): Batch size. Defaults to 16384.
-            n_samples (int, optional): TODO: remove. Defaults to 100.
             alpha (float, optional): Constraint term weight in the loss function. Defaults to 1.0.
         """
         super().__init__()
@@ -77,12 +75,10 @@ class Scyan(pl.LightningModule):
             n_hidden_layers,
             n_layers,
             prior_std,
-            lr,
-            batch_size,
             alpha,
         )
 
-        self.metric = AnnotationMetrics(self, n_samples)
+        self.metric = AnnotationMetrics(self)
 
         log.info(f"Initialized {self}")
 
