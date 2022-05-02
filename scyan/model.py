@@ -202,7 +202,7 @@ class Scyan(pl.LightningModule):
         populations = df.idxmax(axis=1).astype("category")
 
         if key_added:
-            self.adata.obs[key_added] = populations.values
+            self.adata.obs[key_added] = pd.Categorical(populations.values)
 
         return populations
 
@@ -219,7 +219,7 @@ class Scyan(pl.LightningModule):
 
         neigh = KNeighborsClassifier(n_neighbors=n_neighbors)
         neigh.fit(self.adata.X, self.adata.obs.scyan_pop)
-        self.adata.obs[key_added] = neigh.predict(self.adata.X)
+        self.adata.obs[key_added] = pd.Categorical(neigh.predict(self.adata.X))
 
     @torch.no_grad()
     def predict_proba(

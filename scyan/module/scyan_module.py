@@ -72,6 +72,7 @@ class ScyanModule(pl.LightningModule):
         """
         return self.real_nvp(x, covariates)
 
+    @torch.no_grad()
     def inverse(self, u: Tensor, covariates: Tensor) -> Tensor:
         """Goes through the complete flow in reverse direction
 
