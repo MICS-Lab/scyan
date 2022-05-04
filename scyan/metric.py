@@ -18,8 +18,9 @@ class AnnotationMetrics:
         # self.model.log("pi_rmse", pi_rmse, prog_bar=True)
 
         u = self.model()
-        u = u[np.random.choice(len(u), 4096, replace=False)]
-        z = torch.randint(0, self.model.module.n_pops, size=(4096,))
+        n_samples = min(4096, len(u))
+        u = u[np.random.choice(len(u), n_samples, replace=False)]
+        z = torch.randint(0, self.model.module.n_pops, size=(n_samples,))
         u_sample = self.model.module.prior.sample(z)
         mmd = self.model.module.mmd(u, u_sample)
         self.model.log("mmd", mmd, prog_bar=True)
