@@ -1,6 +1,7 @@
 import torch
 import logging
 from sklearn.metrics import accuracy_score
+import numpy as np
 
 log = logging.getLogger(__name__)
 
@@ -15,6 +16,13 @@ class AnnotationMetrics:
     def __call__(self) -> None:
         # pi_rmse = torch.sqrt(((self.model.pi_hat - self.model.module.pi) ** 2).sum())
         # self.model.log("pi_rmse", pi_rmse, prog_bar=True)
+
+        u = self.model()
+        u = u[np.random.choice(len(u), 4096, replace=False)]
+        z = torch.randint(0, self.model.module.n_pops, size=(4096,))
+        u_sample = self.model.module.prior.sample(z)
+        mmd = self.model.module.mmd(u, u_sample)
+        self.model.log("mmd", mmd, prog_bar=True)
 
         if "cell_type" in self.model.adata.obs:
             self.model.log(

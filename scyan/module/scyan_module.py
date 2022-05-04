@@ -7,6 +7,7 @@ import pytorch_lightning as pl
 
 from .real_nvp import RealNVP
 from .distribution import PriorDistribution
+from ..mmd import LossMMD
 
 
 class ScyanModule(pl.LightningModule):
@@ -57,6 +58,8 @@ class ScyanModule(pl.LightningModule):
         self.prior = PriorDistribution(
             self.rho, self.rho_mask, self.hparams.prior_std, self.n_markers
         )
+
+        self.mmd = LossMMD()
 
     def forward(self, x: Tensor, covariates: Tensor) -> Tuple[Tensor, Tensor, Tensor]:
         """Forward implementation, going through the complete flow
@@ -112,7 +115,10 @@ class ScyanModule(pl.LightningModule):
 
     @torch.no_grad()
     def sample(
-        self, n_samples: int, covariates: Tensor, z_pop: Union[int, Tensor, None] = None
+        self,
+        n_samples: int,
+        covariates: Tensor,
+        z_pop: Union[int, Tensor, None] = None,
     ) -> Tuple[Tensor, Tensor]:
         """Sample cells
 
@@ -156,7 +162,7 @@ class ScyanModule(pl.LightningModule):
         log_probs = self.prior.log_prob(u) + self.log_pi  # size N x P
         probs = torch.softmax(log_probs, dim=1)
 
-        return probs, log_probs, ldj_sum
+        return probs, log_probs, ldj_sum, u
 
     def compute_regularization(self, probs: Tensor) -> Tensor:
         """Computes the model regularization
@@ -180,7 +186,14 @@ class ScyanModule(pl.LightningModule):
         Returns:
             Tensor: Loss
         """
-        probs, log_probs, ldj_sum = self.compute_probabilities(x, covariates)
-        regularization = self.compute_regularization(probs)
+        probs, log_probs, ldj_sum, u = self.compute_probabilities(x, covariates)
+        # regularization = self.compute_regularization(probs)
 
-        return -(torch.logsumexp(log_probs, dim=1) + ldj_sum).mean() + regularization
+        z = torch.randint(0, self.n_pops, size=(len(u),))
+        u_sample = self.prior.sample(z)
+        mmd = self.mmd(u, u_sample)
+
+        return (
+            -(torch.logsumexp(log_probs, dim=1) + ldj_sum).mean()
+            + self.hparams.alpha * mmd
+        )
