@@ -262,7 +262,7 @@ class Scyan(pl.LightningModule):
     def fit(
         self,
         max_epochs: int = 100,
-        min_delta: float = 0.5,
+        min_delta: float = 1,
         patience: int = 4,
         callbacks: List[pl.Callback] = [],
         trainer: Union[pl.Trainer, None] = None,
