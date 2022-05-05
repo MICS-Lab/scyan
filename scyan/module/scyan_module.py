@@ -59,7 +59,7 @@ class ScyanModule(pl.LightningModule):
             self.rho, self.rho_mask, self.hparams.prior_std, self.n_markers
         )
 
-        self.mmd = LossMMD()
+        self.mmd = LossMMD(kernel="inverse_multiquadratic")
 
     def forward(self, x: Tensor, covariates: Tensor) -> Tuple[Tensor, Tensor, Tensor]:
         """Forward implementation, going through the complete flow
@@ -164,17 +164,22 @@ class ScyanModule(pl.LightningModule):
 
         return probs, log_probs, ldj_sum, u
 
-    def compute_regularization(self, probs: Tensor) -> Tensor:
-        """Computes the model regularization
+    def compute_mmd(self, u, x):
+        pi_clipped = self.pi.clamp(0.01).detach()
+        pi_clipped = pi_clipped / pi_clipped.sum()
 
-        Args:
-            probs (Tensor): Tensor of probabilities
+        pi_temperature = torch.log_softmax(10 * self.pi_logit / 2, dim=0).detach()
 
-        Returns:
-            Tensor: Contraint
-        """
-        weights = probs.mean(dim=0)
-        return -self.hparams.alpha / self.n_markers * torch.log(weights + self.eps).sum()
+        z = distributions.Categorical(pi_temperature).sample((len(x),))
+        # z = self.prior_z.sample(
+        #     (len(x),)
+        # )  # torch.randint(0, self.n_pops, size=(len(x),))
+
+        # x_sample, _ = self.sample(len(x), covariates=covariates, z_pop=z)
+        # return self.mmd(x, x_sample)
+
+        u_sample = self.prior.sample(z)
+        return self.mmd(u, u_sample)
 
     def loss(self, x: Tensor, covariates: Tensor) -> Tensor:
         """Loss computation
@@ -186,12 +191,8 @@ class ScyanModule(pl.LightningModule):
         Returns:
             Tensor: Loss
         """
-        probs, log_probs, ldj_sum, u = self.compute_probabilities(x, covariates)
-        # regularization = self.compute_regularization(probs)
-
-        z = torch.randint(0, self.n_pops, size=(len(u),))
-        u_sample = self.prior.sample(z)
-        mmd = self.mmd(u, u_sample)
+        _, log_probs, ldj_sum, u = self.compute_probabilities(x, covariates)
+        mmd = self.compute_mmd(u, x)
 
         return (
             -(torch.logsumexp(log_probs, dim=1) + ldj_sum).mean()

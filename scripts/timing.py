@@ -1,8 +1,6 @@
 import pytorch_lightning as pl
 import hydra
 from omegaconf import DictConfig
-from typing import List
-from pytorch_lightning import Callback, Trainer
 import numpy as np
 from collections import Counter
 from imblearn.over_sampling import SMOTE
@@ -10,7 +8,8 @@ from anndata import AnnData
 import time
 
 import scyan
-from scyan.model import Scyan
+
+from .utils import init_and_fit_model
 
 
 @hydra.main(config_path="../config", config_name="config")
@@ -33,7 +32,7 @@ def main(config: DictConfig) -> None:
     times, n_samples = [], []
 
     for n in [adata.n_obs] + [200000, 400000, 800000, 1600000]:
-        if n > 110000:
+        if n > adata.n_obs:
             sampling_strategy = dict(Counter(np.random.choice(adata.obs.cell_type, n)))
             sm = SMOTE(sampling_strategy=sampling_strategy, random_state=42)
             X, cell_type = sm.fit_resample(adata.X, adata.obs.cell_type.values)
@@ -42,33 +41,7 @@ def main(config: DictConfig) -> None:
             adata.obs["cell_type"] = cell_type
 
         start = time.perf_counter()
-        model: Scyan = hydra.utils.instantiate(
-            config.model,
-            adata=adata,
-            marker_pop_matrix=marker_pop_matrix,
-            continuous_covariate_keys=config.project.get(
-                "continuous_covariate_keys", []
-            ),
-            categorical_covariate_keys=config.project.get(
-                "categorical_covariate_keys", []
-            ),
-            _convert_="partial",
-        )
-
-        callbacks: List[Callback] = (
-            [hydra.utils.instantiate(cb_conf) for cb_conf in config.callbacks.values()]
-            if "callbacks" in config
-            else []
-        )
-
-        trainer: Trainer = hydra.utils.instantiate(
-            config.trainer, callbacks=callbacks, _convert_="partial"
-        )
-
-        ### Training
-        model.fit(trainer=trainer)
-        model.predict()
-        model.knn_predict()
+        init_and_fit_model(adata, marker_pop_matrix, config)
 
         n_samples.append(n)
         times.append(time.perf_counter() - start)

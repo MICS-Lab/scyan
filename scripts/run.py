@@ -4,19 +4,12 @@ import pytorch_lightning as pl
 from pytorch_lightning.loggers import WandbLogger
 import hydra
 from omegaconf import DictConfig, OmegaConf
-from typing import List
-from pytorch_lightning import Callback, Trainer
-from sklearn.metrics import (
-    accuracy_score,
-    cohen_kappa_score,
-    f1_score,
-    silhouette_score,
-    davies_bouldin_score,
-)
 
 import scyan
 from scyan.model import Scyan
 from scyan.utils import _wandb_plt_image
+
+from .utils import init_and_fit_model, classification_metrics, clustering_metrics
 
 
 @hydra.main(config_path="../config", config_name="config")
@@ -41,33 +34,8 @@ def main(config: DictConfig) -> float:
     )
     wandb_logger = WandbLogger()
 
-    ### Instantiate everything
     adata, marker_pop_matrix = scyan.data.load(config.project.name)
-
-    model: Scyan = hydra.utils.instantiate(
-        config.model,
-        adata=adata,
-        marker_pop_matrix=marker_pop_matrix,
-        continuous_covariate_keys=config.project.get("continuous_covariate_keys", []),
-        categorical_covariate_keys=config.project.get("categorical_covariate_keys", []),
-        _convert_="partial",
-    )
-
-    callbacks: List[Callback] = (
-        [hydra.utils.instantiate(cb_conf) for cb_conf in config.callbacks.values()]
-        if "callbacks" in config
-        else []
-    )
-
-    trainer: Trainer = hydra.utils.instantiate(
-        config.trainer, logger=wandb_logger, callbacks=callbacks, _convert_="partial"
-    )
-
-    ### Model running
-    model.fit(trainer=trainer)
-    model.predict()
-    if config.run_knn:
-        model.knn_predict()
+    model: Scyan = init_and_fit_model(adata, marker_pop_matrix, config, wandb_logger)
 
     ### Compute UMAP after training (if wandb is enabled and if the save parameters are True)
     palette = adata.uns.get("palette", None)  # Get color palette if existing
@@ -100,34 +68,31 @@ def main(config: DictConfig) -> float:
             }
         )
 
-    ### Printing model accuracy and cohen's kappa (if there are some known labels)
+    ### Printing model metrics (if we have known labels)
     if config.project.get("label", None):
         y_true = model.adata.obs[config.project.label]
         y_pred = model.adata.obs[scyan_pop_key]
 
-        accuracy = accuracy_score(y_true, y_pred)
-        f1 = f1_score(y_true, y_pred, average="macro")
-        kappa = cohen_kappa_score(y_true, y_pred)
-
         print("\nClassification metrics:")
+        accuracy, f1, kappa = classification_metrics(y_true, y_pred)
+
         print(f"Accuracy: {accuracy:.4f}\nF1-score: {f1:.4f}\nKappa: {kappa:.4f}")
         wandb.run.summary["accuracy"] = accuracy
         wandb.run.summary["f1_score"] = f1
         wandb.run.summary["kappa"] = kappa
 
+        print(f"\nClustering metrics:")
         X, labels = model.adata.X, model.adata.obs[scyan_pop_key]
-        wandb.run.summary["n_labels"] = len(set(labels.values))
 
+        wandb.run.summary["n_labels"] = len(set(labels.values))
         if config.force_all_populations and (
             len(set(labels.values)) < len(model.marker_pop_matrix.index)
         ):
             print("Warning: not all pops are present. Setting clustering metrics to 0.")
             silhouette, dbs = 0, 0
         else:
-            silhouette = silhouette_score(X, labels)
-            dbs = davies_bouldin_score(X, labels)
+            silhouette, dbs = clustering_metrics(X, labels)
 
-        print(f"\nClustering metrics:")
         print(f"Silhouette score: {silhouette:.4f}\nDavies Bouldin Score: {dbs:.4f}")
         label_penalty = len(set(labels.values)) - model.n_pops
         wandb.run.summary["silhouette_score"] = silhouette + label_penalty

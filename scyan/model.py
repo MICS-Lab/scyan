@@ -256,7 +256,7 @@ class Scyan(pl.LightningModule):
         self.dataset = AdataDataset(self.x, self.covariates)
 
         return torch.utils.data.DataLoader(
-            self.dataset, batch_size=self.hparams.batch_size
+            self.dataset, batch_size=self.hparams.batch_size, shuffle=True
         )
 
     def fit(
@@ -288,3 +288,5 @@ class Scyan(pl.LightningModule):
         )
         trainer = pl.Trainer(max_epochs=max_epochs, callbacks=[esc] + callbacks)
         trainer.fit(self)
+
+        return self

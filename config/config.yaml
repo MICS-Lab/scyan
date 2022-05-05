@@ -14,6 +14,7 @@ wandb:
 
 run_knn: false
 force_all_populations: false
+n_run_testing: 20
 
 model:
   _target_: scyan.model.Scyan
@@ -22,9 +23,9 @@ model:
   n_layers: 7
   n_hidden_layers: 7
   lr: 0.001
-  batch_size: 16384
+  batch_size: 4096
   prior_std: 0.15
-  alpha: 1
+  alpha: 100
 
 callbacks:
   early_stopping:
