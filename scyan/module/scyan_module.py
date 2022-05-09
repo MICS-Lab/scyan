@@ -180,8 +180,8 @@ class ScyanModule(pl.LightningModule):
 
         z = distributions.Categorical(pi_temperature).sample((len(x),))
 
-        x_sample = self.sample(len(x), covariates=covariates, z=z)
-        return self.mmd(x, x_sample)
+        # x_sample = self.sample(len(x), covariates=covariates, z=z)
+        # return self.mmd(x, x_sample)
 
         u_sample = self.prior.sample(z)
         return self.mmd(u, u_sample)
