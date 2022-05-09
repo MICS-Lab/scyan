@@ -60,7 +60,9 @@ class ScyanModule(pl.LightningModule):
             self.rho, self.rho_mask, self.hparams.prior_std, self.n_markers
         )
 
-        self.mmd = LossMMD(kernel="gaussian", std=kernel_std)
+        self._no_mmd = self.hparams.alpha is None or self.hparams.alpha == 0
+        if not self._no_mmd:
+            self.mmd = LossMMD(kernel="gaussian", std=kernel_std)
 
     def forward(self, x: Tensor, covariates: Tensor) -> Tuple[Tensor, Tensor, Tensor]:
         """Forward implementation, going through the complete flow
@@ -166,6 +168,9 @@ class ScyanModule(pl.LightningModule):
         return probs, log_probs, ldj_sum, u
 
     def compute_mmd(self, u, x):
+        if self._no_mmd:
+            return 0
+
         pi_temperature = torch.log_softmax(10 * self.pi_logit / 2, dim=0).detach()
 
         z = distributions.Categorical(pi_temperature).sample((len(x),))
@@ -174,10 +179,10 @@ class ScyanModule(pl.LightningModule):
         # )  # torch.randint(0, self.n_pops, size=(len(x),))
 
         # x_sample, _ = self.sample(len(x), covariates=covariates, z_pop=z)
-        # return self.mmd(x, x_sample)
+        # return self.hparams.alpha * self.mmd(x, x_sample)
 
         u_sample = self.prior.sample(z)
-        return self.mmd(u, u_sample)
+        return self.hparams.alpha * self.mmd(u, u_sample)
 
     def loss(self, x: Tensor, covariates: Tensor) -> Tensor:
         """Loss computation
@@ -190,9 +195,7 @@ class ScyanModule(pl.LightningModule):
             Tensor: Loss
         """
         _, log_probs, ldj_sum, u = self.compute_probabilities(x, covariates)
+
         mmd = self.compute_mmd(u, x)
 
-        return (
-            -(torch.logsumexp(log_probs, dim=1) + ldj_sum).mean()
-            + self.hparams.alpha * mmd
-        )
+        return -(torch.logsumexp(log_probs, dim=1) + ldj_sum).mean() + mmd

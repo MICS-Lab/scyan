@@ -81,7 +81,7 @@ class Scyan(pl.LightningModule):
         )
 
         self.metric = AnnotationMetrics(self)
-        self.__is_fitted__ = False
+        self._is_fitted = False
 
         log.info(f"Initialized {self}")
 
@@ -294,6 +294,6 @@ class Scyan(pl.LightningModule):
         trainer = pl.Trainer(max_epochs=max_epochs, callbacks=[esc] + callbacks)
         trainer.fit(self)
 
-        self.__is_fitted__ = True
+        self._is_fitted = True
 
         return self
