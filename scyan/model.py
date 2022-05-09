@@ -31,8 +31,9 @@ class Scyan(pl.LightningModule):
         prior_std: float = 0.15,
         lr: float = 1e-3,
         batch_size: int = 4096,
-        alpha: float = 1.0,
+        alpha: float = 1000,
         kernel_std: float = 0.5,
+        temperature: float = 2,
     ):
         """Scyan model
 
@@ -78,6 +79,7 @@ class Scyan(pl.LightningModule):
             prior_std,
             alpha,
             kernel_std,
+            temperature,
         )
 
         self.metric = AnnotationMetrics(self)

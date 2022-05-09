@@ -11,7 +11,8 @@ from ..mmd import LossMMD
 
 
 class ScyanModule(pl.LightningModule):
-    eps: float = 1e-20
+    eps: float = 1e-20  # For numerical stability
+    pi_logit_ratio: float = 10  # To learn pi logits faster
 
     def __init__(
         self,
@@ -23,6 +24,7 @@ class ScyanModule(pl.LightningModule):
         prior_std: float,
         alpha: float,
         kernel_std: float,
+        temperature: float,
     ):
         """Module containing the core logic behind the Scyan model
 
@@ -104,7 +106,7 @@ class ScyanModule(pl.LightningModule):
         Returns:
             Tensor: Log population weights
         """
-        return torch.log_softmax(10 * self.pi_logit, dim=0)
+        return torch.log_softmax(self.pi_logit_ratio * self.pi_logit, dim=0)
 
     @property
     def pi(self) -> Tensor:
@@ -170,7 +172,9 @@ class ScyanModule(pl.LightningModule):
         if self._no_mmd:
             return 0
 
-        pi_temperature = torch.log_softmax(10 * self.pi_logit / 2, dim=0).detach()
+        pi_temperature = torch.log_softmax(
+            self.pi_logit_ratio * self.pi_logit / self.hparams.temperature, dim=0
+        ).detach()
 
         z = distributions.Categorical(pi_temperature).sample((len(x),))
         # z = self.prior_z.sample(

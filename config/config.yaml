@@ -27,6 +27,7 @@ model:
   prior_std: 0.15
   alpha: 1000
   kernel_std: 0.5
+  temperature: 2
 
 callbacks:
   early_stopping:
