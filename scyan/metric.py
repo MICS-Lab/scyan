@@ -17,14 +17,6 @@ class AnnotationMetrics:
         # pi_rmse = torch.sqrt(((self.model.pi_hat - self.model.module.pi) ** 2).sum())
         # self.model.log("pi_rmse", pi_rmse, prog_bar=True)
 
-        u = self.model()
-        n_samples = min(4096, len(u))
-        u = u[np.random.choice(len(u), n_samples, replace=False)]
-        z = torch.randint(0, self.model.module.n_pops, size=(n_samples,))
-        u_sample = self.model.module.prior.sample(z)
-        mmd = self.model.module.mmd(u, u_sample)
-        self.model.log("mmd", mmd, prog_bar=True)
-
         if "cell_type" in self.model.adata.obs:
             self.model.log(
                 "accuracy_score",

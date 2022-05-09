@@ -1,6 +1,8 @@
 import logging
 import scanpy as sc
 
+# __version__ = "?"
+
 sc.settings.verbosity = 3
 sc.set_figure_params(facecolor="white", fontsize=10)
 

@@ -122,32 +122,34 @@ class ScyanModule(pl.LightningModule):
         self,
         n_samples: int,
         covariates: Tensor,
-        z_pop: Union[int, Tensor, None] = None,
+        z: Union[int, Tensor, None] = None,
+        return_z: bool = False,
     ) -> Tuple[Tensor, Tensor]:
         """Sample cells
 
         Args:
             n_samples (int): Number of cells to be sampled
             covariates_sample (Union[Tensor, None], optional): Sample of cobariates. Defaults to None.
-            z_pop (Union[str, List[str], int, Tensor, None], optional): Population indices. Defaults to None.
+            z (Union[str, List[str], int, Tensor, None], optional): Population indices. Defaults to None.
 
         Returns:
             Tuple[Tensor, Tensor]: Pair of (cell expressions, population)
         """
-        if z_pop is None:
+        if z is None:
             z = self.prior_z.sample((n_samples,))
-        elif isinstance(z_pop, int):
-            z = torch.full((n_samples,), z_pop)
-        elif isinstance(z_pop, torch.Tensor):
-            z = z_pop
+        elif isinstance(z, int):
+            z = torch.full((n_samples,), z)
+        elif isinstance(z, torch.Tensor):
+            pass
         else:
             raise ValueError(
-                f"z_pop has to be 'None', an 'int' or a 'torch.Tensor'. Found type {type(z_pop)}."
+                f"z has to be 'None', an 'int' or a 'torch.Tensor'. Found type {type(z)}."
             )
 
         u = self.prior.sample(z)
         x = self.inverse(u, covariates)
-        return x, z
+
+        return (x, z) if return_z else x
 
     def compute_probabilities(
         self, x: Tensor, covariates: Tensor
@@ -168,7 +170,7 @@ class ScyanModule(pl.LightningModule):
 
         return probs, log_probs, ldj_sum, u
 
-    def compute_mmd(self, u, x):
+    def compute_mmd(self, u, x, covariates):
         if self._no_mmd:
             return 0
 
@@ -177,17 +179,14 @@ class ScyanModule(pl.LightningModule):
         ).detach()
 
         z = distributions.Categorical(pi_temperature).sample((len(x),))
-        # z = self.prior_z.sample(
-        #     (len(x),)
-        # )  # torch.randint(0, self.n_pops, size=(len(x),))
 
-        # x_sample, _ = self.sample(len(x), covariates=covariates, z_pop=z)
-        # return self.hparams.alpha * self.mmd(x, x_sample)
+        # x_sample = self.sample(len(x), covariates=covariates, z=z)
+        # return self.mmd(x, x_sample)
 
         u_sample = self.prior.sample(z)
-        return self.hparams.alpha * self.mmd(u, u_sample)
+        return self.mmd(u, u_sample)
 
-    def loss(self, x: Tensor, covariates: Tensor) -> Tensor:
+    def losses(self, x: Tensor, covariates: Tensor) -> Tensor:
         """Loss computation
 
         Args:
@@ -198,7 +197,8 @@ class ScyanModule(pl.LightningModule):
             Tensor: Loss
         """
         _, log_probs, ldj_sum, u = self.compute_probabilities(x, covariates)
+        kl = -(torch.logsumexp(log_probs, dim=1) + ldj_sum).mean()
 
-        mmd = self.compute_mmd(u, x)
+        mmd = self.hparams.alpha * self.compute_mmd(u, x, covariates)
 
-        return -(torch.logsumexp(log_probs, dim=1) + ldj_sum).mean() + mmd
+        return kl, mmd

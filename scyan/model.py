@@ -151,6 +151,7 @@ class Scyan(pl.LightningModule):
         n_samples: int,
         covariates_sample: Union[Tensor, None] = None,
         pop: Union[str, List[str], int, Tensor, None] = None,
+        return_z: bool = False,
     ) -> Tuple[Tensor, Tensor]:
         """Sample cells
 
@@ -162,7 +163,7 @@ class Scyan(pl.LightningModule):
         Returns:
             Tuple[Tensor, Tensor]: Pair of (cell expressions, population)
         """
-        z_pop = _process_pop_sample(self, pop)
+        z = _process_pop_sample(self, pop)
 
         if covariates_sample is None:
             indices = torch.tensor(
@@ -170,12 +171,17 @@ class Scyan(pl.LightningModule):
             )  # TODO: sample where pop
             covariates_sample = self.covariates[indices]
 
-        return self.module.sample(n_samples, covariates_sample, z_pop=z_pop)
+        return self.module.sample(n_samples, covariates_sample, z=z, return_z=return_z)
 
     def training_step(self, batch, _):
         """PyTorch lightning training_step implementation"""
-        loss = self.module.loss(*batch)
+        kl, mmd = self.module.losses(*batch)
+        loss = kl + mmd
+
+        self.log("kl", kl, on_step=True, prog_bar=True)
+        self.log("mmd", mmd, on_step=True, prog_bar=True)
         self.log("loss", loss, on_epoch=True, on_step=True)
+
         return loss
 
     def training_epoch_end(self, _):
