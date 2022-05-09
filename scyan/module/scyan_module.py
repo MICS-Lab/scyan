@@ -22,6 +22,7 @@ class ScyanModule(pl.LightningModule):
         n_layers: int,
         prior_std: float,
         alpha: float,
+        kernel_std: float,
     ):
         """Module containing the core logic behind the Scyan model
 
@@ -59,7 +60,7 @@ class ScyanModule(pl.LightningModule):
             self.rho, self.rho_mask, self.hparams.prior_std, self.n_markers
         )
 
-        self.mmd = LossMMD(kernel="inverse_multiquadratic")
+        self.mmd = LossMMD(kernel="gaussian", std=kernel_std)
 
     def forward(self, x: Tensor, covariates: Tensor) -> Tuple[Tensor, Tensor, Tensor]:
         """Forward implementation, going through the complete flow
@@ -165,9 +166,6 @@ class ScyanModule(pl.LightningModule):
         return probs, log_probs, ldj_sum, u
 
     def compute_mmd(self, u, x):
-        pi_clipped = self.pi.clamp(0.01).detach()
-        pi_clipped = pi_clipped / pi_clipped.sum()
-
         pi_temperature = torch.log_softmax(10 * self.pi_logit / 2, dim=0).detach()
 
         z = distributions.Categorical(pi_temperature).sample((len(x),))

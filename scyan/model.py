@@ -30,8 +30,9 @@ class Scyan(pl.LightningModule):
         n_layers: int = 7,
         prior_std: float = 0.15,
         lr: float = 1e-3,
-        batch_size: int = 16384,
+        batch_size: int = 4096,
         alpha: float = 1.0,
+        kernel_std: float = 0.5,
     ):
         """Scyan model
 
@@ -76,9 +77,11 @@ class Scyan(pl.LightningModule):
             n_layers,
             prior_std,
             alpha,
+            kernel_std,
         )
 
         self.metric = AnnotationMetrics(self)
+        self.__is_fitted__ = False
 
         log.info(f"Initialized {self}")
 
@@ -276,6 +279,8 @@ class Scyan(pl.LightningModule):
             callbacks (List[pl.Callback], optional): Additionnal Pytorch Lightning callbacks.
             trainer (Union[pl.Trainer, None], optional): Pytorch Lightning Trainer. Warning: it will replace the default Trainer and all ther arguments will be unused. Defaults to None.
         """
+        log.info(f"Training scyan with the following hyperparameters:\n{self.hparams}\n")
+
         if trainer is not None:
             trainer.fit(self)
             return
@@ -288,5 +293,7 @@ class Scyan(pl.LightningModule):
         )
         trainer = pl.Trainer(max_epochs=max_epochs, callbacks=[esc] + callbacks)
         trainer.fit(self)
+
+        self.__is_fitted__ = True
 
         return self
