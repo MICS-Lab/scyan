@@ -1,4 +1,5 @@
 import pytest
+import torch
 
 import scyan
 from scyan import Scyan
@@ -14,6 +15,13 @@ def test_init_model(dataset):
 def short_model():
     adata, marker_pop_matrix = scyan.data.load("aml", size="short")
     return Scyan(adata, marker_pop_matrix)
+
+
+def test_inverse(short_model: Scyan):
+    u = short_model()
+    x = short_model.module.inverse(u, short_model.covariates)
+
+    assert torch.isclose(x, short_model.x).all()
 
 
 @pytest.fixture
