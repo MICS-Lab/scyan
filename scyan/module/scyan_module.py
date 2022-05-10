@@ -11,8 +11,8 @@ from ..mmd import LossMMD
 
 
 class ScyanModule(pl.LightningModule):
-    eps: float = 1e-20  # For numerical stability
     pi_logit_ratio: float = 10  # To learn pi logits faster
+    x0_ratio = 20  # To learn x0 faster
 
     def __init__(
         self,
@@ -65,6 +65,12 @@ class ScyanModule(pl.LightningModule):
         self._no_mmd = self.hparams.alpha is None or self.hparams.alpha == 0
         self.mmd = LossMMD(kernel="gaussian", std=kernel_std)
 
+        self.x0_params = nn.Parameter(torch.zeros(self.n_markers))
+
+    @property
+    def x0(self):
+        return self.x0_ratio * self.x0_params
+
     def forward(self, x: Tensor, covariates: Tensor) -> Tuple[Tensor, Tensor, Tensor]:
         """Forward implementation, going through the complete flow
 
@@ -75,7 +81,7 @@ class ScyanModule(pl.LightningModule):
         Returns:
             Tuple[Tensor, Tensor, Tensor]: Tuple of (outputs, covariates, lod_det_jacobian sum)
         """
-        return self.real_nvp(x, covariates)
+        return self.real_nvp(x - self.x0, covariates)
 
     @torch.no_grad()
     def inverse(self, u: Tensor, covariates: Tensor) -> Tensor:
@@ -88,7 +94,7 @@ class ScyanModule(pl.LightningModule):
         Returns:
             Tensor: Outputs
         """
-        return self.real_nvp.inverse(u, covariates)
+        return self.real_nvp.inverse(u, covariates) + self.x0
 
     @property
     def prior_z(self) -> distributions.Distribution:
