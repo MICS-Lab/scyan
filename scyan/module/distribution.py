@@ -23,14 +23,13 @@ class PriorDistribution(pl.LightningModule):
     def compute_constant_terms(self):
         self.uniform_law_radius = 1 - self.prior_std
 
-        count_markers_na = self.rho_mask.sum(dim=1)
-        gamma = (
+        _gamma = (
             self.uniform_law_radius
             / self.prior_std
             * torch.sqrt(2 / torch.tensor(torch.pi))
         )
-        gamma = 1 / (1 + gamma)
-        self.na_constant_term = count_markers_na * torch.log(gamma)
+        self.gamma = 1 / (1 + _gamma)
+        self.na_constant_term = self.rho_mask.sum(dim=1) * torch.log(self.gamma)
 
     def difference_to_modes(self, u: Tensor) -> Tensor:
         """Difference between the latent variable U and all the modes
@@ -52,7 +51,7 @@ class PriorDistribution(pl.LightningModule):
     def log_prob_per_marker(self, u: Tensor):
         diff = self.difference_to_modes(u)  # size N x P x M
 
-        return self.normal.log_prob(diff) + self.na_constant_term[:, None]
+        return self.normal.log_prob(diff) + self.rho_mask * torch.log(self.gamma)
 
     def log_prob(self, u: Tensor):
         diff = self.difference_to_modes(u)  # size N x P x M
