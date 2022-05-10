@@ -12,7 +12,6 @@ from ..mmd import LossMMD
 
 class ScyanModule(pl.LightningModule):
     pi_logit_ratio: float = 10  # To learn pi logits faster
-    x0_ratio = 20  # To learn x0 faster
 
     def __init__(
         self,
@@ -65,12 +64,6 @@ class ScyanModule(pl.LightningModule):
         self._no_mmd = self.hparams.alpha is None or self.hparams.alpha == 0
         self.mmd = LossMMD(kernel="gaussian", std=kernel_std)
 
-        self.x0_params = nn.Parameter(torch.zeros(self.n_markers))
-
-    @property
-    def x0(self):
-        return self.x0_ratio * self.x0_params
-
     def forward(self, x: Tensor, covariates: Tensor) -> Tuple[Tensor, Tensor, Tensor]:
         """Forward implementation, going through the complete flow
 
@@ -81,7 +74,7 @@ class ScyanModule(pl.LightningModule):
         Returns:
             Tuple[Tensor, Tensor, Tensor]: Tuple of (outputs, covariates, lod_det_jacobian sum)
         """
-        return self.real_nvp(x - self.x0, covariates)
+        return self.real_nvp(x, covariates)
 
     @torch.no_grad()
     def inverse(self, u: Tensor, covariates: Tensor) -> Tensor:
@@ -94,7 +87,7 @@ class ScyanModule(pl.LightningModule):
         Returns:
             Tensor: Outputs
         """
-        return self.real_nvp.inverse(u, covariates) + self.x0
+        return self.real_nvp.inverse(u, covariates)
 
     @property
     def prior_z(self) -> distributions.Distribution:
@@ -176,7 +169,7 @@ class ScyanModule(pl.LightningModule):
 
         return probs, log_probs, ldj_sum, u
 
-    def compute_mmd(self, u, x, covariates):
+    def compute_mmd(self, u):
         if self._no_mmd:
             return 0
 
@@ -184,10 +177,7 @@ class ScyanModule(pl.LightningModule):
             self.pi_logit_ratio * self.pi_logit / self.hparams.temperature, dim=0
         ).detach()
 
-        z = distributions.Categorical(pi_temperature).sample((len(x),))
-
-        # x_sample = self.sample(len(x), covariates=covariates, z=z)
-        # return self.mmd(x, x_sample)
+        z = distributions.Categorical(pi_temperature).sample((len(u),))
 
         u_sample = self.prior.sample(z)
         return self.mmd(u, u_sample)
@@ -205,6 +195,6 @@ class ScyanModule(pl.LightningModule):
         _, log_probs, ldj_sum, u = self.compute_probabilities(x, covariates)
         kl = -(torch.logsumexp(log_probs, dim=1) + ldj_sum).mean()
 
-        mmd = self.hparams.alpha * self.compute_mmd(u, x, covariates)
+        mmd = self.hparams.alpha * self.compute_mmd(u[:4096])  # TODO: param
 
         return kl, mmd
