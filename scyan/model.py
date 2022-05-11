@@ -241,10 +241,16 @@ class Scyan(pl.LightningModule):
         Returns:
             pd.DataFrame: Dataframe of probabilities for each population
         """
-        predictions, *_ = self.module.compute_probabilities(
+        u, *_ = self.module(
             self.x if x is None else x,
             self.covariates if covariates is None else covariates,
         )
+        predictions = torch.softmax(self.module.prior.log_prob(u), dim=1)
+
+        # predictions, *_ = self.module.compute_probabilities(
+        #     self.x if x is None else x,
+        #     self.covariates if covariates is None else covariates,
+        # ) # TODO: decide which
         return pd.DataFrame(predictions.numpy(), columns=self.marker_pop_matrix.index)
 
     @property
