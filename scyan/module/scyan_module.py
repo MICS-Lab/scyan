@@ -173,7 +173,7 @@ class ScyanModule(pl.LightningModule):
         if self._no_mmd:
             return 0
 
-        pi_temperature = torch.log_softmax(
+        pi_temperature = torch.softmax(
             self.pi_logit_ratio * self.pi_logit / self.hparams.temperature, dim=0
         ).detach()
 
@@ -193,7 +193,14 @@ class ScyanModule(pl.LightningModule):
             Tensor: Loss
         """
         _, log_probs, ldj_sum, u = self.compute_probabilities(x, covariates)
-        kl = -(torch.logsumexp(log_probs, dim=1) + ldj_sum).mean()
+
+        inv_pi_temperature = (
+            1 / torch.softmax(self.pi_logit_ratio * self.pi_logit / 1.5, dim=0).detach()
+        )  # TODO: param
+        pop_weight = inv_pi_temperature / inv_pi_temperature.mean()
+        cell_weight = pop_weight[log_probs.argmax(dim=1)]
+
+        kl = -(cell_weight * (torch.logsumexp(log_probs, dim=1) + ldj_sum)).mean()
 
         mmd = self.hparams.alpha * self.compute_mmd(u[:4096])  # TODO: param
 
