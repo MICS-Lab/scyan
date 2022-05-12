@@ -9,9 +9,8 @@ These scripts are designed to be used together with Hydra and Weight & Biases.
 
 ## Scripts available
 
-1. `run.py`: runs Scyan, with the possibility of hyperparameter search with Hydra and Optuna.
+1. `run.py`: runs Scyan, with the possibility of hyperparameter search with Hydra and Optuna (over multiple run with a different seed).
 2. `timing.py`: used to time Scyan on different dataset sizes.
-3. `testing.py`: tests Scyan stability over multiple run with a different seed.
 
 ## Usage
 

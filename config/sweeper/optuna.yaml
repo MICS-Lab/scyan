@@ -3,7 +3,7 @@
 defaults:
   - override /hydra/sweeper: optuna
 
-optimized_metric: silhouette_score
+optimized_metric: Penalized Silhouette
 
 hydra:
   sweeper:
