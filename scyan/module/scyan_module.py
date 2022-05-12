@@ -25,6 +25,7 @@ class ScyanModule(pl.LightningModule):
         kernel_std: float,
         temperature_mmd: float,
         temp_lr_weights: float,
+        mmd_max_samples: int,
     ):
         """Module containing the core logic behind the Scyan model
 
@@ -200,6 +201,8 @@ class ScyanModule(pl.LightningModule):
         cell_weights = pop_weights[log_probs.argmax(dim=1)]
 
         kl = -(cell_weights * (torch.logsumexp(log_probs, dim=1) + ldj_sum)).mean()
-        weighted_mmd = self.hparams.alpha * self.compute_mmd(u[:4096])  # TODO: param
+        weighted_mmd = self.hparams.alpha * self.compute_mmd(
+            u[: self.hparams.mmd_max_samples]
+        )
 
         return kl, weighted_mmd

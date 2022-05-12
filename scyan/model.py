@@ -30,11 +30,12 @@ class Scyan(pl.LightningModule):
         n_layers: int = 7,
         prior_std: float = 0.15,
         lr: float = 1e-3,
-        batch_size: int = 4096,
+        batch_size: int = 16384,
         alpha: float = 1000,
         kernel_std: float = 0.5,
         temperature_mmd: float = 2,
         temp_lr_weights: float = 1.5,
+        mmd_max_samples: int = 4096,
     ):
         """Scyan model
 
@@ -83,6 +84,7 @@ class Scyan(pl.LightningModule):
             kernel_std,
             temperature_mmd,
             temp_lr_weights,
+            mmd_max_samples,
         )
 
         log.info(f"Initialized {self}")
