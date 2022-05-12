@@ -1,5 +1,5 @@
 import torch
-from torch import Tensor
+from torch import Tensor, nn
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from anndata import AnnData
@@ -16,6 +16,11 @@ from .data import AdataDataset
 from .utils import _process_pop_sample
 
 log = logging.getLogger(__name__)
+
+
+def weights_init(m):
+    if isinstance(m, nn.Linear):
+        nn.init.xavier_normal_(m.weight.data)
 
 
 class Scyan(pl.LightningModule):
@@ -87,6 +92,7 @@ class Scyan(pl.LightningModule):
             mmd_max_samples,
         )
 
+        self.apply(weights_init)
         log.info(f"Initialized {self}")
 
     def __repr__(self) -> str:
