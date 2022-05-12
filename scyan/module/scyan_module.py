@@ -23,7 +23,8 @@ class ScyanModule(pl.LightningModule):
         prior_std: float,
         alpha: float,
         kernel_std: float,
-        temperature: float,
+        temperature_mmd: float,
+        temp_lr_weights: float,
     ):
         """Module containing the core logic behind the Scyan model
 
@@ -116,6 +117,9 @@ class ScyanModule(pl.LightningModule):
         """
         return torch.exp(self.log_pi)
 
+    def pi_temperature(self, T):
+        return torch.softmax(self.pi_logit_ratio * self.pi_logit / T, dim=0).detach()
+
     @torch.no_grad()
     def sample(
         self,
@@ -173,10 +177,7 @@ class ScyanModule(pl.LightningModule):
         if self._no_mmd:
             return 0
 
-        pi_temperature = torch.softmax(
-            self.pi_logit_ratio * self.pi_logit / self.hparams.temperature, dim=0
-        ).detach()
-
+        pi_temperature = self.pi_temperature(self.hparams.temperature_mmd)
         z = distributions.Categorical(pi_temperature).sample((len(u),))
 
         u_sample = self.prior.sample(z)
@@ -194,14 +195,11 @@ class ScyanModule(pl.LightningModule):
         """
         _, log_probs, ldj_sum, u = self.compute_probabilities(x, covariates)
 
-        inv_pi_temperature = (
-            1 / torch.softmax(self.pi_logit_ratio * self.pi_logit / 1.5, dim=0).detach()
-        )  # TODO: param
-        pop_weight = inv_pi_temperature / inv_pi_temperature.mean()
-        cell_weight = pop_weight[log_probs.argmax(dim=1)]
+        inv_pi_temperature = 1 / self.pi_temperature(self.hparams.temp_lr_weights)
+        pop_weights = inv_pi_temperature / inv_pi_temperature.mean()
+        cell_weights = pop_weights[log_probs.argmax(dim=1)]
 
-        kl = -(cell_weight * (torch.logsumexp(log_probs, dim=1) + ldj_sum)).mean()
+        kl = -(cell_weights * (torch.logsumexp(log_probs, dim=1) + ldj_sum)).mean()
+        weighted_mmd = self.hparams.alpha * self.compute_mmd(u[:4096])  # TODO: param
 
-        mmd = self.hparams.alpha * self.compute_mmd(u[:4096])  # TODO: param
-
-        return kl, mmd
+        return kl, weighted_mmd

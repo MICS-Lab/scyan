@@ -8,10 +8,10 @@ from typing import Union, Tuple, List
 import numpy as np
 import random
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score
 import logging
 
 from .module import ScyanModule
-from .metric import AnnotationMetrics
 from .data import AdataDataset
 from .utils import _process_pop_sample
 
@@ -33,7 +33,8 @@ class Scyan(pl.LightningModule):
         batch_size: int = 4096,
         alpha: float = 1000,
         kernel_std: float = 0.5,
-        temperature: float = 2,
+        temperature_mmd: float = 2,
+        temp_lr_weights: float = 1.5,
     ):
         """Scyan model
 
@@ -58,6 +59,7 @@ class Scyan(pl.LightningModule):
         self.continuous_covariate_keys = list(continuous_covariate_keys)
         self.categorical_covariate_keys = list(categorical_covariate_keys)
         self.n_pops = len(self.marker_pop_matrix.index)
+        self._is_fitted = False
 
         self.save_hyperparameters(
             ignore=[
@@ -79,11 +81,9 @@ class Scyan(pl.LightningModule):
             prior_std,
             alpha,
             kernel_std,
-            temperature,
+            temperature_mmd,
+            temp_lr_weights,
         )
-
-        self.metric = AnnotationMetrics(self)
-        self._is_fitted = False
 
         log.info(f"Initialized {self}")
 
@@ -175,18 +175,26 @@ class Scyan(pl.LightningModule):
 
     def training_step(self, batch, _):
         """PyTorch lightning training_step implementation"""
-        kl, mmd = self.module.losses(*batch)
-        loss = kl + mmd
+        kl, weighted_mmd = self.module.losses(*batch)
+        loss = kl + weighted_mmd
 
         self.log("kl", kl, on_step=True, prog_bar=True)
-        self.log("mmd", mmd, on_step=True, prog_bar=True)
+        self.log("mmd", weighted_mmd, on_step=True, prog_bar=True)
         self.log("loss", loss, on_epoch=True, on_step=True)
 
         return loss
 
     def training_epoch_end(self, _):
         """PyTorch lightning training_epoch_end implementation"""
-        self.metric()
+        if "cell_type" in self.adata.obs:
+            self.log(
+                "accuracy_score",
+                accuracy_score(
+                    self.adata.obs.cell_type,
+                    self.predict(key_added=None).values,
+                ),
+                prog_bar=True,
+            )
 
     @torch.no_grad()
     def predict(
@@ -212,21 +220,6 @@ class Scyan(pl.LightningModule):
             self.adata.obs[key_added] = pd.Categorical(populations.values)
 
         return populations
-
-    def knn_predict(self, n_neighbors: int = 64, key_added: str = "scyan_knn_pop"):
-        """Model k-neirest-neighbors predictions
-
-        Args:
-            n_neighbors (int, optional): Number of neirest neighbors. Defaults to 64.
-            key_added (str, optional): Key added to model.adata.obs. Defaults to "scyan_knn_pop".
-        """
-        assert (
-            "scyan_pop" in self.adata.obs
-        ), "Key scyan_pop must be in model.adata.obs - Have you run model.predict before?"
-
-        neigh = KNeighborsClassifier(n_neighbors=n_neighbors)
-        neigh.fit(self.adata.X, self.adata.obs.scyan_pop)
-        self.adata.obs[key_added] = pd.Categorical(neigh.predict(self.adata.X))
 
     @torch.no_grad()
     def predict_proba(

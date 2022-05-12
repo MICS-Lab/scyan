@@ -39,7 +39,7 @@ def main(config: DictConfig) -> float:
 
     ### Compute UMAP after training (if wandb is enabled and if the save parameters are True)
     palette = adata.uns.get("palette", None)  # Get color palette if existing
-    scyan_pop_key = "scyan_knn_pop" if config.run_knn else "scyan_pop"
+    scyan_pop_key = "scyan_pop"
 
     if config.wandb.mode != "disabled" and config.wandb.save_umap:
         wandb.log(

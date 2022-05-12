@@ -29,7 +29,7 @@ def kde_per_population(
     Args:
         model (Scyan): Scyan model
         where (ArrayLike): Array where cells have to be considered.
-        cell_type_key (str): Key that gets the cell_type, e.g. 'scyan_knn_pop'
+        cell_type_key (str): Key that gets the cell_type, e.g. 'scyan_pop'
         markers (Union[List[str], None], optional): List of markers to consider. None means all markers being considered. Defaults to None.
         ncols (int, optional): Number of columns to be displayed. Defaults to 4.
         hue_name (str, optional): Hue name. Defaults to "Population".

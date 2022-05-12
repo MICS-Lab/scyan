@@ -21,7 +21,7 @@ def test_inverse(short_model: Scyan):
     u = short_model()
     x = short_model.module.inverse(u, short_model.covariates)
 
-    assert torch.isclose(x, short_model.x).all()
+    assert torch.isclose(x, short_model.x, atol=1e-6).all()
 
 
 @pytest.fixture
@@ -34,10 +34,6 @@ def test_run_model(short_model: Scyan):
 def test_predict_model(test_run_model: Scyan):
     test_run_model.predict()
     return test_run_model
-
-
-def test_knn_predict(test_predict_model: Scyan):
-    test_predict_model.knn_predict(n_neighbors=4)
 
 
 def test_sample(test_run_model: Scyan):

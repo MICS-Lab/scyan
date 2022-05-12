@@ -37,8 +37,6 @@ def init_and_fit_model(adata, marker_pop_matrix, config, wandb_logger=None):
 
     model.fit(trainer=trainer)
     model.predict()
-    if config.run_knn:
-        model.knn_predict()
 
     return model
 

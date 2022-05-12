@@ -41,7 +41,7 @@ def main(config: DictConfig) -> float:
         model: Scyan = init_and_fit_model(adata, marker_pop_matrix, config, wandb_logger)
 
         y_true = model.adata.obs[config.project.label]
-        y_pred = model.adata.obs["scyan_knn_pop" if config.run_knn else "scyan_pop"]
+        y_pred = model.adata.obs["scyan_pop"]
 
         accuracy, f1, kappa = classification_metrics(y_true, y_pred)
 

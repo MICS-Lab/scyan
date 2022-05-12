@@ -12,7 +12,6 @@ wandb:
   save_umap: false
   save_umap_latent_space: false
 
-run_knn: false
 force_all_populations: false
 n_run_testing: 20
 
@@ -27,7 +26,8 @@ model:
   prior_std: 0.15
   alpha: 1000
   kernel_std: 0.5
-  temperature: 2
+  temperature_mmd: 2
+  temp_lr_weights: 1.5
 
 callbacks:
   early_stopping:
