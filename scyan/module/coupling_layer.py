@@ -24,24 +24,18 @@ class CouplingLayer(pl.LightningModule):
             mask (Tensor): Mask used to separate x into (x1, x2)
         """
         super().__init__()
-        # self.sfun = nn.Sequential(
-        #     nn.Linear(input_size, hidden_size),
-        #     nn.ReLU(inplace=True),
-        #     *self._hidden_layers(hidden_size, n_hidden_layers),
-        #     nn.Linear(hidden_size, output_size),
-        #     nn.Tanh(),
-        # )
-        # self.tfun = nn.Sequential(
-        #     nn.Linear(input_size, hidden_size),
-        #     nn.ReLU(inplace=True),
-        #     *self._hidden_layers(hidden_size, n_hidden_layers),
-        #     nn.Linear(hidden_size, output_size),
-        # )
-        self.fun = nn.Sequential(
+        self.sfun = nn.Sequential(
             nn.Linear(input_size, hidden_size),
             nn.ReLU(inplace=True),
             *self._hidden_layers(hidden_size, n_hidden_layers),
-            nn.Linear(hidden_size, 2 * output_size),
+            nn.Linear(hidden_size, output_size),
+            nn.Tanh(),
+        )
+        self.tfun = nn.Sequential(
+            nn.Linear(input_size, hidden_size),
+            nn.ReLU(inplace=True),
+            *self._hidden_layers(hidden_size, n_hidden_layers),
+            nn.Linear(hidden_size, output_size),
         )
         self.register_buffer("mask", mask)
 
@@ -68,10 +62,8 @@ class CouplingLayer(pl.LightningModule):
         x_m = x * self.mask
         st_input = torch.cat([x_m, covariates], dim=1)
 
-        s_out, t_out = self.fun(st_input).chunk(2, dim=1)
-        s_out = torch.tanh(s_out)
-        # s_out = self.sfun(st_input)
-        # t_out = self.tfun(st_input)
+        s_out = self.sfun(st_input)
+        t_out = self.tfun(st_input)
 
         y = x_m + (1 - self.mask) * (x * torch.exp(s_out) + t_out)
         ldj_sum = ldj_sum + s_out.sum(dim=1) if ldj_sum is not None else s_out.sum(dim=1)
