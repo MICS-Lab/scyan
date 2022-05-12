@@ -50,29 +50,3 @@ hydra:
       model.mmd_max_samples:
         type: categorical
         choices: [1024, 2048, 4096, 8192]
-      # model.hidden_size:
-      #   type: categorical
-      #   choices: [16, 32]
-      # model.n_layers:
-      #   type: int
-      #   low: 5
-      #   high: 8
-      # model.n_hidden_layers:
-      #   type: int
-      #   low: 5
-      #   high: 8
-      # model.lr:
-      #   type: float
-      #   low: 0.0005
-      #   high: 0.002
-      #   log: true
-      # model.alpha:
-      #   type: float
-      #   low: 0.01
-      #   high: 100
-      #   log: true
-      # model.prior_std:
-      #   type: float
-      #   low: 0.1
-      #   high: 0.3
-      #   log: true
