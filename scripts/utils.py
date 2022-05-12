@@ -88,7 +88,13 @@ def compute_metrics(model, config, scyan_pop_key="scyan_pop"):
 
 
 def metric_to_optimize(all_metrics, config):
-    return np.array(all_metrics[config.optimized_metric]).mean()
+    if len(all_metrics[config.optimized_metric]):
+        return np.array(all_metrics[config.optimized_metric]).mean()
+
+    log.info(
+        f"Metric used for hyperparamsearch ({config.optimized_metric}) was not computed. Returning 0 instead."
+    )
+    return 0
 
 
 def compute_umaps(model, config, scyan_pop_key="scyan_pop"):

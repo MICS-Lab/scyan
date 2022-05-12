@@ -31,7 +31,7 @@ class LossMMD:
             )
 
     def __call__(self, x: Tensor, y: Tensor) -> Tensor:
-        xx, yy, xy = x.mm(x.T), y.mm(y.T), x.mm(y.T)  # TODO: double_grad ?
+        xx, yy, xy = x.mm(x.T), y.mm(y.T), x.mm(y.T)
 
         x2 = (x * x).sum(dim=-1)
         y2 = (y * y).sum(dim=-1)
