@@ -3,7 +3,7 @@ from torch import Tensor
 import pandas as pd
 import scanpy as sc
 from anndata import AnnData
-from typing import Union
+from typing import Union, Sized
 
 from .utils import root_path
 
@@ -25,6 +25,19 @@ class AdataDataset(torch.utils.data.Dataset):
 
     def __len__(self):
         return len(self.x)
+
+
+class RandomSampler(torch.utils.data.Sampler):
+    def __init__(self, data_source: Sized, max_samples: Union[int, None]):
+        self.data_source = data_source
+        self.n_samples = len(data_source)
+        self.max_samples = self.n_samples if max_samples is None else max_samples
+
+    def __iter__(self):
+        return iter(torch.randperm(self.n_samples)[: self.max_samples])
+
+    def __len__(self):
+        return self.max_samples
 
 
 def load(dataset: str, size: str = "default") -> Union[AnnData, pd.DataFrame]:

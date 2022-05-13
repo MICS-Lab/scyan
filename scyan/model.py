@@ -1,5 +1,6 @@
 import torch
 from torch import Tensor
+from torch.utils.data import DataLoader
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from anndata import AnnData
@@ -11,7 +12,7 @@ from sklearn.metrics import accuracy_score
 import logging
 
 from .module import ScyanModule
-from .data import AdataDataset
+from .data import AdataDataset, RandomSampler
 from .utils import _process_pop_sample
 
 log = logging.getLogger(__name__)
@@ -35,6 +36,7 @@ class Scyan(pl.LightningModule):
         temperature_mmd: float = 2,
         temp_lr_weights: float = 1.5,
         mmd_max_samples: int = 4096,
+        max_samples: Union[int, None] = None,
     ):
         """Scyan model
 
@@ -259,9 +261,12 @@ class Scyan(pl.LightningModule):
     def train_dataloader(self):
         """PyTorch lightning train_dataloader implementation"""
         self.dataset = AdataDataset(self.x, self.covariates)
+        sampler = RandomSampler(self.dataset, max_samples=self.hparams.max_samples)
 
-        return torch.utils.data.DataLoader(
-            self.dataset, batch_size=self.hparams.batch_size, shuffle=True
+        return DataLoader(
+            self.dataset,
+            batch_size=self.hparams.batch_size,
+            sampler=sampler,
         )
 
     def fit(
