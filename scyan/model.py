@@ -169,9 +169,8 @@ class Scyan(pl.LightningModule):
         z = _process_pop_sample(self, pop)
 
         if covariates_sample is None:
-            indices = torch.tensor(
-                random.sample(range(len(self.x)), n_samples)
-            )  # TODO: sample where pop
+            # TODO: sample where pop
+            indices = random.sample(range(len(self.x)), n_samples)
             covariates_sample = self.covariates[indices]
 
         return self.module.sample(n_samples, covariates_sample, z=z, return_z=return_z)
@@ -190,14 +189,19 @@ class Scyan(pl.LightningModule):
     def training_epoch_end(self, _):
         """PyTorch lightning training_epoch_end implementation"""
         if "cell_type" in self.adata.obs:
-            self.log(
-                "accuracy_score",
-                accuracy_score(
-                    self.adata.obs.cell_type,
-                    self.predict(key_added=None).values,
-                ),
-                prog_bar=True,
-            )
+            if len(self.x) > 500000:
+                indices = random.sample(range(len(self.x)), 500000)
+                x = self.x[indices]
+                covariates = self.covariates[indices]
+                labels = self.adata.obs.cell_type[indices]
+                acc = accuracy_score(
+                    labels, self.predict(x, covariates, key_added=None).values
+                )
+            else:
+                acc = accuracy_score(
+                    self.adata.obs.cell_type, self.predict(key_added=None).values
+                )
+            self.log("accuracy_score", acc, prog_bar=True)
 
     @torch.no_grad()
     def predict(
