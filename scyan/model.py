@@ -31,11 +31,11 @@ class Scyan(pl.LightningModule):
         prior_std: float = 0.15,
         lr: float = 1e-3,
         batch_size: int = 16384,
-        alpha: float = 1000,
-        kernel_std: float = 0.5,
-        temperature_mmd: float = 2,
-        temp_lr_weights: float = 1.5,
-        mmd_max_samples: int = 4096,
+        alpha: float = 20000,
+        kernel_std: float = 0.25,
+        temperature_mmd: float = 1.2,
+        temp_lr_weights: float = 8,
+        mmd_max_samples: int = 2048,
         max_samples: Union[int, None] = None,
     ):
         """Scyan model

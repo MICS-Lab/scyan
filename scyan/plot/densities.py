@@ -10,10 +10,11 @@ import matplotlib
 from scipy import stats
 
 from .. import Scyan
-from ..utils import _optional_show
+from ..utils import _optional_show, _check_population
 
 
 @_optional_show
+@_check_population
 def kde_per_population(
     model: Scyan,
     population: str,
@@ -63,6 +64,7 @@ def kde_per_population(
 
 
 @_optional_show
+@_check_population
 def latent_expressions(
     model: Scyan, population: str, obs_key: str = "scyan_pop", show: bool = True
 ):
@@ -104,6 +106,7 @@ def latent_expressions(
 
 
 @_optional_show
+@_check_population
 def pop_weighted_kde(
     model: Scyan,
     population: str,

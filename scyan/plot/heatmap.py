@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from .. import Scyan
-from ..utils import _optional_show
+from ..utils import _optional_show, _check_population
 
 
 @_optional_show
@@ -33,6 +33,7 @@ def marker_matrix_reconstruction(
 
 
 @_optional_show
+@_check_population
 def probs_per_marker(
     model: Scyan,
     population: str,

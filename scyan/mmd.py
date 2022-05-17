@@ -22,7 +22,7 @@ kernel_dict = {
 
 
 class LossMMD:
-    def __init__(self, kernel: str = "energy", **kwargs):
+    def __init__(self, kernel: str = "gaussian", **kwargs):
         if kernel in kernel_dict:
             self.kernel = kernel_dict[kernel](**kwargs)
         else:

@@ -1,5 +1,6 @@
 import logging
 import scanpy as sc
+import pytorch_lightning as pl
 
 # __version__ = "?"
 
@@ -11,4 +12,4 @@ logging.basicConfig(level=logging.INFO)
 from .model import Scyan
 from . import plot, utils, data
 
-# pl.seed_everything(0)
+pl.seed_everything(0)

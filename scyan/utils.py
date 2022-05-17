@@ -159,3 +159,20 @@ def _optional_show(f: Callable) -> Callable:
             plt.show()
 
     return wrapper
+
+
+def _check_population(f: Callable) -> Callable:
+    """Decorator that checks if the provided population exists"""
+
+    def wrapper(model, population: str, *args, obs_key="scyan_pop", **kwargs):
+        if model.adata.obs[obs_key].dtype == "category":
+            populations = model.adata.obs[obs_key].cat.categories.values
+        else:
+            populations = set(model.adata.obs[obs_key].values)
+        if population not in populations:
+            raise NameError(
+                f"Invalid population. It has to be one of {populations}, got {population}."
+            )
+        f(model, population, *args, obs_key=obs_key, **kwargs)
+
+    return wrapper
