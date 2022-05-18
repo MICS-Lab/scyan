@@ -1,3 +1,4 @@
 name: bmmc
 wandb_project_name: bmmc
 label: cell_type
+size: default

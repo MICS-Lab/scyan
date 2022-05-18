@@ -24,7 +24,10 @@ def main(config: DictConfig) -> float:
     Returns:
         float: metric chosen by the config to be optimized for hyperparameter search, e.g. the loss
     """
-    adata, marker_pop_matrix = scyan.data.load(config.project.name)
+    adata, marker_pop_matrix = scyan.data.load(
+        config.project.name, size=config.project.size
+    )
+
     all_metrics = defaultdict(list)
 
     for i in range(config.n_run):

@@ -3,3 +3,4 @@ wandb_project_name: pop
 categorical_covariate_keys:
   - batch
 label: cell_type
+size: default
