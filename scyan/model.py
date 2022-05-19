@@ -32,6 +32,7 @@ class Scyan(pl.LightningModule):
         lr: float = 1e-3,
         batch_size: int = 16384,
         alpha: float = 20000,
+        alpha2: float = 1000,
         kernel_std: float = 0.25,
         temperature_mmd: float = 1.2,
         temp_lr_weights: float = 8,
@@ -177,11 +178,13 @@ class Scyan(pl.LightningModule):
 
     def training_step(self, batch, _):
         """PyTorch lightning training_step implementation"""
-        kl, weighted_mmd = self.module.losses(*batch)
-        loss = kl + weighted_mmd
+        kl, weighted_mmd, mmd_h = self.module.losses(*batch)
+        weighted_mmd_h = self.hparams.alpha2 * mmd_h
+        loss = kl + weighted_mmd + weighted_mmd_h
 
         self.log("kl", kl, on_step=True, prog_bar=True)
         self.log("mmd", weighted_mmd, on_step=True, prog_bar=True)
+        self.log("mmd_h", weighted_mmd_h, on_step=True, prog_bar=True)
         self.log("loss", loss, on_epoch=True, on_step=True)
 
         return loss

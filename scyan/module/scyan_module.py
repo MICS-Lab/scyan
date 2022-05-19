@@ -8,6 +8,7 @@ import pytorch_lightning as pl
 from .real_nvp import RealNVP
 from .distribution import PriorDistribution
 from ..mmd import LossMMD
+from ..utils import _truncate_n_samples
 
 
 class ScyanModule(pl.LightningModule):
@@ -174,6 +175,7 @@ class ScyanModule(pl.LightningModule):
 
         return probs, log_probs, ldj_sum, u
 
+    @_truncate_n_samples
     def compute_mmd(self, u):
         if self._no_mmd:
             return 0
@@ -183,6 +185,12 @@ class ScyanModule(pl.LightningModule):
 
         u_sample = self.prior.sample(z)
         return self.mmd(u, u_sample)
+
+    @_truncate_n_samples
+    def compute_mmd_h(self, u, argmax):
+        h = self.prior.difference_to_closest_mode(u, argmax)
+        h_sample = self.prior.prior_h.sample((len(h),))
+        return self.mmd(h, h_sample)
 
     def losses(self, x: Tensor, covariates: Tensor) -> Tensor:
         """Loss computation
@@ -198,11 +206,11 @@ class ScyanModule(pl.LightningModule):
 
         inv_pi_temperature = 1 / self.pi_temperature(self.hparams.temp_lr_weights)
         pop_weights = inv_pi_temperature / inv_pi_temperature.mean()
-        cell_weights = pop_weights[log_probs.argmax(dim=1)]
+        argmax = log_probs.argmax(dim=1)
+        cell_weights = pop_weights[argmax]
 
         kl = -(cell_weights * (torch.logsumexp(log_probs, dim=1) + ldj_sum)).mean()
-        weighted_mmd = self.hparams.alpha * self.compute_mmd(
-            u[: self.hparams.mmd_max_samples]
-        )
+        weighted_mmd = self.hparams.alpha * self.compute_mmd(u)
+        mmd_h = self.compute_mmd_h(u, argmax)
 
-        return kl, weighted_mmd
+        return kl, weighted_mmd, mmd_h

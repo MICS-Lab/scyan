@@ -31,6 +31,15 @@ class PriorDistribution(pl.LightningModule):
         self.gamma = 1 / (1 + _gamma)
         self.na_constant_term = self.rho_mask.sum(dim=1) * torch.log(self.gamma)
 
+    def clamp_nan_values(self, x: Tensor) -> Tensor:
+        return torch.clamp(x.abs() - self.uniform_law_radius, min=0)
+
+    def difference_to_closest_mode(self, u: Tensor, argmax: Tensor) -> Tensor:
+        diff = u - self.rho[argmax]
+        diff[self.rho_mask[argmax]] = self.clamp_nan_values(diff[self.rho_mask[argmax]])
+
+        return diff
+
     def difference_to_modes(self, u: Tensor) -> Tensor:
         """Difference between the latent variable U and all the modes
 
@@ -41,10 +50,7 @@ class PriorDistribution(pl.LightningModule):
             Tensor: Tensor of difference to all modes
         """
         diff = u[:, None, :] - self.rho[None, ...]
-
-        diff[:, self.rho_mask] = torch.clamp(
-            diff[:, self.rho_mask].abs() - self.uniform_law_radius, min=0
-        )  # Handling NA values
+        diff[:, self.rho_mask] = self.clamp_nan_values(diff[:, self.rho_mask])
 
         return diff
 
