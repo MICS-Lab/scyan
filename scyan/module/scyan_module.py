@@ -192,7 +192,9 @@ class ScyanModule(pl.LightningModule):
         assert n_samples >= 1000, "n_samples has to be >= 1000"
         return self.mmd(u_ref[:n_samples], u_other[:n_samples])
 
-    def losses(self, x: Tensor, covariates: Tensor, batch: Tensor, ref: int) -> Tensor:
+    def losses(
+        self, x: Tensor, covariates: Tensor, batch: Tensor, ref: Union[int, None]
+    ) -> Tensor:
         """Loss computation
 
         Args:
@@ -213,11 +215,16 @@ class ScyanModule(pl.LightningModule):
             u[: self.hparams.mmd_max_samples]
         )
 
-        u_ref = u[batch == ref]
-        u_others = [u[batch == other] for other in set(batch.tolist()) if other != ref]
+        if ref is not None:
+            u_ref = u[batch == ref]
+            u_others = [
+                u[batch == other] for other in set(batch.tolist()) if other != ref
+            ]
 
-        batch_mmd = torch.stack(
-            [self.batch_mmd(u_ref, u_other) for u_other in u_others]
-        ).sum()
+            batch_mmd = torch.stack(
+                [self.batch_mmd(u_ref, u_other) for u_other in u_others]
+            ).sum()
+        else:
+            batch_mmd = 0
 
         return kl, weighted_mmd, batch_mmd
