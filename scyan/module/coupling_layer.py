@@ -66,7 +66,8 @@ class CouplingLayer(pl.LightningModule):
         t_out = self.tfun(st_input)
 
         y = x_m + (1 - self.mask) * (x * torch.exp(s_out) + t_out)
-        ldj_sum = ldj_sum + s_out.sum(dim=1) if ldj_sum is not None else s_out.sum(dim=1)
+        ldj = (s_out * (1 - self.mask)).sum(dim=1)
+        ldj_sum = ldj_sum + ldj if ldj_sum is not None else ldj
 
         return y, covariates, ldj_sum
 
