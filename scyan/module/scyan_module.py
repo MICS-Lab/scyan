@@ -8,6 +8,7 @@ import pytorch_lightning as pl
 from .real_nvp import RealNVP
 from .distribution import PriorDistribution
 from ..mmd import LossMMD
+from ..utils import _truncate_n_samples
 
 
 class ScyanModule(pl.LightningModule):
@@ -174,6 +175,7 @@ class ScyanModule(pl.LightningModule):
 
         return probs, log_probs, ldj_sum, u
 
+    @_truncate_n_samples
     def compute_mmd(self, u):
         if self._no_mmd:
             return 0

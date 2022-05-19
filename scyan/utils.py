@@ -176,3 +176,11 @@ def _check_population(f: Callable) -> Callable:
         f(model, population, *args, obs_key=obs_key, **kwargs)
 
     return wrapper
+
+
+def _truncate_n_samples(f: Callable) -> Callable:
+    def wrapper(self, *tensors):
+        max_samples = self.hparams.mmd_max_samples
+        return f(self, *[tensor[:max_samples] for tensor in tensors])
+
+    return wrapper
