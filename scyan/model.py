@@ -33,7 +33,7 @@ class Scyan(pl.LightningModule):
         batch_size: int = 16384,
         alpha: float = 20000,
         kernel_std: float = 0.25,
-        temperature_mmd: float = 1.2,
+        temperature_mmd: float = 1.5,
         temp_lr_weights: float = 8,
         mmd_max_samples: int = 2048,
         max_samples: Union[int, None] = None,
