@@ -32,11 +32,14 @@ class Scyan(pl.LightningModule):
         lr: float = 1e-3,
         batch_size: int = 16384,
         alpha: float = 20000,
+        alpha_batch_effect: float = 1000,
         kernel_std: float = 0.25,
         temperature_mmd: float = 1.2,
         temp_lr_weights: float = 8,
         mmd_max_samples: int = 2048,
         max_samples: Union[int, None] = None,
+        batch_key: str = "batch",
+        batch_ref: Union[str, int, None] = None,
     ):
         """Scyan model
 
@@ -140,6 +143,13 @@ class Scyan(pl.LightningModule):
             ),
         )
 
+        batch = (
+            torch.tensor(self.adata.obs[self.hparams.batch_key].astype(int).values)
+            if self.hparams.batch_key
+            else torch.empty(self.adata.n_obs)
+        )
+        self.register_buffer("batch", batch)
+
     def forward(self) -> Tensor:
         """Model forward function
 
@@ -175,13 +185,15 @@ class Scyan(pl.LightningModule):
 
         return self.module.sample(n_samples, covariates_sample, z=z, return_z=return_z)
 
-    def training_step(self, batch, _):
+    def training_step(self, data, _):
         """PyTorch lightning training_step implementation"""
-        kl, weighted_mmd = self.module.losses(*batch)
-        loss = kl + weighted_mmd
+        kl, weighted_mmd, batch_mmd = self.module.losses(*data, self.hparams.batch_ref)
+        batch_mmd = self.hparams.alpha_batch_effect * batch_mmd
+        loss = kl + weighted_mmd + batch_mmd
 
         self.log("kl", kl, on_step=True, prog_bar=True)
         self.log("mmd", weighted_mmd, on_step=True, prog_bar=True)
+        self.log("batch_mmd", batch_mmd, on_step=True, prog_bar=True)
         self.log("loss", loss, on_epoch=True, on_step=True)
 
         return loss
@@ -264,7 +276,7 @@ class Scyan(pl.LightningModule):
 
     def train_dataloader(self):
         """PyTorch lightning train_dataloader implementation"""
-        self.dataset = AdataDataset(self.x, self.covariates)
+        self.dataset = AdataDataset(self.x, self.covariates, self.batch)
         sampler = RandomSampler(self.dataset, max_samples=self.hparams.max_samples)
 
         return DataLoader(

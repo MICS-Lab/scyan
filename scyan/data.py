@@ -9,7 +9,7 @@ from .utils import root_path
 
 
 class AdataDataset(torch.utils.data.Dataset):
-    def __init__(self, x: Tensor, covariates: Tensor):
+    def __init__(self, x: Tensor, covariates: Tensor, batch: Tensor):
         """PyTorch dataset
 
         Args:
@@ -19,9 +19,10 @@ class AdataDataset(torch.utils.data.Dataset):
         super().__init__()
         self.x = x
         self.covariates = covariates
+        self.batch = batch
 
     def __getitem__(self, index):
-        return self.x[index], self.covariates[index]
+        return self.x[index], self.covariates[index], self.batch[index]
 
     def __len__(self):
         return len(self.x)

@@ -186,7 +186,13 @@ class ScyanModule(pl.LightningModule):
         u_sample = self.prior.sample(z)
         return self.mmd(u, u_sample)
 
-    def losses(self, x: Tensor, covariates: Tensor) -> Tensor:
+    @_truncate_n_samples
+    def batch_mmd(self, u_ref, u_other):
+        n_samples = min(len(u_ref), len(u_other))
+        assert n_samples >= 1000, "n_samples has to be >= 1000"
+        return self.mmd(u_ref[:n_samples], u_other[:n_samples])
+
+    def losses(self, x: Tensor, covariates: Tensor, batch: Tensor, ref: int) -> Tensor:
         """Loss computation
 
         Args:
@@ -207,4 +213,11 @@ class ScyanModule(pl.LightningModule):
             u[: self.hparams.mmd_max_samples]
         )
 
-        return kl, weighted_mmd
+        u_ref = u[batch == ref]
+        u_others = [u[batch == other] for other in set(batch.tolist()) if other != ref]
+
+        batch_mmd = torch.stack(
+            [self.batch_mmd(u_ref, u_other) for u_other in u_others]
+        ).sum()
+
+        return kl, weighted_mmd, batch_mmd
