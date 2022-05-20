@@ -65,7 +65,7 @@ class ScyanModule(pl.LightningModule):
         )
 
         self._no_mmd = self.hparams.alpha is None or self.hparams.alpha == 0
-        self.mmd = LossMMD(kernel="gaussian", std=kernel_std)
+        self.mmd = LossMMD()
 
     def forward(self, x: Tensor, covariates: Tensor) -> Tuple[Tensor, Tensor, Tensor]:
         """Forward implementation, going through the complete flow

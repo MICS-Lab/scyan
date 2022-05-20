@@ -1,11 +1,8 @@
 # Hydra and Weight & Biases scripts
 
-These scripts are designed to be used together with Hydra and Weight & Biases.
+> ⚠️ **WARNING**: This folder is **not** the library itself, but contains scripts to use it with Hydra and Weight & Biases or reproduce the results from the article.
 
-## Important notes
-
-- For a **normal usage** of Scyan, do not use these scripts, please refer to the documentation instead.
-- These scripts can be used to reproduce the results from the article.
+> To see the library, go inside the `scyan` folder at the root of the project.
 
 ## Scripts available
 
