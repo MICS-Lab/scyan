@@ -14,7 +14,7 @@ wandb:
 
 force_all_populations: false
 compute_silhouette_score: false # may take a while
-n_run: 20
+n_run: 10
 
 model:
   _target_: scyan.model.Scyan

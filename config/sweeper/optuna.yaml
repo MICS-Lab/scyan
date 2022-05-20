@@ -23,7 +23,7 @@ hydra:
 
     direction: maximize
     storage: null
-    n_trials: 60
+    n_trials: 100
     n_jobs: 1
 
     search_space:
