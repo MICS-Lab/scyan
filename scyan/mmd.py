@@ -1,5 +1,6 @@
 import torch
 from torch import Tensor
+from typing import List
 
 
 def gaussian_kernel(scale: float = 0.5) -> Tensor:
@@ -7,9 +8,8 @@ def gaussian_kernel(scale: float = 0.5) -> Tensor:
 
 
 class LossMMD:
-    scales = [0.01, 0.1, 1.0, 10.0]
-
-    def __init__(self):
+    def __init__(self, scales: List[int] = [0.25]):
+        self.scales = scales
         self.kernels = [gaussian_kernel(scale) for scale in self.scales]
 
     def one_kernel_mmd(self, kernel, dxx, dxy, dyy):

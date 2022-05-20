@@ -25,9 +25,9 @@ model:
   lr: 0.001
   batch_size: 16384
   prior_std: 0.15
-  alpha: 1000
-  kernel_std: 0.25
-  temperature_mmd: 2
+  alpha: 20000
+  alpha_batch_effect: 200
+  temperature_mmd: 1.5
   temp_lr_weights: 8
   mmd_max_samples: 2048
 

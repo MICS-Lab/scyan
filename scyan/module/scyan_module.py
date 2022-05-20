@@ -23,7 +23,6 @@ class ScyanModule(pl.LightningModule):
         n_layers: int,
         prior_std: float,
         alpha: float,
-        kernel_std: float,
         temperature_mmd: float,
         temp_lr_weights: float,
         mmd_max_samples: int,
