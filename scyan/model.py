@@ -31,7 +31,7 @@ class Scyan(pl.LightningModule):
         prior_std: float = 0.15,
         lr: float = 1e-3,
         batch_size: int = 16384,
-        alpha: float = 2e4,
+        alpha: float = 200,
         alpha_batch_effect: float = 200,
         temperature_mmd: float = 1.5,
         temp_lr_weights: float = 8,
@@ -74,7 +74,7 @@ class Scyan(pl.LightningModule):
             ]
         )
 
-        self.init_data_covariates()
+        self.prepare_data()
 
         self.module = ScyanModule(
             torch.tensor(marker_pop_matrix.values, dtype=torch.float32),
@@ -106,12 +106,18 @@ class Scyan(pl.LightningModule):
     def var_names(self):
         return self.adata.var_names
 
-    def init_data_covariates(self) -> None:
+    def prepare_data(self) -> None:
         """Initializes the data and the covariates"""
         self.register_buffer("x", torch.tensor(self.adata.X))
 
         for key in self.categorical_covariate_keys:  # enforce dtype category
             self.adata.obs[key] = self.adata.obs[key].astype("category")
+
+        if (
+            self.hparams.batch_key
+            and self.hparams.batch_key not in self.categorical_covariate_keys
+        ):
+            self.categorical_covariate_keys.append(self.hparams.batch_key)
 
         categorical_covariate_embedding = (
             pd.get_dummies(self.adata.obs[self.categorical_covariate_keys]).values

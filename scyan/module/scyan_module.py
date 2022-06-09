@@ -48,6 +48,7 @@ class ScyanModule(pl.LightningModule):
 
         self.rho_mask = self.rho.isnan()
         self.rho[self.rho_mask] = 0
+        self.mean_na = self.rho_mask.sum() / self.n_markers
 
         self.pi_logit = nn.Parameter(torch.zeros(self.n_pops))
 
@@ -64,7 +65,7 @@ class ScyanModule(pl.LightningModule):
         )
 
         self._no_mmd = self.hparams.alpha is None or self.hparams.alpha == 0
-        self.mmd = LossMMD()
+        self.mmd = LossMMD(self.n_markers, self.hparams.prior_std, self.mean_na)
 
     def forward(self, x: Tensor, covariates: Tensor) -> Tuple[Tensor, Tensor, Tensor]:
         """Forward implementation, going through the complete flow
@@ -188,7 +189,9 @@ class ScyanModule(pl.LightningModule):
     @_truncate_n_samples
     def batch_mmd(self, u_ref, u_other):
         n_samples = min(len(u_ref), len(u_other))
-        assert n_samples >= 1000, "n_samples has to be >= 1000"
+        assert (
+            n_samples >= 500
+        ), "n_samples has to be >= 1000"  # TODO: what should we do with it?
         return self.mmd(u_ref[:n_samples], u_other[:n_samples])
 
     def losses(
@@ -205,11 +208,8 @@ class ScyanModule(pl.LightningModule):
         """
         _, log_probs, ldj_sum, u = self.compute_probabilities(x, covariates)
 
-        inv_pi_temperature = 1 / self.pi_temperature(self.hparams.temp_lr_weights)
-        pop_weights = inv_pi_temperature / inv_pi_temperature.mean()
-        cell_weights = pop_weights[log_probs.argmax(dim=1)]
+        kl = -(torch.logsumexp(log_probs, dim=1) + ldj_sum).mean()
 
-        kl = -(cell_weights * (torch.logsumexp(log_probs, dim=1) + ldj_sum)).mean()
         weighted_mmd = self.hparams.alpha * self.compute_mmd(
             u[: self.hparams.mmd_max_samples]
         )

@@ -1,25 +1,34 @@
 import torch
 from torch import Tensor
-from typing import List
+from typing import Callable, List
 
 
-def gaussian_kernel(scale: float = 0.5) -> Tensor:
-    return lambda dist_squared: torch.exp(-dist_squared / (2 * scale ** 2))
+def gaussian_kernel(scale: float) -> Tensor:
+    return lambda dist_squared: torch.exp(-dist_squared / scale)
 
 
 class LossMMD:
-    def __init__(self, scales: List[int] = [0.25]):
-        self.scales = scales
+    def __init__(self, n_markers, prior_std, mean_na):
+        self.scales = self.get_heuristic_scales(n_markers, prior_std, mean_na)
         self.kernels = [gaussian_kernel(scale) for scale in self.scales]
 
-    def one_kernel_mmd(self, kernel, dxx, dxy, dyy):
+    def get_heuristic_scales(
+        self, n_markers: int, prior_std: float, mean_na: float
+    ) -> List[float]:
+        internal_scale = 2 * n_markers * prior_std ** 2
+        adjacent_modes_scale = internal_scale + 2 * mean_na / 3 + 4
+        return [internal_scale, adjacent_modes_scale]
+
+    def one_kernel_mmd(
+        self, kernel: Callable, dxx: Tensor, dxy: Tensor, dyy: Tensor
+    ) -> Tensor:
         return (kernel(dxx) - 2 * kernel(dxy) + kernel(dyy)).mean()
 
     def __call__(self, x: Tensor, y: Tensor) -> Tensor:
         xx, yy, xy = x.mm(x.T), y.mm(y.T), x.mm(y.T)
 
-        x2 = (x * x).sum(dim=-1)
-        y2 = (y * y).sum(dim=-1)
+        x2 = (x ** 2).sum(dim=-1)
+        y2 = (y ** 2).sum(dim=-1)
 
         dxx = x2[:, None] + x2[None, :] - 2 * xx
         dxy = x2[:, None] + y2[None, :] - 2 * xy
