@@ -3,12 +3,12 @@ from torch import Tensor
 from typing import Callable, List
 
 
-def gaussian_kernel(scale: float) -> Tensor:
+def gaussian_kernel(scale: float) -> Callable:
     return lambda dist_squared: torch.exp(-dist_squared / scale)
 
 
 class LossMMD:
-    def __init__(self, n_markers, prior_std, mean_na):
+    def __init__(self, n_markers: int, prior_std: float, mean_na: float):
         self.scales = self.get_heuristic_scales(n_markers, prior_std, mean_na)
         self.kernels = [gaussian_kernel(scale) for scale in self.scales]
 
@@ -34,6 +34,4 @@ class LossMMD:
         dxy = x2[:, None] + y2[None, :] - 2 * xy
         dyy = y2[:, None] + y2[None, :] - 2 * yy
 
-        return sum(
-            [self.one_kernel_mmd(kernel, dxx, dxy, dyy) for kernel in self.kernels]
-        )
+        return sum(self.one_kernel_mmd(kernel, dxx, dxy, dyy) for kernel in self.kernels)

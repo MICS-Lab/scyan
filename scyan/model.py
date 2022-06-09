@@ -12,7 +12,7 @@ from sklearn.metrics import accuracy_score
 import logging
 
 from .module import ScyanModule
-from .data import AdataDataset, RandomSampler
+from .data import AdataDataset, RandomSampler, _prepare_data
 from .utils import _process_pop_sample
 
 log = logging.getLogger(__name__)
@@ -108,50 +108,15 @@ class Scyan(pl.LightningModule):
 
     def prepare_data(self) -> None:
         """Initializes the data and the covariates"""
-        self.register_buffer("x", torch.tensor(self.adata.X))
-
-        for key in self.categorical_covariate_keys:  # enforce dtype category
-            self.adata.obs[key] = self.adata.obs[key].astype("category")
-
-        if (
-            self.hparams.batch_key
-            and self.hparams.batch_key not in self.categorical_covariate_keys
-        ):
-            self.categorical_covariate_keys.append(self.hparams.batch_key)
-
-        categorical_covariate_embedding = (
-            pd.get_dummies(self.adata.obs[self.categorical_covariate_keys]).values
-            if self.categorical_covariate_keys
-            else np.empty((self.adata.n_obs, 0))
+        x, covariates, batch = _prepare_data(
+            self.adata,
+            self.hparams.batch_key,
+            self.categorical_covariate_keys,
+            self.continuous_covariate_keys,
         )
 
-        continuous_covariate_embedding = (
-            self.adata.obs[self.continuous_covariate_keys].values
-            if self.continuous_covariate_keys
-            else np.empty((self.adata.n_obs, 0))
-        )
-
-        self.adata.obsm["covariates"] = np.concatenate(
-            [
-                categorical_covariate_embedding,
-                continuous_covariate_embedding,
-            ],
-            axis=1,
-        )
-
-        self.register_buffer(
-            "covariates",
-            torch.tensor(
-                self.adata.obsm["covariates"],
-                dtype=torch.float32,
-            ),
-        )
-
-        batch = (
-            torch.tensor(self.adata.obs[self.hparams.batch_key].astype(int).values)
-            if self.hparams.batch_key
-            else torch.empty(self.adata.n_obs)
-        )
+        self.register_buffer("x", x)
+        self.register_buffer("covariates", covariates)
         self.register_buffer("batch", batch)
 
     def forward(self) -> Tensor:
@@ -265,7 +230,7 @@ class Scyan(pl.LightningModule):
 
     @property
     @torch.no_grad()
-    def pi_hat(self) -> Tensor:
+    def pi_hat(self) -> Tensor:  # TODO: remove?
         """Model observed population weights
 
         Returns:

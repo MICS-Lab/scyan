@@ -3,7 +3,8 @@ from torch import Tensor
 import pandas as pd
 import scanpy as sc
 from anndata import AnnData
-from typing import Union, Sized
+from typing import List, Tuple, Union, Sized
+import numpy as np
 
 from .utils import root_path
 
@@ -56,3 +57,51 @@ def load(dataset: str, size: str = "default") -> Union[AnnData, pd.DataFrame]:
     marker_pop_matrix = pd.read_csv(data_path / "table.csv", index_col=0)
 
     return adata, marker_pop_matrix
+
+
+def _prepare_data(
+    adata: AnnData,
+    batch_key: Union[str, int, None],
+    categorical_covariate_keys: List[str],
+    continuous_covariate_keys: List[str],
+) -> Tuple[Tensor, Tensor, Tensor]:
+    """Initializes the data and the covariates"""
+    x = torch.tensor(adata.X)
+
+    if (batch_key is not None) and batch_key not in categorical_covariate_keys:
+        categorical_covariate_keys.append(batch_key)
+
+    for key in categorical_covariate_keys:  # enforce dtype category
+        adata.obs[key] = adata.obs[key].astype("category")
+
+    categorical_covariate_embedding = (
+        pd.get_dummies(adata.obs[categorical_covariate_keys]).values
+        if categorical_covariate_keys
+        else np.empty((adata.n_obs, 0))
+    )
+
+    continuous_covariate_embedding = (
+        adata.obs[continuous_covariate_keys].values
+        if continuous_covariate_keys
+        else np.empty((adata.n_obs, 0))
+    )
+
+    covariates = np.concatenate(
+        [
+            categorical_covariate_embedding,
+            continuous_covariate_embedding,
+        ],
+        axis=1,
+    )
+    covariates = torch.tensor(
+        covariates,
+        dtype=torch.float32,
+    )
+
+    batch = (
+        torch.tensor(adata.obs[batch_key].astype(int).values)
+        if batch_key
+        else torch.empty(adata.n_obs)
+    )
+
+    return x, covariates, batch
