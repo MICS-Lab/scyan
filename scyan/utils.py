@@ -169,10 +169,17 @@ def _check_population(f: Callable) -> Callable:
             populations = model.adata.obs[obs_key].cat.categories.values
         else:
             populations = set(model.adata.obs[obs_key].values)
-        if population not in populations:
-            raise NameError(
-                f"Invalid population. It has to be one of {populations}, got {population}."
-            )
+        if isinstance(population, str):
+            if population not in populations:
+                raise NameError(
+                    f"Invalid input population. {population} has to be one of {populations}."
+                )
+        else:
+            not_found_names = [p for p in population if p not in populations]
+            if not_found_names:
+                raise NameError(
+                    f"Invalid input population list. {not_found_names} has to be inside {populations}."
+                )
         f(model, population, *args, obs_key=obs_key, **kwargs)
 
     return wrapper
