@@ -12,8 +12,6 @@ wandb:
   save_umap: false
   save_umap_latent_space: false
 
-force_all_populations: false
-compute_silhouette_score: false # may take a while
 n_run: 10
 
 model:

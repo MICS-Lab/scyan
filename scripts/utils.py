@@ -5,12 +5,7 @@ import wandb
 import logging
 import numpy as np
 import scanpy as sc
-from sklearn.metrics import (
-    accuracy_score,
-    cohen_kappa_score,
-    f1_score,
-    silhouette_score,
-)
+from sklearn import metrics
 
 import scyan
 from scyan.model import Scyan
@@ -48,9 +43,9 @@ def init_and_fit_model(adata, marker_pop_matrix, config, wandb_logger=None):
 
 
 def classification_metrics(y_true, y_pred):
-    accuracy = accuracy_score(y_true, y_pred)
-    f1 = f1_score(y_true, y_pred, average="macro")
-    kappa = cohen_kappa_score(y_true, y_pred)
+    accuracy = metrics.accuracy_score(y_true, y_pred)
+    f1 = metrics.f1_score(y_true, y_pred, average="macro")
+    kappa = metrics.cohen_kappa_score(y_true, y_pred)
 
     return {"Accuracy": accuracy, "F1-score": f1, "Kappa": kappa}
 
@@ -65,24 +60,24 @@ def compute_metrics(model, config, scyan_pop_key="scyan_pop"):
         metrics_dict = {}
 
     X, labels = model.adata.X, model.adata.obs[scyan_pop_key]
-    labels_count = len(set(labels.values))
-    metrics_dict["Labels count"] = labels_count
 
-    if config.compute_silhouette_score:
-        if config.force_all_populations and (
-            labels_count < len(model.marker_pop_matrix.index)
-        ):
-            log.warning("Not all pops are present. Setting silhouette metric to 0.")
-            silhouette = 0
-        else:
-            silhouette = silhouette_score(X, labels)
+    n_missing_pop = len(model.marker_pop_matrix.index) - len(set(labels.values))
+    metrics_dict["Number of missing pop"] = n_missing_pop
 
-        metrics_dict["Penalized Silhouette"] = silhouette + labels_count
+    dbs = metrics.davies_bouldin_score(X, labels)
+    metrics_dict["dbs"] = dbs
 
-    print("\nComputed metrics:")
+    p = labels.value_counts(normalize=True).values
+    neg_log_dir = -np.log(p).sum()
+    metrics_dict["neg_log_dir"] = neg_log_dir
+
+    metrics_dict["Heuristic"] = (n_missing_pop + 1) * dbs * neg_log_dir
+
+    print("\n-- Run metrics --")
     for name, value in metrics_dict.items():
         print(f"{name}: {value:.4f}")
         wandb.run.summary[name] = value
+    print()
 
     return metrics_dict
 
