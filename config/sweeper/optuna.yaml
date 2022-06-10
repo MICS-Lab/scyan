@@ -27,35 +27,24 @@ hydra:
     n_jobs: 1
 
     search_space:
-      model.alpha:
+      model.temperature:
         type: float
-        low: 5000
-        high: 100000
-        log: true
-      model.temperature_mmd:
-        type: float
-        low: 1.1
-        high: 2.5
-        log: true
-      model.temp_lr_weights:
-        type: float
-        low: 5
-        high: 15
-        log: true
-      model.mmd_max_samples:
-        type: categorical
-        choices: [1024, 2048]
+        low: -1.5
+        high: 0
+      # model.mmd_max_samples:
+      #   type: categorical
+      #   choices: [1024, 2048]
       model.hidden_size:
         type: categorical
         choices: [8, 16, 32]
       model.n_hidden_layers:
         type: int
         low: 6
-        high: 8
+        high: 9
       model.n_layers:
         type: int
         low: 6
-        high: 8
+        high: 9
       model.prior_std:
         type: float
         low: 0.1
