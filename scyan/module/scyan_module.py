@@ -22,9 +22,7 @@ class ScyanModule(pl.LightningModule):
         n_hidden_layers: int,
         n_layers: int,
         prior_std: float,
-        alpha: float,
-        temperature_mmd: float,
-        temp_lr_weights: float,
+        temperature: float,
         mmd_max_samples: int,
     ):
         """Module containing the core logic behind the Scyan model
@@ -64,7 +62,6 @@ class ScyanModule(pl.LightningModule):
             self.rho, self.rho_mask, self.hparams.prior_std, self.n_markers
         )
 
-        self._no_mmd = self.hparams.alpha is None or self.hparams.alpha == 0
         self.mmd = LossMMD(self.n_markers, self.hparams.prior_std, self.mean_na)
 
     def forward(self, x: Tensor, covariates: Tensor) -> Tuple[Tensor, Tensor, Tensor]:
@@ -119,8 +116,8 @@ class ScyanModule(pl.LightningModule):
         """
         return torch.exp(self.log_pi)
 
-    def pi_temperature(self, T):
-        return torch.softmax(self.pi_logit_ratio * self.pi_logit / T, dim=0).detach()
+    def log_pi_temperature(self, T):
+        return torch.log_softmax(self.pi_logit_ratio * self.pi_logit / T, dim=0).detach()
 
     @torch.no_grad()
     def sample(
@@ -157,7 +154,7 @@ class ScyanModule(pl.LightningModule):
         return (x, z) if return_z else x
 
     def compute_probabilities(
-        self, x: Tensor, covariates: Tensor
+        self, x: Tensor, covariates: Tensor, use_temp: bool = False
     ) -> Tuple[Tensor, Tensor, Tensor]:
         """Computes probabilities used to define the loss function
 
@@ -170,21 +167,14 @@ class ScyanModule(pl.LightningModule):
         """
         u, _, ldj_sum = self(x, covariates)
 
-        log_probs = self.prior.log_prob(u) + self.log_pi  # size N x P
+        log_pi = (
+            self.log_pi_temperature(self.hparams.temperature) if use_temp else self.log_pi
+        )
+
+        log_probs = self.prior.log_prob(u) + log_pi  # size N x P
         probs = torch.softmax(log_probs, dim=1)
 
         return probs, log_probs, ldj_sum, u
-
-    @_truncate_n_samples
-    def compute_mmd(self, u):
-        if self._no_mmd:
-            return 0
-
-        pi_temperature = self.pi_temperature(self.hparams.temperature_mmd)
-        z = distributions.Categorical(pi_temperature).sample((len(u),))
-
-        u_sample = self.prior.sample(z)
-        return self.mmd(u, u_sample)
 
     @_truncate_n_samples
     def batch_mmd(self, u_ref, u_other):
@@ -195,7 +185,12 @@ class ScyanModule(pl.LightningModule):
         return self.mmd(u_ref[:n_samples], u_other[:n_samples])
 
     def losses(
-        self, x: Tensor, covariates: Tensor, batch: Tensor, ref: Union[int, None]
+        self,
+        x: Tensor,
+        covariates: Tensor,
+        batch: Tensor,
+        ref: Union[int, None],
+        use_temp: bool,
     ) -> Tensor:
         """Loss computation
 
@@ -206,13 +201,9 @@ class ScyanModule(pl.LightningModule):
         Returns:
             Tensor: Loss
         """
-        _, log_probs, ldj_sum, u = self.compute_probabilities(x, covariates)
+        _, log_probs, ldj_sum, u = self.compute_probabilities(x, covariates, use_temp)
 
         kl = -(torch.logsumexp(log_probs, dim=1) + ldj_sum).mean()
-
-        weighted_mmd = self.hparams.alpha * self.compute_mmd(
-            u[: self.hparams.mmd_max_samples]
-        )
 
         if ref is not None:
             u_ref = u[batch == ref]
@@ -226,4 +217,4 @@ class ScyanModule(pl.LightningModule):
         else:
             batch_mmd = 0
 
-        return kl, weighted_mmd, batch_mmd
+        return kl, batch_mmd

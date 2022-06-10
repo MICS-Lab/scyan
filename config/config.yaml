@@ -12,7 +12,7 @@ wandb:
   save_umap: false
   save_umap_latent_space: false
 
-n_run: 10
+n_run: 20
 
 model:
   _target_: scyan.model.Scyan
@@ -23,10 +23,8 @@ model:
   lr: 0.001
   batch_size: 16384
   prior_std: 0.15
-  alpha: 20000
   alpha_batch_effect: 200
-  temperature_mmd: 1.5
-  temp_lr_weights: 8
+  temperature: -1
   mmd_max_samples: 2048
 
 callbacks:
