@@ -65,11 +65,11 @@ def compute_metrics(model, config, scyan_pop_key="scyan_pop"):
     metrics_dict["Number of missing pop"] = n_missing_pop
 
     dbs = metrics.davies_bouldin_score(X, labels)
-    metrics_dict["dbs"] = dbs
+    metrics_dict["Davies-Bouldin score"] = dbs
 
     p = labels.value_counts(normalize=True).values
     neg_log_dir = -np.log(p).sum()
-    metrics_dict["neg_log_dir"] = neg_log_dir
+    metrics_dict["Neg log Dirichlet"] = neg_log_dir
 
     metrics_dict["Heuristic"] = (n_missing_pop + 1) * dbs * neg_log_dir
 
