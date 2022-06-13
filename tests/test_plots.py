@@ -1,21 +1,27 @@
 import pytest
+from typing import List
 
 import scyan
 from scyan import Scyan
 
 
 @pytest.fixture
-def pop():
+def pop() -> str:
     return "CD8 T cells"
 
 
 @pytest.fixture
-def ref():
+def ref() -> str:
     return "CD4 T cells"
 
 
 @pytest.fixture
-def model():
+def markers() -> List[str]:
+    return ["CD4", "CD45"]
+
+
+@pytest.fixture
+def model() -> Scyan:
     adata, marker_pop_matrix = scyan.data.load("aml", size="short")
     model = Scyan(adata, marker_pop_matrix)
     model.predict()
@@ -42,3 +48,7 @@ def test_pop_weighted_kde_with_ref(model: Scyan, pop: str, ref: str):
 
 def test_probs_per_marker(model: Scyan, pop: str, ref: str):
     scyan.plot.probs_per_marker(model, pop, show=False)
+
+
+def test_scatter(model: Scyan, pop: str, ref: str, markers: List[str]):
+    scyan.plot.scatter(model, [pop, ref], markers, n_obs=100, show=False)

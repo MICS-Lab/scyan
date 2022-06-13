@@ -4,10 +4,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from .. import Scyan
-from ..utils import _optional_show, _check_population
+from .utils import optional_show, check_population
 
 
-@_optional_show
+@optional_show
 def marker_matrix_reconstruction(
     model: Scyan, show_diff: bool = False, show: bool = True
 ):
@@ -32,8 +32,8 @@ def marker_matrix_reconstruction(
     plt.title("Marker matrix approximation by the model embedding space")
 
 
-@_optional_show
-@_check_population
+@optional_show
+@check_population
 def probs_per_marker(
     model: Scyan,
     population: str,

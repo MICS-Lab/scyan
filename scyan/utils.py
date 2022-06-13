@@ -148,38 +148,3 @@ def _process_pop_sample(model, pop: Union[str, List[str], int, Tensor, None] = N
         return _pops_to_indices(model, pop)
     else:
         return pop
-
-
-def _optional_show(f: Callable) -> Callable:
-    """Decorator that shows a matplotlib figure if the provided 'show' argument is True"""
-
-    def wrapper(*args, **kwargs):
-        f(*args, **kwargs)
-        if kwargs.get("show", True):
-            plt.show()
-
-    return wrapper
-
-
-def _check_population(f: Callable) -> Callable:
-    """Decorator that checks if the provided population exists"""
-
-    def wrapper(model, population: str, *args, obs_key="scyan_pop", **kwargs):
-        if model.adata.obs[obs_key].dtype == "category":
-            populations = model.adata.obs[obs_key].cat.categories.values
-        else:
-            populations = set(model.adata.obs[obs_key].values)
-        if isinstance(population, (list, tuple, np.ndarray)):
-            not_found_names = [p for p in population if p not in populations]
-            if not_found_names:
-                raise NameError(
-                    f"Invalid input population list. {not_found_names} has to be inside {populations}."
-                )
-        else:
-            if population not in populations:
-                raise NameError(
-                    f"Invalid input population. {population} has to be one of {populations}."
-                )
-        f(model, population, *args, obs_key=obs_key, **kwargs)
-
-    return wrapper
