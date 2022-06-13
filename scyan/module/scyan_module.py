@@ -2,13 +2,15 @@ import torch
 from torch import Tensor
 from torch import nn
 from torch import distributions
-from typing import Tuple, Union
+from typing import Tuple, Union, List
 import pytorch_lightning as pl
+import logging
 
 from .real_nvp import RealNVP
 from .distribution import PriorDistribution
 from ..mmd import LossMMD
-from ..utils import _truncate_n_samples
+
+log = logging.getLogger(__name__)
 
 
 class ScyanModule(pl.LightningModule):
@@ -18,12 +20,14 @@ class ScyanModule(pl.LightningModule):
         self,
         rho: Tensor,
         n_covariates: int,
+        other_batches: List[int],
         hidden_size: int,
         n_hidden_layers: int,
         n_layers: int,
         prior_std: float,
         temperature: float,
         mmd_max_samples: int,
+        batch_ref: Union[str, int, None],
     ):
         """Module containing the core logic behind the Scyan model
 
@@ -39,7 +43,7 @@ class ScyanModule(pl.LightningModule):
             alpha (float, optional): Constraint term weight in the loss function. Defaults to 1.0.
         """
         super().__init__()
-        self.save_hyperparameters(ignore=["rho", "n_covariates"])
+        self.save_hyperparameters(ignore=["rho", "n_covariates", "other_batches"])
 
         self.n_pops, self.n_markers = rho.shape
         self.register_buffer("rho", rho)
@@ -62,7 +66,8 @@ class ScyanModule(pl.LightningModule):
             self.rho, self.rho_mask, self.hparams.prior_std, self.n_markers
         )
 
-        self.mmd = LossMMD(self.n_markers, self.hparams.prior_std, self.mean_na)
+        self.other_batches = other_batches
+        self.loss_mmd = LossMMD(self.n_markers, self.hparams.prior_std, self.mean_na)
 
     def forward(self, x: Tensor, covariates: Tensor) -> Tuple[Tensor, Tensor, Tensor]:
         """Forward implementation, going through the complete flow
@@ -172,49 +177,59 @@ class ScyanModule(pl.LightningModule):
         )
 
         log_probs = self.prior.log_prob(u) + log_pi  # size N x P
-        probs = torch.softmax(log_probs, dim=1)
+        probs = torch.softmax(log_probs, dim=1)  # TODO: remove?
 
         return probs, log_probs, ldj_sum, u
 
-    @_truncate_n_samples
-    def batch_mmd(self, u_ref, u_other):
-        n_samples = min(len(u_ref), len(u_other))
-        assert (
-            n_samples >= 500
-        ), "n_samples has to be >= 1000"  # TODO: what should we do with it?
-        return self.mmd(u_ref[:n_samples], u_other[:n_samples])
+    def batch_correction_mmd(self, u1, pop1, u2, pop2):
+        n_samples = min(len(u1), len(u2), self.hparams.mmd_max_samples)
+
+        if n_samples < 500:
+            log.warn(f"Correcting batch effect with few samples ({n_samples})")
+
+        pop_weights = 1 / self.pi.detach()  # TODO: use temp ? use u2 ?
+
+        indices1 = torch.multinomial(pop_weights[pop1], n_samples)
+        indices2 = torch.multinomial(pop_weights[pop2], n_samples)
+
+        return self.loss_mmd(u1[indices1], u2[indices2])
+
+    def get_mmd_inputs(self, u: Tensor, batch: Tensor, probs: Tensor, b: int):
+        condition = batch == b
+        return u[condition], probs[condition].argmax(dim=1)
 
     def losses(
         self,
         x: Tensor,
         covariates: Tensor,
         batch: Tensor,
-        ref: Union[int, None],
         use_temp: bool,
     ) -> Tensor:
-        """Loss computation
+        """Computes the module loss for one mini-batch.
 
         Args:
-            x (Tensor): Inputs
-            covariates (Tensor): Covariates
+            x (Tensor): Cytometry values
+            covariates (Tensor): Covariates values
+            batch (Tensor): Batch information used to correct batch-effect
+            use_temp (bool): Whether to consider temperature is the KL term
 
         Returns:
-            Tensor: Loss
+            Tensor: Sum of the KL divergence and the MMD (only for batch effect correction)
         """
         _, log_probs, ldj_sum, u = self.compute_probabilities(x, covariates, use_temp)
 
         kl = -(torch.logsumexp(log_probs, dim=1) + ldj_sum).mean()
 
-        if ref is not None:
-            u_ref = u[batch == ref]
-            u_others = [
-                u[batch == other] for other in set(batch.tolist()) if other != ref
-            ]
+        if self.hparams.batch_ref is None:
+            return kl, 0
 
-            batch_mmd = torch.stack(
-                [self.batch_mmd(u_ref, u_other) for u_other in u_others]
-            ).sum()
-        else:
-            batch_mmd = 0
+        u_ref, pop_ref = self.get_mmd_inputs(u, batch, log_probs, self.hparams.batch_ref)
 
-        return kl, batch_mmd
+        mmd = sum(
+            self.batch_correction_mmd(
+                u_ref, pop_ref, *self.get_mmd_inputs(u, batch, log_probs, other)
+            )
+            for other in self.other_batches
+        )
+
+        return kl, mmd

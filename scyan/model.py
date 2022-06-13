@@ -28,12 +28,13 @@ class Scyan(pl.LightningModule):
         hidden_size: int = 16,
         n_hidden_layers: int = 7,
         n_layers: int = 7,
-        prior_std: float = 0.15,
+        prior_std: float = 0.20,
         lr: float = 1e-3,
         batch_size: int = 16384,
         alpha_batch_effect: float = 200,
         temperature: float = -1,
         mmd_max_samples: int = 2048,
+        modulo_temp: int = 2,
         max_samples: Union[int, None] = None,
         batch_key: Union[str, None] = None,
         batch_ref: Union[str, int, None] = None,
@@ -77,12 +78,14 @@ class Scyan(pl.LightningModule):
         self.module = ScyanModule(
             torch.tensor(marker_pop_matrix.values, dtype=torch.float32),
             self.covariates.shape[1],
+            self.other_batches,
             hidden_size,
             n_hidden_layers,
             n_layers,
             prior_std,
             temperature,
             mmd_max_samples,
+            batch_ref,
         )
 
         log.info(f"Initialized {self}")
@@ -114,6 +117,11 @@ class Scyan(pl.LightningModule):
         self.register_buffer("x", x)
         self.register_buffer("covariates", covariates)
         self.register_buffer("batch", batch)
+
+        self.other_batches = list(set(self.batch.tolist()))
+
+        if self.hparams.batch_ref is not None:
+            self.other_batches.remove(self.hparams.batch_ref)
 
     def forward(self) -> Tensor:
         """Model forward function
@@ -150,16 +158,25 @@ class Scyan(pl.LightningModule):
 
         return self.module.sample(n_samples, covariates_sample, z=z, return_z=return_z)
 
+    @torch.no_grad()
+    def batch_effect_correction(self):
+        u = self()
+
+        ref_covariate = self.covariates[self.batch == self.hparams.batch_ref][0]
+        covariates = torch.tensor(ref_covariate).repeat((self.adata.n_obs, 1))
+
+        return self.module.inverse(u, covariates)
+
     def training_step(self, data, _):
         """PyTorch lightning training_step implementation"""
-        kl, batch_mmd = self.module.losses(
-            *data, self.hparams.batch_ref, self.current_epoch % 2
-        )
-        batch_mmd = self.hparams.alpha_batch_effect * batch_mmd
-        loss = kl + batch_mmd
+        use_temp = self.current_epoch % self.hparams.modulo_temp > 0
+        kl, mmd = self.module.losses(*data, use_temp)
+
+        mmd = self.hparams.alpha_batch_effect * mmd
+        loss = kl + mmd
 
         self.log("kl", kl, on_step=True, prog_bar=True)
-        self.log("batch_mmd", batch_mmd, on_step=True, prog_bar=True)
+        self.log("mmd", mmd, on_step=True, prog_bar=True)
         self.log("loss", loss, on_epoch=True, on_step=True)
 
         return loss
