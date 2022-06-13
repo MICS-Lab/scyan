@@ -61,7 +61,7 @@ class Scyan(pl.LightningModule):
         self.adata = adata[:, self.marker_pop_matrix.columns].copy()
         self.continuous_covariate_keys = list(continuous_covariate_keys)
         self.categorical_covariate_keys = list(categorical_covariate_keys)
-        self.n_pops = len(self.marker_pop_matrix.index)
+        self.n_pops = len(self.marker_pop_matrix)
         self._is_fitted = False
 
         self.save_hyperparameters(
@@ -160,10 +160,10 @@ class Scyan(pl.LightningModule):
 
     @torch.no_grad()
     def batch_effect_correction(self):
-        u = self()
+        u = self().detach()
 
         ref_covariate = self.covariates[self.batch == self.hparams.batch_ref][0]
-        covariates = torch.tensor(ref_covariate).repeat((self.adata.n_obs, 1))
+        covariates = ref_covariate.repeat((self.adata.n_obs, 1))
 
         return self.module.inverse(u, covariates)
 
