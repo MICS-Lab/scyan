@@ -23,8 +23,8 @@ class Scyan(pl.LightningModule):
         self,
         adata: AnnData,
         marker_pop_matrix: pd.DataFrame,
-        continuous_covariate_keys: List[str] = [],
-        categorical_covariate_keys: List[str] = [],
+        continuous_covariate_keys: Union[List[str], None] = None,
+        categorical_covariate_keys: Union[List[str], None] = None,
         hidden_size: int = 16,
         n_hidden_layers: int = 7,
         n_layers: int = 7,
@@ -59,8 +59,8 @@ class Scyan(pl.LightningModule):
 
         self.marker_pop_matrix = marker_pop_matrix
         self.adata = adata[:, self.marker_pop_matrix.columns].copy()
-        self.continuous_covariate_keys = list(continuous_covariate_keys)
-        self.categorical_covariate_keys = list(categorical_covariate_keys)
+        self.continuous_covariate_keys = continuous_covariate_keys or []
+        self.categorical_covariate_keys = categorical_covariate_keys or []
         self.n_pops = len(self.marker_pop_matrix)
         self._is_fitted = False
 
@@ -287,7 +287,7 @@ class Scyan(pl.LightningModule):
         max_epochs: int = 100,
         min_delta: float = 1,
         patience: int = 4,
-        callbacks: List[pl.Callback] = [],
+        callbacks: Union[List[pl.Callback], None] = None,
         trainer: Union[pl.Trainer, None] = None,
     ) -> None:
         """Train Scyan
@@ -311,7 +311,9 @@ class Scyan(pl.LightningModule):
             patience=patience,
             check_on_train_epoch_end=True,
         )
-        trainer = pl.Trainer(max_epochs=max_epochs, callbacks=[esc] + callbacks)
+        _callbacks = [esc] + (callbacks or [])
+
+        trainer = pl.Trainer(max_epochs=max_epochs, callbacks=_callbacks)
         trainer.fit(self)
 
         self._is_fitted = True
