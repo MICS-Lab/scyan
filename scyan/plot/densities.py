@@ -17,7 +17,7 @@ from ..utils import _optional_show, _check_population
 @_check_population
 def kde_per_population(
     model: Scyan,
-    population: str,
+    population: Union[str, List[str]],
     obs_key: str = "scyan_pop",
     markers: Union[List[str], None] = None,
     ncols: int = 4,
@@ -38,14 +38,19 @@ def kde_per_population(
         value_name (str, optional): Value name. Defaults to "Expression".
         show (bool, optional): Whether to plt.show() or not. Defaults to True.
     """
-    hue_name = f"{obs_key} is '{population}'"
     markers = model.adata.var_names if markers is None else markers
 
     df = model.adata.to_df()
-    df[hue_name] = pd.Categorical(model.adata.obs[obs_key] == population)
+
+    if isinstance(population, str):
+        df[obs_key] = pd.Categorical(model.adata.obs[obs_key] == population)
+    else:
+        keys = model.adata.obs[obs_key]
+        df[obs_key] = np.where(~np.isin(keys, population), "Others", keys)
+
     df = pd.melt(
         df,
-        id_vars=[hue_name],
+        id_vars=[obs_key],
         value_vars=markers,
         var_name=var_name,
         value_name=value_name,
@@ -55,7 +60,7 @@ def kde_per_population(
         df,
         x=value_name,
         col=var_name,
-        hue=hue_name,
+        hue=obs_key,
         col_wrap=ncols,
         kind="kde",
         common_norm=False,

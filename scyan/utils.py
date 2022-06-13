@@ -169,18 +169,17 @@ def _check_population(f: Callable) -> Callable:
             populations = model.adata.obs[obs_key].cat.categories.values
         else:
             populations = set(model.adata.obs[obs_key].values)
-        if population not in populations:
-            raise NameError(
-                f"Invalid population. It has to be one of {populations}, got {population}."
-            )
+        if isinstance(population, (list, tuple, np.ndarray)):
+            not_found_names = [p for p in population if p not in populations]
+            if not_found_names:
+                raise NameError(
+                    f"Invalid input population list. {not_found_names} has to be inside {populations}."
+                )
+        else:
+            if population not in populations:
+                raise NameError(
+                    f"Invalid input population. {population} has to be one of {populations}."
+                )
         f(model, population, *args, obs_key=obs_key, **kwargs)
-
-    return wrapper
-
-
-def _truncate_n_samples(f: Callable) -> Callable:
-    def wrapper(self, *tensors):
-        max_samples = self.hparams.mmd_max_samples
-        return f(self, *[tensor[:max_samples] for tensor in tensors])
 
     return wrapper

@@ -12,7 +12,7 @@ from sklearn.metrics import accuracy_score
 import logging
 
 from .module import ScyanModule
-from .data import AdataDataset, RandomSampler
+from .data import AdataDataset, RandomSampler, _prepare_data
 from .utils import _process_pop_sample
 
 log = logging.getLogger(__name__)
@@ -28,15 +28,16 @@ class Scyan(pl.LightningModule):
         hidden_size: int = 16,
         n_hidden_layers: int = 7,
         n_layers: int = 7,
-        prior_std: float = 0.15,
+        prior_std: float = 0.20,
         lr: float = 1e-3,
         batch_size: int = 16384,
-        alpha: float = 20000,
-        kernel_std: float = 0.25,
-        temperature_mmd: float = 1.5,
-        temp_lr_weights: float = 8,
+        alpha_batch_effect: float = 200,
+        temperature: float = -1,
         mmd_max_samples: int = 2048,
+        modulo_temp: int = 2,
         max_samples: Union[int, None] = None,
+        batch_key: Union[str, None] = None,
+        batch_ref: Union[str, int, None] = None,
     ):
         """Scyan model
 
@@ -72,20 +73,19 @@ class Scyan(pl.LightningModule):
             ]
         )
 
-        self.init_data_covariates()
+        self.prepare_data()
 
         self.module = ScyanModule(
             torch.tensor(marker_pop_matrix.values, dtype=torch.float32),
             self.covariates.shape[1],
+            self.other_batches,
             hidden_size,
             n_hidden_layers,
             n_layers,
             prior_std,
-            alpha,
-            kernel_std,
-            temperature_mmd,
-            temp_lr_weights,
+            temperature,
             mmd_max_samples,
+            batch_ref,
         )
 
         log.info(f"Initialized {self}")
@@ -105,40 +105,23 @@ class Scyan(pl.LightningModule):
     def var_names(self):
         return self.adata.var_names
 
-    def init_data_covariates(self) -> None:
+    def prepare_data(self) -> None:
         """Initializes the data and the covariates"""
-        self.register_buffer("x", torch.tensor(self.adata.X))
-
-        for key in self.categorical_covariate_keys:  # enforce dtype category
-            self.adata.obs[key] = self.adata.obs[key].astype("category")
-
-        categorical_covariate_embedding = (
-            pd.get_dummies(self.adata.obs[self.categorical_covariate_keys]).values
-            if self.categorical_covariate_keys
-            else np.empty((self.adata.n_obs, 0))
+        x, covariates, batch = _prepare_data(
+            self.adata,
+            self.hparams.batch_key,
+            self.categorical_covariate_keys,
+            self.continuous_covariate_keys,
         )
 
-        continuous_covariate_embedding = (
-            self.adata.obs[self.continuous_covariate_keys].values
-            if self.continuous_covariate_keys
-            else np.empty((self.adata.n_obs, 0))
-        )
+        self.register_buffer("x", x)
+        self.register_buffer("covariates", covariates)
+        self.register_buffer("batch", batch)
 
-        self.adata.obsm["covariates"] = np.concatenate(
-            [
-                categorical_covariate_embedding,
-                continuous_covariate_embedding,
-            ],
-            axis=1,
-        )
+        self.other_batches = list(set(self.batch.tolist()))
 
-        self.register_buffer(
-            "covariates",
-            torch.tensor(
-                self.adata.obsm["covariates"],
-                dtype=torch.float32,
-            ),
-        )
+        if self.hparams.batch_ref is not None:
+            self.other_batches.remove(self.hparams.batch_ref)
 
     def forward(self) -> Tensor:
         """Model forward function
@@ -175,13 +158,25 @@ class Scyan(pl.LightningModule):
 
         return self.module.sample(n_samples, covariates_sample, z=z, return_z=return_z)
 
-    def training_step(self, batch, _):
+    @torch.no_grad()
+    def batch_effect_correction(self):
+        u = self()
+
+        ref_covariate = self.covariates[self.batch == self.hparams.batch_ref][0]
+        covariates = torch.tensor(ref_covariate).repeat((self.adata.n_obs, 1))
+
+        return self.module.inverse(u, covariates)
+
+    def training_step(self, data, _):
         """PyTorch lightning training_step implementation"""
-        kl, weighted_mmd = self.module.losses(*batch)
-        loss = kl + weighted_mmd
+        use_temp = self.current_epoch % self.hparams.modulo_temp > 0
+        kl, mmd = self.module.losses(*data, use_temp)
+
+        mmd = self.hparams.alpha_batch_effect * mmd
+        loss = kl + mmd
 
         self.log("kl", kl, on_step=True, prog_bar=True)
-        self.log("mmd", weighted_mmd, on_step=True, prog_bar=True)
+        self.log("mmd", mmd, on_step=True, prog_bar=True)
         self.log("loss", loss, on_epoch=True, on_step=True)
 
         return loss
@@ -249,7 +244,7 @@ class Scyan(pl.LightningModule):
 
     @property
     @torch.no_grad()
-    def pi_hat(self) -> Tensor:
+    def pi_hat(self) -> Tensor:  # TODO: remove?
         """Model observed population weights
 
         Returns:
@@ -264,7 +259,7 @@ class Scyan(pl.LightningModule):
 
     def train_dataloader(self):
         """PyTorch lightning train_dataloader implementation"""
-        self.dataset = AdataDataset(self.x, self.covariates)
+        self.dataset = AdataDataset(self.x, self.covariates, self.batch)
         sampler = RandomSampler(self.dataset, max_samples=self.hparams.max_samples)
 
         return DataLoader(

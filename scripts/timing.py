@@ -41,10 +41,12 @@ def main(config: DictConfig) -> None:
             adata.obs["cell_type"] = cell_type
 
         start = time.perf_counter()
+
         init_and_fit_model(adata, marker_pop_matrix, config)
 
-        n_samples.append(n)
         times.append(time.perf_counter() - start)
+        n_samples.append(n)
+
         print("n:", n_samples)
         print("times:", times)
 

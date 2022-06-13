@@ -52,7 +52,7 @@ def main(config: DictConfig) -> float:
 
         wandb.finish()
 
-    print(f"\n--- Finished {config.n_run} Run(s) ---\n")
+    print(f"--- Finished {config.n_run} Run(s) ---\n")
     for name, values in all_metrics.items():
         values = np.array(values)
         print(f"{name}: {values.mean():.4f} ± {values.std():.4f}\n  {values}\n")

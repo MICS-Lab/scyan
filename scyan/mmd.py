@@ -1,43 +1,37 @@
 import torch
 from torch import Tensor
+from typing import Callable, List
 
 
-def energy_kernel(eps: float = 1e-8) -> Tensor:
-    return lambda d2: -torch.sqrt(d2.clamp(eps))
-
-
-def gaussian_kernel(std: float = 0.5) -> Tensor:
-    return lambda d2: torch.exp(-d2 / (2 * std ** 2))
-
-
-def inverse_multiquadratic(C: float = 1.0) -> Tensor:
-    return lambda d2: (C / (C + d2))
-
-
-kernel_dict = {
-    "energy": energy_kernel,
-    "gaussian": gaussian_kernel,
-    "inverse_multiquadratic": inverse_multiquadratic,
-}
+def gaussian_kernel(scale: float) -> Callable:
+    return lambda dist_squared: torch.exp(-dist_squared / scale)
 
 
 class LossMMD:
-    def __init__(self, kernel: str = "gaussian", **kwargs):
-        if kernel in kernel_dict:
-            self.kernel = kernel_dict[kernel](**kwargs)
-        else:
-            raise NameError(
-                f"MMD kernel has to be one of {list(kernel_dict.keys())}, found {kernel}"
-            )
+    def __init__(self, n_markers: int, prior_std: float, mean_na: float):
+        self.scales = self.get_heuristic_scales(n_markers, prior_std, mean_na)
+        self.kernels = [gaussian_kernel(scale) for scale in self.scales]
+
+    def get_heuristic_scales(
+        self, n_markers: int, prior_std: float, mean_na: float
+    ) -> List[float]:
+        internal_scale = 2 * n_markers * prior_std ** 2
+        adjacent_modes_scale = internal_scale + 2 * mean_na / 3 + 4
+        return [internal_scale, adjacent_modes_scale]
+
+    def one_kernel_mmd(
+        self, kernel: Callable, dxx: Tensor, dxy: Tensor, dyy: Tensor
+    ) -> Tensor:
+        return (kernel(dxx) - 2 * kernel(dxy) + kernel(dyy)).mean()
 
     def __call__(self, x: Tensor, y: Tensor) -> Tensor:
         xx, yy, xy = x.mm(x.T), y.mm(y.T), x.mm(y.T)
 
-        x2 = (x * x).sum(dim=-1)
-        y2 = (y * y).sum(dim=-1)
+        x2 = (x ** 2).sum(dim=-1)
+        y2 = (y ** 2).sum(dim=-1)
 
         dxx = x2[:, None] + x2[None, :] - 2 * xx
         dxy = x2[:, None] + y2[None, :] - 2 * xy
         dyy = y2[:, None] + y2[None, :] - 2 * yy
 
-        return (self.kernel(dxx) - 2 * self.kernel(dxy) + self.kernel(dyy)).mean()
+        return sum(self.one_kernel_mmd(kernel, dxx, dxy, dyy) for kernel in self.kernels)

@@ -3,7 +3,7 @@
 defaults:
   - override /hydra/sweeper: optuna
 
-optimized_metric: Penalized Silhouette
+optimized_metric: Heuristic
 
 hydra:
   sweeper:
@@ -21,32 +21,49 @@ hydra:
 
     _target_: hydra_plugins.hydra_optuna_sweeper.optuna_sweeper.OptunaSweeper
 
-    direction: maximize
+    direction: minimize
     storage: null
-    n_trials: 40
+    n_trials: 50
     n_jobs: 1
 
     search_space:
-      model.alpha:
+      model.temperature:
         type: float
-        low: 1
-        high: 100000
-        log: true
-      model.kernel_std:
+        low: -1.5
+        high: 0
+      # model.mmd_max_samples:
+      #   type: categorical
+      #   choices: [1024, 2048]
+      model.hidden_size:
+        type: categorical
+        choices: [8, 16, 32]
+      model.n_hidden_layers:
+        type: int
+        low: 6
+        high: 9
+      model.n_layers:
+        type: int
+        low: 6
+        high: 9
+      model.prior_std:
         type: float
         low: 0.1
-        high: 5
+        high: 0.25
         log: true
-      model.temperature_mmd:
+      model.lr:
         type: float
-        low: 1
-        high: 5
+        low: 0.0005
+        high: 0.002
         log: true
-      model.temp_lr_weights:
-        type: float
-        low: 1
-        high: 10
-        log: true
-      model.mmd_max_samples:
+      model.batch_size:
         type: categorical
-        choices: [1024, 2048, 4096, 8192]
+        choices: [8192, 16384]
+      callbacks.early_stopping.patience:
+        type: int
+        low: 2
+        high: 5
+      callbacks.early_stopping.min_delta:
+        type: float
+        low: 0.25
+        high: 2
+        log: true

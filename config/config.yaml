@@ -12,8 +12,6 @@ wandb:
   save_umap: false
   save_umap_latent_space: false
 
-force_all_populations: false
-compute_silhouette_score: false # may take a while
 n_run: 20
 
 model:
@@ -24,18 +22,16 @@ model:
   n_hidden_layers: 7
   lr: 0.001
   batch_size: 16384
-  prior_std: 0.15
-  alpha: 1000
-  kernel_std: 0.25
-  temperature_mmd: 1.5
-  temp_lr_weights: 8
+  prior_std: 0.25
+  alpha_batch_effect: 200
+  temperature: -1
   mmd_max_samples: 2048
 
 callbacks:
   early_stopping:
     _target_: pytorch_lightning.callbacks.EarlyStopping
     monitor: loss_epoch
-    patience: 4
+    patience: 3
     min_delta: 0.5
     check_on_train_epoch_end: True
 
