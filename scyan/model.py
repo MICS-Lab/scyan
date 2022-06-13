@@ -160,7 +160,7 @@ class Scyan(pl.LightningModule):
 
     @torch.no_grad()
     def batch_effect_correction(self):
-        u = self().detach()
+        u = self()
 
         ref_covariate = self.covariates[self.batch == self.hparams.batch_ref][0]
         covariates = ref_covariate.repeat((self.adata.n_obs, 1))
@@ -183,7 +183,7 @@ class Scyan(pl.LightningModule):
 
     def training_epoch_end(self, _):
         """PyTorch lightning training_epoch_end implementation"""
-        if "cell_type" in self.adata.obs:
+        if "cell_type" in self.adata.obs:  # TODO: remove?
             if len(self.x) > 500000:
                 indices = random.sample(range(len(self.x)), 500000)
                 x = self.x[indices]
