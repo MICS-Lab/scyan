@@ -35,7 +35,7 @@ class Scyan(pl.LightningModule):
         temperature: float = -1,
         mmd_max_samples: int = 2048,
         modulo_temp: int = 2,
-        max_samples: Union[int, None] = None,
+        max_samples: Union[int, None] = 200000,
         batch_key: Union[str, None] = None,
         batch_ref: Union[str, int, None] = None,
     ):
@@ -120,7 +120,21 @@ class Scyan(pl.LightningModule):
 
         self.other_batches = list(set(self.batch.tolist()))
 
-        if self.hparams.batch_ref is not None:
+        if self.hparams.batch_key is None:
+            assert (
+                self.hparams.batch_ref is None
+            ), "To correct batch effect, please profide a batch_key (received only a batch_ref)."
+        else:
+            if self.hparams.batch_ref is None:
+                self.hparams.batch_ref = self.batch[0]
+                log.warn(
+                    f"No batch_ref was provided, using {self.hparams.batch_ref} as reference."
+                )
+
+            assert (
+                self.hparams.batch_ref in self.other_batches
+            ), f"Batch reference '{self.hparams.batch_ref}' is not an existing batch."
+
             self.other_batches.remove(self.hparams.batch_ref)
 
     def forward(self) -> Tensor:
