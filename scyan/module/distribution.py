@@ -7,11 +7,11 @@ import pytorch_lightning as pl
 class PriorDistribution(pl.LightningModule):
     def __init__(self, rho: Tensor, rho_mask: Tensor, prior_std: float, n_markers: int):
         super().__init__()
-        self.rho = rho
-        self.rho_mask = rho_mask
         self.prior_std = prior_std
         self.n_markers = n_markers
 
+        self.register_buffer("rho", rho)
+        self.register_buffer("rho_mask", rho_mask)
         self.register_buffer("loc", torch.zeros((n_markers)))
         self.register_buffer("cov", torch.eye((n_markers)) * self.prior_std ** 2)
 
