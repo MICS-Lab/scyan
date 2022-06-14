@@ -30,7 +30,7 @@ class PriorDistribution(pl.LightningModule):
             * torch.sqrt(2 / torch.tensor(torch.pi))
         )
         self.gamma = 1 / (1 + _gamma)
-        self.na_constant_term = self.rho_mask.sum(dim=1) * torch.log(self.gamma)
+        self.na_constant_term = (self.rho_mask.sum(dim=1) * torch.log(self.gamma)).item()
 
     def difference_to_modes(self, u: Tensor) -> Tensor:
         """Difference between the latent variable U and all the modes
