@@ -50,5 +50,9 @@ def test_probs_per_marker(model: Scyan, pop: str, ref: str):
     scyan.plot.probs_per_marker(model, pop, show=False)
 
 
+def test_latent_heatmap(model: Scyan):
+    scyan.plot.latent_heatmap(model, show=False)
+
+
 def test_scatter(model: Scyan, pop: str, ref: str, markers: List[str]):
     scyan.plot.scatter(model, [pop, ref], markers, n_obs=100, show=False)

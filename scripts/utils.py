@@ -45,9 +45,9 @@ def init_and_fit_model(adata, marker_pop_matrix, config, wandb_logger=None):
 def classification_metrics(y_true, y_pred):
     accuracy = metrics.accuracy_score(y_true, y_pred)
     f1 = metrics.f1_score(y_true, y_pred, average="macro")
-    kappa = metrics.cohen_kappa_score(y_true, y_pred)
+    balanced_acc = metrics.balanced_accuracy_score(y_true, y_pred)
 
-    return {"Accuracy": accuracy, "F1-score": f1, "Kappa": kappa}
+    return {"Accuracy": accuracy, "F1-Score": f1, "Balanced Accuracy": balanced_acc}
 
 
 def compute_metrics(model, config, scyan_pop_key="scyan_pop"):

@@ -71,3 +71,13 @@ def probs_per_marker(
     df_probs.sort_values(by=prob_name, inplace=True, ascending=False)
     sns.heatmap(df_probs, cmap="magma", vmin=max(vmin_threshold, mean_log_probs.min()))
     plt.title("Log probabilities per marker for each population")
+
+
+@optional_show
+def latent_heatmap(model: Scyan, obs_key: str = "scyan_pop", show: bool = True):
+    u = model()
+
+    df = pd.DataFrame(u.detach().numpy(), columns=model.marker_pop_matrix.columns)
+    df["Population"] = model.adata.obs[obs_key].values
+
+    sns.heatmap(df.groupby("Population").mean(), center=0, cmap="coolwarm")
