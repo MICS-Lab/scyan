@@ -15,11 +15,14 @@ class PriorDistribution(pl.LightningModule):
         self.register_buffer("loc", torch.zeros((n_markers)))
         self.register_buffer("cov", torch.eye((n_markers)) * self.prior_std ** 2)
 
-        self.prior_h = distributions.MultivariateNormal(self.loc, self.cov)
         self.uniform = distributions.Uniform(-1, 1)
         self.normal = distributions.Normal(0, self.prior_std)
 
         self.compute_constant_terms()
+
+    @property
+    def prior_h(self):
+        return distributions.MultivariateNormal(self.loc, self.cov)
 
     def compute_constant_terms(self):
         self.uniform_law_radius = 1 - self.prior_std
