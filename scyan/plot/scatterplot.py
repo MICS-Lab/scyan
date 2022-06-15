@@ -1,5 +1,5 @@
 import seaborn as sns
-from typing import List
+from typing import List, Union
 import scanpy as sc
 import numpy as np
 
@@ -8,10 +8,10 @@ from .utils import optional_show, check_population, get_palette_others
 
 
 @optional_show
-@check_population
+@check_population(return_list=True)
 def scatter(
     model: Scyan,
-    populations: List[str],
+    populations: Union[str, List[str]],
     markers: List[str],
     obs_key: str = "scyan_pop",
     n_obs: int = 5000,

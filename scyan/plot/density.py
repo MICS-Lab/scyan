@@ -15,10 +15,10 @@ from .utils import optional_show, check_population, get_palette_others
 
 
 @optional_show
-@check_population
+@check_population(return_list=True)
 def kde_per_population(
     model: Scyan,
-    population: Union[str, List[str]],
+    populations: Union[str, List[str]],
     obs_key: str = "scyan_pop",
     markers: Union[List[str], None] = None,
     ncols: int = 4,
@@ -39,15 +39,12 @@ def kde_per_population(
         value_name (str, optional): Value name. Defaults to "Expression".
         show (bool, optional): Whether to plt.show() or not. Defaults to True.
     """
-    markers = model.adata.var_names if markers is None else markers
+    markers = model.var_names if markers is None else markers
 
     df = model.adata.to_df()
 
-    if isinstance(population, str):
-        df[obs_key] = pd.Categorical(model.adata.obs[obs_key] == population)
-    else:
-        keys = model.adata.obs[obs_key]
-        df[obs_key] = np.where(~np.isin(keys, population), "Others", keys)
+    keys = model.adata.obs[obs_key]
+    df[obs_key] = np.where(~np.isin(keys, populations), "Others", keys)
 
     df = pd.melt(
         df,
@@ -72,7 +69,7 @@ def kde_per_population(
 
 @torch.no_grad()
 @optional_show
-@check_population
+@check_population()
 def latent_expressions(
     model: Scyan, population: str, obs_key: str = "scyan_pop", show: bool = True
 ):
@@ -114,7 +111,7 @@ def latent_expressions(
 
 
 @optional_show
-@check_population
+@check_population()
 def pop_weighted_kde(
     model: Scyan,
     population: str,

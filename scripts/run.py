@@ -9,7 +9,7 @@ import numpy as np
 import scyan
 from scyan.model import Scyan
 
-from .utils import init_and_fit_model, compute_metrics, metric_to_optimize, compute_umaps
+from .utils import init_and_fit_model, compute_metrics, metric_to_optimize, compute_umap
 
 
 @hydra.main(config_path="../config", config_name="config")
@@ -44,7 +44,7 @@ def main(config: DictConfig) -> float:
 
         model: Scyan = init_and_fit_model(adata, marker_pop_matrix, config, wandb_logger)
 
-        compute_umaps(model, config)
+        compute_umap(model, config)
         metrics_dict = compute_metrics(model, config)
 
         for name, value in metrics_dict.items():

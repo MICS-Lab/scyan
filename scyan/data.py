@@ -61,12 +61,13 @@ def load(dataset: str, size: str = "default") -> Union[AnnData, pd.DataFrame]:
 
 def _prepare_data(
     adata: AnnData,
+    markers: List[str],
     batch_key: Union[str, int, None],
     categorical_covariate_keys: List[str],
     continuous_covariate_keys: List[str],
 ) -> Tuple[Tensor, Tensor, Tensor]:
     """Initializes the data and the covariates"""
-    x = torch.tensor(adata.X)
+    x = torch.tensor(adata[:, markers].X)
 
     if (batch_key is not None) and batch_key not in categorical_covariate_keys:
         categorical_covariate_keys.append(batch_key)

@@ -10,7 +10,6 @@ defaults:
 wandb:
   mode: disabled # online, offline, disabled
   save_umap: false
-  save_umap_latent_space: false
 
 n_run: 20
 

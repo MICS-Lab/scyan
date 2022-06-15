@@ -59,7 +59,7 @@ def compute_metrics(model, config, scyan_pop_key="scyan_pop"):
         log.info("No label provided. The classification metrics are not computed.")
         metrics_dict = {}
 
-    X, labels = model.adata.X, model.adata.obs[scyan_pop_key]
+    X, labels = model.x.cpu().numpy(), model.adata.obs[scyan_pop_key]
 
     n_missing_pop = len(model.marker_pop_matrix.index) - len(set(labels.values))
     metrics_dict["Number of missing pop"] = n_missing_pop
@@ -92,7 +92,7 @@ def metric_to_optimize(all_metrics, config):
     return 0
 
 
-def compute_umaps(model, config, scyan_pop_key="scyan_pop"):
+def compute_umap(model, config, obs_key="scyan_pop"):
     palette = model.adata.uns.get("palette", None)  # Get color palette if existing
 
     if config.wandb.mode != "disabled" and config.wandb.save_umap:
@@ -100,23 +100,7 @@ def compute_umaps(model, config, scyan_pop_key="scyan_pop"):
             {
                 "umap": scyan.utils._wandb_plt_image(
                     lambda: sc.pl.umap(
-                        model.adata, color=scyan_pop_key, show=False, palette=palette
-                    )
-                )
-            }
-        )
-
-    if config.wandb.mode != "disabled" and config.wandb.save_umap_latent_space:
-        scyan.utils.process_umap_latent(model)
-        wandb.log(
-            {
-                "umap_latent_space": scyan.utils._wandb_plt_image(
-                    lambda: sc.pl.umap(
-                        model.adata,
-                        color=[scyan_pop_key]
-                        + model.categorical_covariate_keys
-                        + model.continuous_covariate_keys,
-                        show=False,
+                        model.adata, color=obs_key, show=False, palette=palette
                     )
                 )
             }

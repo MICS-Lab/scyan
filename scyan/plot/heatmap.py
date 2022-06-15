@@ -36,7 +36,7 @@ def marker_matrix_reconstruction(
 
 @torch.no_grad()
 @optional_show
-@check_population
+@check_population()
 def probs_per_marker(
     model: Scyan,
     population: str,
@@ -45,7 +45,7 @@ def probs_per_marker(
     show: bool = True,
     vmin_threshold: int = -100,
 ):
-    """Plots a heatmap of marker pronbabilities for each population
+    """Plots a heatmap of marker probabilities for each population
 
     Args:
         model (Scyan): Scyan model

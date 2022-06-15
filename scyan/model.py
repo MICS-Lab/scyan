@@ -55,10 +55,9 @@ class Scyan(pl.LightningModule):
             alpha (float, optional): Constraint term weight in the loss function. Defaults to 1.0.
         """
         super().__init__()
-        log.info("The provided adata is copied, prefer to use model.adata from now on.")
 
         self.marker_pop_matrix = marker_pop_matrix
-        self.adata = adata[:, self.marker_pop_matrix.columns].copy()
+        self.adata = adata
         self.continuous_covariate_keys = continuous_covariate_keys or []
         self.categorical_covariate_keys = categorical_covariate_keys or []
         self.n_pops = len(self.marker_pop_matrix)
@@ -103,12 +102,13 @@ class Scyan(pl.LightningModule):
 
     @property
     def var_names(self):
-        return self.adata.var_names
+        return self.marker_pop_matrix.columns
 
     def prepare_data(self) -> None:
         """Initializes the data and the covariates"""
         x, covariates, batch = _prepare_data(
             self.adata,
+            self.var_names,
             self.hparams.batch_key,
             self.categorical_covariate_keys,
             self.continuous_covariate_keys,
