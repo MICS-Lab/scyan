@@ -2,11 +2,13 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
+import torch
 
 from .. import Scyan
 from .utils import optional_show, check_population
 
 
+@torch.no_grad()
 @optional_show
 def marker_matrix_reconstruction(
     model: Scyan, show_diff: bool = False, show: bool = True
@@ -20,7 +22,7 @@ def marker_matrix_reconstruction(
     """
     predictions = model.predict(key_added=None)
     predictions.name = "Population"
-    h = model().detach().numpy()
+    h = model().cpu().numpy()
     df = pd.concat(
         [predictions, pd.DataFrame(h, columns=model.marker_pop_matrix.columns)], axis=1
     )
@@ -32,6 +34,7 @@ def marker_matrix_reconstruction(
     plt.title("Marker matrix approximation by the model embedding space")
 
 
+@torch.no_grad()
 @optional_show
 @check_population
 def probs_per_marker(
@@ -54,7 +57,7 @@ def probs_per_marker(
     u = model.module(model.x[where], model.covariates[where])[0]
 
     log_probs = model.module.prior.log_prob_per_marker(u)
-    mean_log_probs = log_probs.mean(dim=0).detach().numpy()
+    mean_log_probs = log_probs.mean(dim=0).cpu().numpy()
 
     df_probs = pd.DataFrame(
         mean_log_probs,
@@ -73,11 +76,12 @@ def probs_per_marker(
     plt.title("Log probabilities per marker for each population")
 
 
+@torch.no_grad()
 @optional_show
 def latent_heatmap(model: Scyan, obs_key: str = "scyan_pop", show: bool = True):
     u = model()
 
-    df = pd.DataFrame(u.detach().numpy(), columns=model.marker_pop_matrix.columns)
+    df = pd.DataFrame(u.cpu().numpy(), columns=model.marker_pop_matrix.columns)
     df["Population"] = model.adata.obs[obs_key].values
 
     sns.heatmap(df.groupby("Population").mean(), center=0, cmap="coolwarm")

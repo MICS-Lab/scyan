@@ -45,18 +45,6 @@ def _wandb_plt_image(fun: Callable, figsize: Tuple[int, int] = [7, 5]):
     return wandb.Image(Image.open(img_buf))
 
 
-def process_umap_latent(model, min_dist: float = 0.05):
-    """Computes the UMAP based on Scyan's latent space
-
-    Args:
-        model (Scyan): Scyan model
-        min_dist (float, optional): min_dist parameter for the UMAP. Defaults to 0.05.
-    """
-    model.adata.obsm["X_scyan"] = model().detach().numpy()
-    sc.pp.neighbors(model.adata, use_rep="X_scyan")
-    sc.tl.umap(model.adata, min_dist=min_dist)
-
-
 def read_fcs(path: str) -> AnnData:
     """Reads a FCS file and returns an AnnData instance
 

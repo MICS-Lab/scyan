@@ -8,6 +8,7 @@ import matplotlib.patheffects as pe
 import matplotlib.lines as mlines
 import matplotlib
 from scipy import stats
+import torch
 
 from .. import Scyan
 from .utils import optional_show, check_population, get_palette_others
@@ -69,6 +70,7 @@ def kde_per_population(
     )
 
 
+@torch.no_grad()
 @optional_show
 @check_population
 def latent_expressions(
@@ -85,7 +87,7 @@ def latent_expressions(
     u_mean = model.module(model.x[where], model.covariates[where])[0].mean(dim=0)
 
     labels = model.marker_pop_matrix.columns
-    values = u_mean.detach().numpy()
+    values = u_mean.cpu().numpy()
 
     x_pdf = np.linspace(min(-1.5, values.min()), max(values.max(), 1.5), 200)
     y_pdf = 0.5 * (

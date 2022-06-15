@@ -254,7 +254,9 @@ class Scyan(pl.LightningModule):
             self.x if x is None else x,
             self.covariates if covariates is None else covariates,
         )
-        return pd.DataFrame(predictions.numpy(), columns=self.marker_pop_matrix.index)
+        return pd.DataFrame(
+            predictions.cpu().numpy(), columns=self.marker_pop_matrix.index
+        )
 
     @property
     @torch.no_grad()
