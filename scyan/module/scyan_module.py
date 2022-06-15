@@ -177,9 +177,8 @@ class ScyanModule(pl.LightningModule):
         )
 
         log_probs = self.prior.log_prob(u) + log_pi  # size N x P
-        probs = torch.softmax(log_probs, dim=1)  # TODO: remove?
 
-        return probs, log_probs, ldj_sum, u
+        return log_probs, ldj_sum, u
 
     def batch_correction_mmd(self, u1, pop1, u2, pop2):
         n_samples = min(len(u1), len(u2), self.hparams.mmd_max_samples)
@@ -216,7 +215,7 @@ class ScyanModule(pl.LightningModule):
         Returns:
             Tensor: Sum of the KL divergence and the MMD (only for batch effect correction)
         """
-        _, log_probs, ldj_sum, u = self.compute_probabilities(x, covariates, use_temp)
+        log_probs, ldj_sum, u = self.compute_probabilities(x, covariates, use_temp)
 
         kl = -(torch.logsumexp(log_probs, dim=1) + ldj_sum).mean()
 

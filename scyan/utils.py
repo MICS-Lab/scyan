@@ -10,6 +10,9 @@ import flowio
 from typing import Union, List
 import torch
 from torch import Tensor
+import logging
+
+log = logging.getLogger(__name__)
 
 
 def root_path() -> Path:
@@ -136,3 +139,39 @@ def _process_pop_sample(model, pop: Union[str, List[str], int, Tensor, None] = N
         return _pops_to_indices(model, pop)
     else:
         return pop
+
+
+def _requires_fit(f: Callable) -> Callable:
+    """Make sure the model has been trained"""
+
+    def wrapper(model, *args, **kwargs):
+        assert (
+            model._is_fitted
+        ), "The model have to be trained first, consider running 'model.fit()'"
+        return f(model, *args, **kwargs)
+
+    return wrapper
+
+
+def _validate_inputs(adata: AnnData, df: pd.DataFrame):
+    assert isinstance(
+        adata, AnnData
+    ), f"The provided adata has to be an AnnData object (https://anndata.readthedocs.io/en/latest/), found {type(adata)}."
+
+    assert isinstance(
+        df, pd.DataFrame
+    ), f"The marker-population matrix has to be a pandas DataFrame, found {type(df)}"
+
+    not_found_columns = [c for c in df.columns if c not in adata.var_names]
+
+    assert (
+        not not_found_columns
+    ), f"All column names from the marker-population table have to be a known marker from adata.var_names. Missing {not_found_columns}."
+
+    if not df.dtypes.apply(is_numeric_dtype).all():
+        log.warn(
+            "Some columns of the marker-population table are not numeric / NaN. Every non-numeric value will be considered as NaN."
+        )
+        df = df.apply(pd.to_numeric, errors="coerce")
+
+    return adata, df

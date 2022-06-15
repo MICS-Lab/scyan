@@ -13,7 +13,7 @@ import logging
 
 from .module import ScyanModule
 from .data import AdataDataset, RandomSampler, _prepare_data
-from .utils import _process_pop_sample
+from .utils import _process_pop_sample, _validate_inputs, _requires_fit
 
 log = logging.getLogger(__name__)
 
@@ -30,12 +30,12 @@ class Scyan(pl.LightningModule):
         n_layers: int = 7,
         prior_std: float = 0.20,
         lr: float = 1e-3,
-        batch_size: int = 16384,
+        batch_size: int = 16_384,
         alpha_batch_effect: float = 200,
         temperature: float = -1,
         mmd_max_samples: int = 2048,
         modulo_temp: int = 2,
-        max_samples: Union[int, None] = 200000,
+        max_samples: Union[int, None] = 200_000,
         batch_key: Union[str, None] = None,
         batch_ref: Union[str, int, None] = None,
     ):
@@ -55,9 +55,7 @@ class Scyan(pl.LightningModule):
             alpha (float, optional): Constraint term weight in the loss function. Defaults to 1.0.
         """
         super().__init__()
-
-        self.marker_pop_matrix = marker_pop_matrix
-        self.adata = adata
+        self.adata, self.marker_pop_matrix = _validate_inputs(adata, marker_pop_matrix)
         self.continuous_covariate_keys = continuous_covariate_keys or []
         self.categorical_covariate_keys = categorical_covariate_keys or []
         self.n_pops = len(self.marker_pop_matrix)
@@ -146,6 +144,7 @@ class Scyan(pl.LightningModule):
         return self.module(self.x, self.covariates)[0]
 
     @torch.no_grad()
+    @_requires_fit
     def sample(
         self,
         n_samples: int,
@@ -167,12 +166,13 @@ class Scyan(pl.LightningModule):
 
         if covariates_sample is None:
             # TODO: sample where pop
-            indices = random.sample(range(len(self.x)), n_samples)
+            indices = random.sample(range(self.adata.n_obs), n_samples)
             covariates_sample = self.covariates[indices]
 
         return self.module.sample(n_samples, covariates_sample, z=z, return_z=return_z)
 
     @torch.no_grad()
+    @_requires_fit
     def batch_effect_correction(self):
         u = self()
 
@@ -212,12 +212,13 @@ class Scyan(pl.LightningModule):
                 )
             self.log("accuracy_score", acc, prog_bar=True)
 
+    # @_requires_fit
     @torch.no_grad()
     def predict(
         self,
         x: Union[Tensor, None] = None,
         covariates: Union[Tensor, None] = None,
-        key_added: str = "scyan_pop",
+        key_added: Union[str, None] = "scyan_pop",
     ) -> pd.Series:
         """Model predictions
 
@@ -232,11 +233,12 @@ class Scyan(pl.LightningModule):
         df = self.predict_proba(x, covariates)
         populations = df.idxmax(axis=1).astype("category")
 
-        if key_added:
+        if key_added is not None:
             self.adata.obs[key_added] = pd.Categorical(populations.values)
 
         return populations
 
+    # @_requires_fit
     @torch.no_grad()
     def predict_proba(
         self, x: Union[Tensor, None] = None, covariates: Union[Tensor, None] = None
@@ -250,13 +252,13 @@ class Scyan(pl.LightningModule):
         Returns:
             pd.DataFrame: Dataframe of probabilities for each population
         """
-        predictions, *_ = self.module.compute_probabilities(
+        log_probs, *_ = self.module.compute_probabilities(
             self.x if x is None else x,
             self.covariates if covariates is None else covariates,
         )
-        return pd.DataFrame(
-            predictions.cpu().numpy(), columns=self.marker_pop_matrix.index
-        )
+        probs = torch.softmax(log_probs, dim=1)
+
+        return pd.DataFrame(probs.cpu().numpy(), columns=self.marker_pop_matrix.index)
 
     @property
     @torch.no_grad()
@@ -266,8 +268,8 @@ class Scyan(pl.LightningModule):
         Returns:
             Tensor: Population weights
         """
-        predictions, *_ = self.module.compute_probabilities(self.x, self.covariates)
-        return predictions.mean(dim=0)
+        log_probs, *_ = self.module.compute_probabilities(self.x, self.covariates)
+        return torch.softmax(log_probs, dim=1).mean(dim=0)
 
     def configure_optimizers(self):
         """PyTorch lightning configure_optimizers implementation"""
