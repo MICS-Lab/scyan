@@ -1,8 +1,10 @@
+from typing import Tuple
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from itertools import groupby
 
 from .. import Scyan
 from .utils import optional_show, check_population
@@ -81,7 +83,58 @@ def probs_per_marker(
 def latent_heatmap(model: Scyan, obs_key: str = "scyan_pop", show: bool = True):
     u = model()
 
-    df = pd.DataFrame(u.cpu().numpy(), columns=model.marker_pop_matrix.columns)
+    df = pd.DataFrame(u.cpu().numpy(), columns=model.var_names)
     df["Population"] = model.adata.obs[obs_key].values
 
     sns.heatmap(df.groupby("Population").mean(), center=0, cmap="coolwarm")
+
+
+@torch.no_grad()
+@optional_show
+def subclusters(
+    model: Scyan,
+    obs_key: str = "scyan_pop",
+    subcluster_key: str = "leiden_subcluster",
+    figsize: Tuple[int, int] = (10, 5),
+    show: bool = True,
+):
+    plt.figure(figsize=figsize)
+
+    u = model()
+
+    df = pd.DataFrame(u.cpu().numpy(), columns=model.var_names)
+    df[obs_key] = model.adata.obs[obs_key].values
+    df[subcluster_key] = model.adata.obs[subcluster_key].values
+
+    df = df.groupby([obs_key, subcluster_key]).mean().dropna()
+    pops = df.index.get_level_values(obs_key)
+    df.index = list(df.index.get_level_values(subcluster_key))
+
+    ax = sns.heatmap(df, center=0, cmap="coolwarm")
+    trans = ax.get_xaxis_transform()
+
+    x0 = -1
+    delta = 0.2
+    n_pops = len(df.index)
+    scale = 1 / n_pops
+    groups = [(label, len(list(g))) for label, g in groupby(pops)]
+
+    pos = 0
+    for i, (label, k) in enumerate(groups):
+        y1, y2 = pos, pos + k
+        y_line1, y_line2 = (n_pops - y1 - 0.5) * scale, (n_pops - y2 + 0.5) * scale
+
+        ax.plot(
+            [x0 + delta, x0, x0, x0 + delta],
+            [y_line1, y_line1, y_line2, y_line2],
+            color="k",
+            transform=trans,
+            clip_on=False,
+        )
+        if i:
+            plt.plot([0, len(model.var_names)], [y1, y1], color="black")
+        plt.text(x0 - delta, (y1 + y2) / 2, label, ha="right", va="center")
+
+        pos += k
+
+    plt.yticks(rotation=0)

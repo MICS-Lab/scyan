@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 
 class ScyanModule(pl.LightningModule):
-    pi_logit_ratio: float = 10  # To learn pi logits faster
+    pi_logit_ratio: float = 100  # To learn pi logits faster
 
     def __init__(
         self,

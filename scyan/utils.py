@@ -175,3 +175,31 @@ def _validate_inputs(adata: AnnData, df: pd.DataFrame):
         df = df.apply(pd.to_numeric, errors="coerce")
 
     return adata, df
+
+
+def subcluster(
+    model,
+    resolution: float = 1,
+    cluster_size_th: int = 100,
+    obs_key: str = "scyan_pop",
+    subcluster_key: str = "leiden_subcluster",
+):
+    adata = model.adata
+    sc.tl.leiden(adata, resolution=resolution)
+
+    adata.obs[subcluster_key] = ""
+    for pop in adata.obs[obs_key].cat.categories:
+        condition = adata.obs[obs_key] == pop
+
+        labels = adata[condition].obs.leiden
+        counts = labels.value_counts()
+
+        if (counts > cluster_size_th).sum() < 2:
+            adata.obs.loc[condition, subcluster_key] = np.nan
+            continue
+
+        rename_dict = {
+            k: i if v > cluster_size_th else np.nan
+            for i, (k, v) in enumerate(counts.items())
+        }
+        adata.obs.loc[condition, subcluster_key] = [rename_dict[l] for l in labels]
