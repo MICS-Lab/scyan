@@ -16,11 +16,6 @@ def ref() -> str:
 
 
 @pytest.fixture
-def markers() -> List[str]:
-    return ["CD4", "CD45"]
-
-
-@pytest.fixture
 def model() -> Scyan:
     adata, marker_pop_matrix = scyan.data.load("aml", size="short")
     model = Scyan(adata, marker_pop_matrix)
@@ -54,5 +49,5 @@ def test_latent_heatmap(model: Scyan):
     scyan.plot.latent_heatmap(model, show=False)
 
 
-def test_scatter(model: Scyan, pop: str, ref: str, markers: List[str]):
-    scyan.plot.scatter(model, [pop, ref], markers, n_obs=100, show=False)
+def test_scatter(model: Scyan, pop: str, ref: str):
+    scyan.plot.scatter(model, [pop, ref], max_obs=100, show=False)

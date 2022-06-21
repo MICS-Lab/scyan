@@ -15,7 +15,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-def root_path() -> Path:
+def _root_path() -> Path:
     """Gets the library root path
 
     Returns:
@@ -99,6 +99,12 @@ def write_fcs(adata: AnnData, path: str) -> None:
 
     with open(path, "wb") as f:
         flowio.create_fcs(X.flatten(), channel_names, f)
+
+
+def _subset(indices: List[str], max_obs: int):
+    if len(indices) < max_obs:
+        return indices
+    return indices[np.random.choice(len(indices), max_obs, replace=False)]
 
 
 def _markers_to_indices(model, markers: List[str]) -> Tensor:

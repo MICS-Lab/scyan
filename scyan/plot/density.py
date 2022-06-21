@@ -11,7 +11,7 @@ from scipy import stats
 import torch
 
 from .. import Scyan
-from .utils import optional_show, check_population, get_palette_others
+from .utils import optional_show, check_population, get_palette_others, get_markers
 
 
 @optional_show
@@ -21,6 +21,7 @@ def kde_per_population(
     populations: Union[str, List[str]],
     obs_key: str = "scyan_pop",
     markers: Union[List[str], None] = None,
+    n_markers: Union[int, None] = 3,
     ncols: int = 4,
     var_name: str = "Marker",
     value_name: str = "Expression",
@@ -39,7 +40,7 @@ def kde_per_population(
         value_name (str, optional): Value name. Defaults to "Expression".
         show (bool, optional): Whether to plt.show() or not. Defaults to True.
     """
-    markers = model.var_names if markers is None else markers
+    markers = get_markers(model, markers, n_markers, obs_key, populations)
 
     df = model.adata.to_df()
 
@@ -64,6 +65,7 @@ def kde_per_population(
         common_norm=False,
         facet_kws=dict(sharey=False),
         palette=get_palette_others(df, obs_key),
+        hue_order=populations + ["Others"],
     )
 
 
