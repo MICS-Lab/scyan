@@ -25,7 +25,7 @@ class PriorDistribution(pl.LightningModule):
         return distributions.MultivariateNormal(self.loc, self.cov)
 
     def compute_constant_terms(self):
-        self.uniform_law_radius = 1 - self.prior_std
+        self.uniform_law_radius = 1
 
         _gamma = (
             self.uniform_law_radius

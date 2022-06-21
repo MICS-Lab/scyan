@@ -28,7 +28,7 @@ class Scyan(pl.LightningModule):
         hidden_size: int = 16,
         n_hidden_layers: int = 7,
         n_layers: int = 7,
-        prior_std: float = 0.20,
+        prior_std: float = 0.2,
         lr: float = 1e-3,
         batch_size: int = 16_384,
         alpha_batch_effect: float = 200,
