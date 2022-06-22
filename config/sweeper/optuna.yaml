@@ -33,7 +33,7 @@ hydra:
         high: 0
       model.modulo_temp:
         type: int
-        low: 2
+        low: 1
         high: 4
       # model.mmd_max_samples:
       #   type: categorical

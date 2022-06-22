@@ -3,6 +3,7 @@ from torch import Tensor
 from torch import nn
 from typing import Tuple
 import pytorch_lightning as pl
+import numpy as np
 
 from .coupling_layer import CouplingLayer
 
@@ -26,6 +27,8 @@ class RealNVP(pl.LightningModule):
             n_layers (int): number of coupling layers
         """
         super().__init__()
+        self.build_masks(output_size, n_layers)
+
         self.module_list = nn.ModuleList(
             [
                 CouplingLayer(
@@ -33,15 +36,20 @@ class RealNVP(pl.LightningModule):
                     hidden_size,
                     output_size,
                     n_hidden_layers,
-                    self._mask(output_size, i),
+                    self.masks[i],
                 )
                 for i in range(n_layers)
             ]
         )
         self.module = nn.Sequential(*self.module_list)
 
-    def _mask(self, output_size: int, shift: int):
-        return (((torch.arange(output_size) - shift) % 3) > 0).to(int)
+    def build_masks(self, output_size: int, n_layers: int):
+        self.masks = []
+        for _ in range((n_layers + 1) // 2):
+            mask = np.array([j % 2 for j in range(output_size)])
+            np.random.shuffle(mask)
+            mask = torch.tensor(mask)
+            self.masks.extend([mask, 1 - mask])
 
     def forward(self, x: Tensor, covariates: Tensor) -> Tuple[Tensor, Tensor, Tensor]:
         """Forward implementation
