@@ -4,7 +4,7 @@ import numpy as np
 
 from .. import Scyan
 from ..utils import _subset
-from .utils import optional_show, check_population, get_palette_others, get_markers
+from .utils import optional_show, check_population, get_palette_others, select_markers
 
 
 @optional_show
@@ -20,7 +20,7 @@ def scatter(
     show: bool = True,
 ):
     adata = model.adata
-    markers = get_markers(model, markers, n_markers, obs_key, populations)
+    markers = select_markers(model, markers, n_markers, obs_key, populations)
 
     data = adata[:, markers].to_df()
     keys = adata.obs[obs_key].astype(str)

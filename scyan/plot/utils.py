@@ -63,7 +63,7 @@ def get_palette_others(data, key, default="Set1", others="Others", value=0.5):
     return colors
 
 
-def get_statistics(model: Scyan, obs_key: str, populations: List[str]):
+def ks_statistics(model: Scyan, obs_key: str, populations: List[str]):
     adata = model.adata
     statistics = defaultdict(float)
 
@@ -87,7 +87,7 @@ def get_statistics(model: Scyan, obs_key: str, populations: List[str]):
 MIN_2_MARKERS = "Provide at least 2 markers to plot or use scyan.plot.kde_per_population"
 
 
-def get_markers(
+def select_markers(
     model: Scyan,
     markers: Union[List[str], None],
     n_markers: Union[int, None],
@@ -100,7 +100,7 @@ def get_markers(
         ), "You need to provide a list of markers or a number of markers to be chosen automatically"
         assert n_markers >= 2, MIN_2_MARKERS
 
-        statistics = get_statistics(model, obs_key, populations)
+        statistics = ks_statistics(model, obs_key, populations)
         statistics = sorted(statistics.items(), key=lambda x: x[1], reverse=True)
         markers = [m for m, _ in statistics[:n_markers]]
 

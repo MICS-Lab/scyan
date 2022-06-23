@@ -188,9 +188,11 @@ def subcluster(
     resolution: float = 1,
     cluster_size_th: int = 100,
     obs_key: str = "scyan_pop",
-    subcluster_key: str = "leiden_subcluster",
+    subcluster_key: str = "subcluster_index",
+    umap_display_key: str = "leiden_subcluster",
 ):
     adata = model.adata
+    sc.pp.neighbors(adata)
     sc.tl.leiden(adata, resolution=resolution)
 
     adata.obs[subcluster_key] = ""
@@ -209,3 +211,12 @@ def subcluster(
             for i, (k, v) in enumerate(counts.items())
         }
         adata.obs.loc[condition, subcluster_key] = [rename_dict[l] for l in labels]
+
+    series = adata.obs[subcluster_key]
+    adata.obs[umap_display_key] = pd.Categorical(
+        np.where(
+            series.isna(),
+            np.nan,
+            adata.obs[obs_key].astype(str) + " -> " + series.astype(str),
+        )
+    )

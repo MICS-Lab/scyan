@@ -11,7 +11,7 @@ from scipy import stats
 import torch
 
 from .. import Scyan
-from .utils import optional_show, check_population, get_palette_others, get_markers
+from .utils import optional_show, check_population, get_palette_others, select_markers
 
 
 @optional_show
@@ -40,7 +40,7 @@ def kde_per_population(
         value_name (str, optional): Value name. Defaults to "Expression".
         show (bool, optional): Whether to plt.show() or not. Defaults to True.
     """
-    markers = get_markers(model, markers, n_markers, obs_key, populations)
+    markers = select_markers(model, markers, n_markers, obs_key, populations)
 
     df = model.adata.to_df()
 

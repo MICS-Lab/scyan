@@ -86,7 +86,7 @@ def latent_heatmap(model: Scyan, obs_key: str = "scyan_pop", show: bool = True):
     df = pd.DataFrame(u.cpu().numpy(), columns=model.var_names)
     df["Population"] = model.adata.obs[obs_key].values
 
-    sns.heatmap(df.groupby("Population").mean(), center=0, cmap="coolwarm")
+    sns.heatmap(df.groupby("Population").mean(), vmax=1.2, vmin=-1.2, cmap="coolwarm")
 
 
 @torch.no_grad()
@@ -94,7 +94,7 @@ def latent_heatmap(model: Scyan, obs_key: str = "scyan_pop", show: bool = True):
 def subclusters(
     model: Scyan,
     obs_key: str = "scyan_pop",
-    subcluster_key: str = "leiden_subcluster",
+    subcluster_key: str = "subcluster_index",
     figsize: Tuple[int, int] = (10, 5),
     show: bool = True,
 ):
@@ -110,7 +110,7 @@ def subclusters(
     pops = df.index.get_level_values(obs_key)
     df.index = list(df.index.get_level_values(subcluster_key))
 
-    ax = sns.heatmap(df, center=0, cmap="coolwarm")
+    ax = sns.heatmap(df, vmax=1.2, vmin=-1.2, cmap="coolwarm")
     trans = ax.get_xaxis_transform()
 
     x0 = -1
