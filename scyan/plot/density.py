@@ -85,7 +85,7 @@ def latent_expressions(
     where = model.adata.obs[obs_key] == population
     u_mean = model.module(model.x[where], model.covariates[where])[0].mean(dim=0)
 
-    labels = model.marker_pop_matrix.columns
+    labels = model.var_names
     values = u_mean.cpu().numpy()
 
     x_pdf = np.linspace(min(-1.5, values.min()), max(values.max(), 1.5), 200)
@@ -148,7 +148,7 @@ def pop_weighted_kde(
             ).statistic,
             marker,
         )
-        for marker in model.marker_pop_matrix.columns
+        for marker in model.var_names
     ]
     markers = [marker for _, marker in sorted(markers_statistics, reverse=True)]
 

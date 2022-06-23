@@ -258,7 +258,7 @@ class Scyan(pl.LightningModule):
         )
         probs = torch.softmax(log_probs, dim=1)
 
-        return pd.DataFrame(probs.cpu().numpy(), columns=self.marker_pop_matrix.index)
+        return pd.DataFrame(probs.cpu().numpy(), columns=self.pop_names)
 
     @property
     @torch.no_grad()

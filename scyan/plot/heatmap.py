@@ -25,11 +25,9 @@ def marker_matrix_reconstruction(
     predictions = model.predict(key_added=None)
     predictions.name = "Population"
     h = model().cpu().numpy()
-    df = pd.concat(
-        [predictions, pd.DataFrame(h, columns=model.marker_pop_matrix.columns)], axis=1
-    )
+    df = pd.concat([predictions, pd.DataFrame(h, columns=model.var_names)], axis=1)
     df = df.groupby("Population").median()
-    heatmap = df.loc[model.marker_pop_matrix.index]
+    heatmap = df.loc[model.pop_names]
     if show_diff:
         heatmap -= model.marker_pop_matrix
     sns.heatmap(heatmap, cmap="coolwarm", center=0)
