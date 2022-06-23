@@ -1,6 +1,6 @@
 name: pop_durva
 wandb_project_name: pop
-categorical_covariate_keys:
-  - batch # TODO: use batch key
-label: cell_type
+# categorical_covariate_keys:
+#   - batch # TODO: use batch key
+# label: cell_type
 size: default
