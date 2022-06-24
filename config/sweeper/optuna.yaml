@@ -30,7 +30,7 @@ hydra:
       model.temperature:
         type: float
         low: -2
-        high: 0
+        high: -0.3
       model.modulo_temp:
         type: int
         low: 1
