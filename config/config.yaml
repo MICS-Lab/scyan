@@ -23,7 +23,7 @@ model:
   batch_size: 16384
   prior_std: 0.25
   alpha_batch_effect: 200
-  temperature: -1
+  temperature: 1
   mmd_max_samples: 2048
   modulo_temp: 2
 

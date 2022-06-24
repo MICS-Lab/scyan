@@ -29,8 +29,9 @@ hydra:
     search_space:
       model.temperature:
         type: float
-        low: -2
-        high: -0.3
+        low: 0.3
+        high: 10
+        log: true
       model.modulo_temp:
         type: int
         low: 1

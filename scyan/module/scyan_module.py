@@ -173,7 +173,9 @@ class ScyanModule(pl.LightningModule):
         u, _, ldj_sum = self(x, covariates)
 
         log_pi = (
-            self.log_pi_temperature(self.hparams.temperature) if use_temp else self.log_pi
+            self.log_pi_temperature(-self.hparams.temperature)
+            if use_temp
+            else self.log_pi
         )
 
         log_probs = self.prior.log_prob(u) + log_pi  # size N x P
