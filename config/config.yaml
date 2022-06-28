@@ -12,6 +12,7 @@ wandb:
   save_umap: false
 
 n_run: 20
+save_predictions: false
 
 model:
   _target_: scyan.model.Scyan

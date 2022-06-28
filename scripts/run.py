@@ -44,6 +44,9 @@ def main(config: DictConfig) -> float:
 
         model: Scyan = init_and_fit_model(adata, marker_pop_matrix, config, wandb_logger)
 
+        if config.save_predictions:
+            np.save(f"pred_{config.project.name}_{i}", adata.obs.scyan_pop.values)
+
         compute_umap(model, config)
         metrics_dict = compute_metrics(model, config)
 
