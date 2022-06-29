@@ -29,19 +29,19 @@ hydra:
     search_space:
       model.temperature:
         type: float
-        low: 0.3
+        low: 0.5
         high: 10
         log: true
       model.modulo_temp:
         type: int
         low: 1
-        high: 4
+        high: 3
       # model.mmd_max_samples:
       #   type: categorical
       #   choices: [1024, 2048]
       model.hidden_size:
         type: categorical
-        choices: [16, 32, 64]
+        choices: [16, 32]
       model.n_hidden_layers:
         type: int
         low: 6
@@ -52,12 +52,12 @@ hydra:
         high: 8
       model.prior_std:
         type: float
-        low: 0.15
-        high: 0.35
+        low: 0.2
+        high: 0.4
       model.lr:
         type: float
-        low: 0.0005
-        high: 0.002
+        low: 0.0001
+        high: 0.005
         log: true
       model.batch_size:
         type: categorical

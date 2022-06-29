@@ -16,7 +16,7 @@ from .utils import init_and_fit_model, compute_metrics, metric_to_optimize, comp
 def main(config: DictConfig) -> float:
     """Runs scyan on a dataset specified by the config/config.yaml file.
     It can be used for optuna hyperparameter search together with Weight&Biases to monitor the model.
-    Note that using this file is not optional, you can use the library as such.
+    Note that using this file is optional, you can use the library as such.
 
     Args:
         config (DictConfig): Hydra generated configuration (automatic)

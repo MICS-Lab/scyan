@@ -31,16 +31,6 @@ def test_latent_expressions(model: Scyan, pop: str, ref: str):
     scyan.plot.latent_expressions(model, pop, show=False)
 
 
-def test_pop_weighted_kde(model: Scyan, pop: str, ref: str):
-    scyan.plot.pop_weighted_kde(model, pop, n_samples=model.adata.n_obs, show=False)
-
-
-def test_pop_weighted_kde_with_ref(model: Scyan, pop: str, ref: str):
-    scyan.plot.pop_weighted_kde(
-        model, pop, n_samples=model.adata.n_obs, ref=ref, show=False
-    )
-
-
 def test_probs_per_marker(model: Scyan, pop: str, ref: str):
     scyan.plot.probs_per_marker(model, pop, show=False)
 

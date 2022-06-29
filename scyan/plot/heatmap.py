@@ -12,30 +12,6 @@ from .utils import optional_show, check_population
 
 @torch.no_grad()
 @optional_show
-def marker_matrix_reconstruction(
-    model: Scyan, show_diff: bool = False, show: bool = True
-):
-    """Reconstructs the marker matrix based on predictions
-
-    Args:
-        model (Scyan): Scyan model
-        show_diff (bool, optional): Whether do show the difference with the actual marker-population matrix. Defaults to False.
-        show (bool, optional): Whether to plt.show() or not. Defaults to True.
-    """
-    predictions = model.predict(key_added=None)
-    predictions.name = "Population"
-    h = model().cpu().numpy()
-    df = pd.concat([predictions, pd.DataFrame(h, columns=model.var_names)], axis=1)
-    df = df.groupby("Population").median()
-    heatmap = df.loc[model.pop_names]
-    if show_diff:
-        heatmap -= model.marker_pop_matrix
-    sns.heatmap(heatmap, cmap="coolwarm", center=0)
-    plt.title("Marker matrix approximation by the model embedding space")
-
-
-@torch.no_grad()
-@optional_show
 @check_population()
 def probs_per_marker(
     model: Scyan,

@@ -73,117 +73,39 @@ def kde_per_population(
 @optional_show
 @check_population()
 def latent_expressions(
-    model: Scyan, population: str, obs_key: str = "scyan_pop", show: bool = True
-):
-    """Plots all markers in one graph
-
-    Args:
-        model (Scyan): Scyan model
-        where (ArrayLike): Array where cells have to be considered
-        show (bool, optional): Whether to plt.show() or not. Defaults to True.
-    """
-    where = model.adata.obs[obs_key] == population
-    u_mean = model.module(model.x[where], model.covariates[where])[0].mean(dim=0)
-
-    labels = model.var_names
-    values = u_mean.cpu().numpy()
-
-    x_pdf = np.linspace(min(-1.5, values.min()), max(values.max(), 1.5), 200)
-    y_pdf = 0.5 * (
-        norm.pdf(x_pdf, loc=1, scale=model.hparams.prior_std)
-        + norm.pdf(x_pdf, loc=-1, scale=model.hparams.prior_std)
-    )
-
-    plt.figure(figsize=(10, 5))
-    plt.plot(x_pdf, y_pdf, "--", color="grey")
-    plt.xticks([-1, 0, 1])
-    plt.yticks([0, round(y_pdf.max(), 1)])
-
-    cmap = matplotlib.cm.get_cmap("viridis")
-
-    for value, label in sorted(zip(values, labels)):
-        plt.scatter([value], [0], c=[cmap(value)], label=label)
-        plt.annotate(
-            label,
-            (value - 0.02, 0.02),
-            rotation=90,
-            path_effects=[pe.withStroke(linewidth=3, foreground="white")],
-        )
-    plt.legend()
-
-
-@optional_show
-@check_population()
-def pop_weighted_kde(
     model: Scyan,
     population: str,
     obs_key: str = "scyan_pop",
-    n_samples: int = 5000,
-    alpha: float = 0.2,
-    thresh: float = 0.05,
-    ref: Union[str, None] = None,
+    max_value: float = 1.5,
+    num_pieces: int = 100,
+    radius: float = 0.05,
     show: bool = True,
 ):
-    """Plots a Kernel Density Estimation on a scatterplot
+    condition = model.adata.obs[obs_key] == population
+    u_mean = model.module(model.x[condition], model.covariates[condition])[0].mean(dim=0)
+    values = u_mean.cpu().numpy().clip(-max_value, max_value)
 
-    Args:
-        model (Scyan): Scyan model
-        pop (str): Population considered
-        n_samples (int, optional): Number of dots to be plot. Defaults to 5000.
-        alpha (float, optional): Scatter plot transparancy. Defaults to 0.2.
-        thresh (float, optional): KDE threshold. Defaults to 0.05.
-        ref (Union[str, None], optional): Population reference. None means no population reference. Defaults to None.
-        show (bool, optional): Whether to plt.show() or not. Defaults to True.
-    """
-    adata1 = model.adata[model.adata.obs[obs_key] == population]
-    if ref is None:
-        adata2 = model.adata[model.adata.obs[obs_key] != population]
-    else:
-        adata2 = model.adata[model.adata.obs[obs_key] == ref]
+    y = np.linspace(-max_value, max_value, num_pieces + 1)
+    cmap = plt.get_cmap("RdBu")
+    y_cmap = norm.pdf(np.abs(y) - 1, scale=model.hparams.prior_std)
+    y_cmap = y_cmap - y_cmap.min()
+    y_cmap = 0.5 - np.sign(y) * (y_cmap / y_cmap.max() / 2)
+    colors = cmap(y_cmap).clip(0, 0.8)
 
-    markers_statistics = [
-        (
-            stats.kstest(
-                adata1[:, marker].X.flatten(), adata2[:, marker].X.flatten()
-            ).statistic,
-            marker,
-        )
-        for marker in model.var_names
-    ]
-    markers = [marker for _, marker in sorted(markers_statistics, reverse=True)]
+    plt.figure(figsize=(2, 6), dpi=100)
+    plt.vlines(np.zeros(num_pieces), y[:-1], y[1:], colors=colors, linewidth=5)
+    plt.annotate("Pos", (-0.7, 1), fontsize=15)
+    plt.annotate("Neg", (-0.7, -1), fontsize=15)
 
-    df = model.adata.to_df()
-    df["proba"] = model.predict_proba()[population].values
-    if ref is not None:
-        df["proba_ref"] = model.predict_proba()[ref].values
-    df = df.sample(n=n_samples, random_state=0)
+    for v in np.arange(-max_value, max_value, 2 * radius):
+        labels = [
+            label
+            for value, label in zip(values, model.var_names)
+            if abs(v - value) < radius
+        ]
+        if labels:
+            plt.plot([0, 0.1], [v, v], "k")
+            plt.annotate(", ".join(labels), (0.2, v - 0.03))
 
-    if ref is not None:
-        sns.kdeplot(
-            data=df,
-            x=markers[0],
-            y=markers[1],
-            weights="proba_ref",
-            fill=True,
-            thresh=thresh,
-            color="C1",
-        )
-        plt.legend(
-            handles=[
-                mlines.Line2D([], [], color="C1", marker="s", ls="", label=ref),
-                mlines.Line2D([], [], color="C0", marker="s", ls="", label=population),
-            ]
-        )
-    sns.kdeplot(
-        data=df,
-        x=markers[0],
-        y=markers[1],
-        weights="proba",
-        fill=True,
-        thresh=thresh,
-        color="C0",
-    )
-    sns.scatterplot(data=df, x=markers[0], y=markers[1], alpha=alpha, color=".0", s=5)
-    plt.title(
-        f"KDE of cells weighted by the probability of {population}{'' if ref is None else f' and ref {ref}'}"
-    )
+    plt.xlim([-1, 1])
+    plt.axis("off")
