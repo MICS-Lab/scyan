@@ -30,13 +30,9 @@ model = scyan.Scyan(adata, marker_pop_matrix)
 model.fit()
 ```
 
-# Generate the docs
+# Docs
 
-```bash
-cd docs
-sphinx-apidoc -o source ../scyan
-make html
-open build/html/index.html
-```
-
-Or autobuild: `sphinx-autobuild docs/source docs/_build/html`
+- `mkdocs new [dir-name]` - Create a new project.
+- `mkdocs serve` - Start the live-reloading docs server.
+- `mkdocs build` - Build the documentation site.
+- `mkdocs -h` - Print help message and exit.

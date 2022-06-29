@@ -1,0 +1,26 @@
+site_name: Scyan
+repo_url: https://gitlab-research.centralesupelec.fr/mics_biomathematics/biomaths/scyan
+repo_name: biomaths/scyan
+copyright: Copyright &copy; 2021 - 2022 Quentin Blampey
+theme:
+  name: material
+  logo: assets/logo_medium.png
+  favicon: assets/favicon.png
+nav:
+  - Home: index.md
+  - Getting Started: getting_started.md
+  - Tutorials: tutorials.md
+  - API: 
+    - scyan.Scyan: api/model.md
+    - Modules:
+      - scyan.modules.ScyanModule: api/module.md
+  - Cite us: cite.md
+plugins:
+  - search
+  - mkdocstrings
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences

@@ -1,8 +1,8 @@
 # OS related
 .DS_Store
 
-# Sphinx documentation
-docs/_build/
+# Documentation
+site
 
 # Logs
 outputs
