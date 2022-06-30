@@ -22,7 +22,7 @@ def kde_per_population(
     obs_key: str = "scyan_pop",
     markers: Union[List[str], None] = None,
     n_markers: Union[int, None] = 3,
-    ncols: int = 4,
+    ncols: int = 2,
     var_name: str = "Marker",
     value_name: str = "Expression",
     show: bool = True,
@@ -40,7 +40,7 @@ def kde_per_population(
         value_name (str, optional): Value name. Defaults to "Expression".
         show (bool, optional): Whether to plt.show() or not. Defaults to True.
     """
-    markers = select_markers(model, markers, n_markers, obs_key, populations)
+    markers = select_markers(model, markers, n_markers, obs_key, populations, 1)
 
     df = model.adata.to_df()
 

@@ -19,6 +19,18 @@ log = logging.getLogger(__name__)
 
 
 class Scyan(pl.LightningModule):
+    """Scyan, a.k.a Single-cell Cytometry Annotation Network.
+    It is a wrapper to the ScyanModule that contains the core logic (the loss implementation, the forward function, ...).
+    While ScyanModule works on tensors, this class works directly on AnnData objects.
+
+    Attributes:
+        adata (AnnData): The provided `adata`
+        marker_pop_matrix (pd.Dataframe): The table knowledge
+        n_pops (int): Number of populations considered
+        hparams (object): Model hyperparameters
+        module (ScyanModule): A [ScyanModule][scyan.module.ScyanModule] object
+    """
+
     def __init__(
         self,
         adata: AnnData,
@@ -39,8 +51,7 @@ class Scyan(pl.LightningModule):
         batch_key: Union[str, None] = None,
         batch_ref: Union[str, int, None] = None,
     ):
-        """Scyan model
-
+        """
         Args:
             adata (AnnData): AnnData object containing the FCS data
             marker_pop_matrix (pd.DataFrame): Marker-population table (expert knowledge)
@@ -70,7 +81,7 @@ class Scyan(pl.LightningModule):
             ]
         )
 
-        self.prepare_data()
+        self._prepare_data()
 
         self.module = ScyanModule(
             torch.tensor(marker_pop_matrix.values, dtype=torch.float32),
@@ -95,14 +106,16 @@ class Scyan(pl.LightningModule):
         return f"Scyan model with N={self.adata.n_obs} cells, P={self.n_pops} populations and M={self.adata.n_vars} markers. {cov_repr}"
 
     @property
-    def pop_names(self):
+    def pop_names(self) -> pd.Index:
+        """Name of the populations considered in the knowledge table"""
         return self.marker_pop_matrix.index
 
     @property
-    def var_names(self):
+    def var_names(self) -> pd.Index:
+        """Name of the markers considered in the knowledge table"""
         return self.marker_pop_matrix.columns
 
-    def prepare_data(self) -> None:
+    def _prepare_data(self) -> None:
         """Initializes the data and the covariates"""
         if self.hparams.batch_key is None:
             assert (
@@ -155,15 +168,16 @@ class Scyan(pl.LightningModule):
         pop: Union[str, List[str], int, Tensor, None] = None,
         return_z: bool = False,
     ) -> Tuple[Tensor, Tensor]:
-        """Sample cells
+        """Sampling cells by sampling from the prior distribution and going into the Normalizing Flow
 
         Args:
-            n_samples (int): Number of cells to be sampled
-            covariates_sample (Union[Tensor, None], optional): Sample of cobariates. Defaults to None.
-            pop (Union[str, List[str], int, Tensor, None], optional): Sample of population. Defaults to None.
+            n_samples: Number of cells to sample
+            covariates_sample: Optional tensor of covariates. Defaults to None.
+            pop: Population to sample from. If None, sample from all populations. Defaults to None.
+            return_z: Whether to return the population Tensor. Defaults to False.
 
         Returns:
-            Tuple[Tensor, Tensor]: Pair of (cell expressions, population)
+            Sampled cells expressions and, if `return_z`, the populations associated to these cells.
         """
         z = _process_pop_sample(self, pop)
 
@@ -272,11 +286,6 @@ class Scyan(pl.LightningModule):
     @property
     @torch.no_grad()
     def pi_hat(self) -> Tensor:  # TODO: remove?
-        """Model observed population weights
-
-        Returns:
-            Tensor: Population weights
-        """
         log_probs, *_ = self.module.compute_probabilities(self.x, self.covariates)
         return torch.softmax(log_probs, dim=1).mean(dim=0)
 

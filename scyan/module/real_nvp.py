@@ -4,7 +4,7 @@ from torch import nn
 from typing import Tuple
 import pytorch_lightning as pl
 
-from .coupling_layer import CouplingLayer
+from . import CouplingLayer
 
 
 class RealNVP(pl.LightningModule):

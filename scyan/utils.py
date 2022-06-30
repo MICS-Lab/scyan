@@ -11,6 +11,7 @@ from typing import Union, List
 import torch
 from torch import Tensor
 import logging
+from functools import wraps
 
 log = logging.getLogger(__name__)
 
@@ -150,6 +151,7 @@ def _process_pop_sample(model, pop: Union[str, List[str], int, Tensor, None] = N
 def _requires_fit(f: Callable) -> Callable:
     """Make sure the model has been trained"""
 
+    @wraps(f)
     def wrapper(model, *args, **kwargs):
         assert (
             model._is_fitted

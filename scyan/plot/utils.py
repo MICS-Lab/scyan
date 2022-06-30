@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy import stats
 from collections import defaultdict
+from functools import wraps
 
 from .. import Scyan
 
@@ -11,6 +12,7 @@ from .. import Scyan
 def optional_show(f: Callable) -> Callable:
     """Decorator that shows a matplotlib figure if the provided 'show' argument is True"""
 
+    @wraps(f)
     def wrapper(*args, **kwargs):
         res = f(*args, **kwargs)
         if kwargs.get("show", True):
@@ -24,6 +26,7 @@ def check_population(return_list: bool = False):
     """Decorator that checks if the provided population (or populations) exists"""
 
     def decorator(f: Callable) -> Callable:
+        @wraps(f)
         def wrapper(
             model: Scyan,
             population: Union[str, List[str]],
@@ -84,25 +87,25 @@ def ks_statistics(model: Scyan, obs_key: str, populations: List[str]):
     return statistics
 
 
-MIN_2_MARKERS = "Provide at least 2 markers to plot or use scyan.plot.kde_per_population"
-
-
 def select_markers(
     model: Scyan,
     markers: Union[List[str], None],
     n_markers: Union[int, None],
     obs_key: str,
     populations: List[str],
+    min_markers: int = 2,
 ):
+    MIN_MARKERS_ERROR = f"Provide at least {min_markers} markers to plot or use scyan.plot.kde_per_population"
+
     if markers is None:
         assert (
             n_markers is not None
         ), "You need to provide a list of markers or a number of markers to be chosen automatically"
-        assert n_markers >= 2, MIN_2_MARKERS
+        assert n_markers >= min_markers, MIN_MARKERS_ERROR
 
         statistics = ks_statistics(model, obs_key, populations)
         statistics = sorted(statistics.items(), key=lambda x: x[1], reverse=True)
         markers = [m for m, _ in statistics[:n_markers]]
 
-    assert len(markers) >= 2, MIN_2_MARKERS
+    assert len(markers) >= min_markers, MIN_MARKERS_ERROR
     return markers

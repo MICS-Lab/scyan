@@ -6,14 +6,22 @@ from typing import Tuple, Union, List
 import pytorch_lightning as pl
 import logging
 
-from .real_nvp import RealNVP
-from .distribution import PriorDistribution
+from . import RealNVP, PriorDistribution
 from ..mmd import LossMMD
 
 log = logging.getLogger(__name__)
 
 
 class ScyanModule(pl.LightningModule):
+    """Core logic contained inside the main class [Scyan][scyan.Scyan]. Do not use this class directly.
+
+    Attributes:
+        real_nvp (RealNVP): The Normalizing Flow (a [RealNVP][scyan.module.RealNVP] object)
+        prior (PriorDistribution): The prior U (a [PriorDistribution][scyan.module.PriorDistribution] object)
+        loss_mmd (LossMMD): The MMD loss (a [LossMMD][scyan.mmd.LossMMD] object)
+        pi_logit (Tensor): Logits used to learn the population weights
+    """
+
     pi_logit_ratio: float = 100  # To learn pi logits faster
 
     def __init__(
@@ -29,8 +37,7 @@ class ScyanModule(pl.LightningModule):
         mmd_max_samples: int,
         batch_ref_id: Union[str, int, None],
     ):
-        """Module containing the core logic behind the Scyan model
-
+        """
         Args:
             rho (Tensor): Tensor representing the marker-population matrix
             n_covariates (int): Number of covariates considered

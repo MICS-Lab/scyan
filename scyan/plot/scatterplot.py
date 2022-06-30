@@ -18,7 +18,20 @@ def scatter(
     max_obs: int = 2000,
     s: float = 1.0,
     show: bool = True,
-):
+) -> None:
+    """Displays cells expressions on 2D scatter plots with colors per population.
+    One scatter plot is displayed for each pair of marker.
+
+    Args:
+        model: Scyan model
+        populations: One population or a list of population to be colored
+        markers: List of markers to plot. If `None`, the list is chosen automatically.
+        n_markers: Number of markers to choose automatically if `markers is None`.
+        obs_key: Key to look for population in `adata.obs`. By default, uses the model predictions.
+        max_obs: Maximum number of cells per population to be displayed.
+        s: Dot marker size.
+        show: Whether or not to display the plot.
+    """
     adata = model.adata
     markers = select_markers(model, markers, n_markers, obs_key, populations)
 
