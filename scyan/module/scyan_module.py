@@ -27,7 +27,7 @@ class ScyanModule(pl.LightningModule):
         prior_std: float,
         temperature: float,
         mmd_max_samples: int,
-        batch_ref: Union[str, int, None],
+        batch_ref_id: Union[str, int, None],
     ):
         """Module containing the core logic behind the Scyan model
 
@@ -195,15 +195,15 @@ class ScyanModule(pl.LightningModule):
 
         return self.loss_mmd(u1[indices1], u2[indices2])
 
-    def get_mmd_inputs(self, u: Tensor, batch: Tensor, probs: Tensor, b: int):
-        condition = batch == b
+    def get_mmd_inputs(self, u: Tensor, batches: Tensor, probs: Tensor, b: int):
+        condition = batches == b
         return u[condition], probs[condition].argmax(dim=1)
 
     def losses(
         self,
         x: Tensor,
         covariates: Tensor,
-        batch: Tensor,
+        batches: Tensor,
         use_temp: bool,
     ) -> Tensor:
         """Computes the module loss for one mini-batch.
@@ -221,14 +221,16 @@ class ScyanModule(pl.LightningModule):
 
         kl = -(torch.logsumexp(log_probs, dim=1) + ldj_sum).mean()
 
-        if self.hparams.batch_ref is None:
+        if self.hparams.batch_ref_id is None:
             return kl, 0
 
-        u_ref, pop_ref = self.get_mmd_inputs(u, batch, log_probs, self.hparams.batch_ref)
+        u_ref, pop_ref = self.get_mmd_inputs(
+            u, batches, log_probs, self.hparams.batch_ref_id
+        )
 
         mmd = sum(
             self.batch_correction_mmd(
-                u_ref, pop_ref, *self.get_mmd_inputs(u, batch, log_probs, other)
+                u_ref, pop_ref, *self.get_mmd_inputs(u, batches, log_probs, other)
             )
             for other in self.other_batches
         )

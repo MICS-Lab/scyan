@@ -180,6 +180,17 @@ def _validate_inputs(adata: AnnData, df: pd.DataFrame):
         )
         df = df.apply(pd.to_numeric, errors="coerce")
 
+    X = adata[:, df.columns].X
+
+    assert (
+        np.abs(X).max() < 1e3
+    ), "The provided values are very high, have you run preprocessing first? E.g., asinh or logicle transformations."
+
+    if np.abs(X.mean(axis=0)).max() > 0.2 or np.abs(X.std(axis=0) - 1).max() > 0.2:
+        log.warn(
+            "It seems that the data is not standardised. We advise to use scanpy scaling (sc.pp.scale) before to use Scyan."
+        )
+
     return adata, df
 
 

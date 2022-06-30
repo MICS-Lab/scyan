@@ -82,7 +82,7 @@ class Scyan(pl.LightningModule):
             prior_std,
             temperature,
             mmd_max_samples,
-            batch_ref,
+            self.batch_ref_id,
         )
 
         log.info(f"Initialized {self}")
@@ -104,36 +104,39 @@ class Scyan(pl.LightningModule):
 
     def prepare_data(self) -> None:
         """Initializes the data and the covariates"""
-        x, covariates, batch = _prepare_data(
+        if self.hparams.batch_key is None:
+            assert (
+                self.hparams.batch_ref is None
+            ), "To correct batch effect, please profide a batch_key (received only a batch_ref)."
+        else:
+            batches = self.adata.obs[self.hparams.batch_key]
+
+            if self.hparams.batch_ref is None:
+                self.hparams.batch_ref = batches.value_counts().index[0]
+                log.warn(
+                    f"No batch_ref was provided, using {self.hparams.batch_ref} as reference."
+                )
+
+            assert self.hparams.batch_ref in set(
+                batches
+            ), f"Batch reference '{self.hparams.batch_ref}' is not an existing batch."
+
+        x, covariates, batches, self.other_batches, self.batch_to_id = _prepare_data(
             self.adata,
             self.var_names,
             self.hparams.batch_key,
+            self.hparams.batch_ref,
             self.categorical_covariate_keys,
             self.continuous_covariate_keys,
         )
 
         self.register_buffer("x", x)
         self.register_buffer("covariates", covariates)
-        self.register_buffer("batch", batch)
+        self.register_buffer("batches", batches)
 
-        self.other_batches = list(set(self.batch.tolist()))
-
-        if self.hparams.batch_key is None:
-            assert (
-                self.hparams.batch_ref is None
-            ), "To correct batch effect, please profide a batch_key (received only a batch_ref)."
-        else:
-            if self.hparams.batch_ref is None:
-                self.hparams.batch_ref = self.batch[0]
-                log.warn(
-                    f"No batch_ref was provided, using {self.hparams.batch_ref} as reference."
-                )
-
-            assert (
-                self.hparams.batch_ref in self.other_batches
-            ), f"Batch reference '{self.hparams.batch_ref}' is not an existing batch."
-
-            self.other_batches.remove(self.hparams.batch_ref)
+    @property
+    def batch_ref_id(self):
+        return self.batch_to_id.get(self.hparams.batch_ref)
 
     def forward(self) -> Tensor:
         """Model forward function
@@ -174,12 +177,18 @@ class Scyan(pl.LightningModule):
     @torch.no_grad()
     @_requires_fit
     def batch_effect_correction(self):
+        assert (
+            self.hparams.batch_key is not None
+        ), "Scyan model was trained with no batch_key, thus not correcting batch effect"
+
         u = self()
 
-        ref_covariate = self.covariates[self.batch == self.hparams.batch_ref][0]
-        covariates = ref_covariate.repeat((self.adata.n_obs, 1))
+        ref_covariate = self.covariates[
+            self.adata.obs[self.hparams.batch_key] == self.hparams.batch_ref
+        ][0]
+        ref_covariates = ref_covariate.repeat((self.adata.n_obs, 1))
 
-        return self.module.inverse(u, covariates)
+        return self.module.inverse(u, ref_covariates)
 
     def training_step(self, data, _):
         """PyTorch lightning training_step implementation"""
@@ -277,7 +286,7 @@ class Scyan(pl.LightningModule):
 
     def train_dataloader(self):
         """PyTorch lightning train_dataloader implementation"""
-        self.dataset = AdataDataset(self.x, self.covariates, self.batch)
+        self.dataset = AdataDataset(self.x, self.covariates, self.batches)
         sampler = RandomSampler(self.dataset, max_samples=self.hparams.max_samples)
 
         return DataLoader(

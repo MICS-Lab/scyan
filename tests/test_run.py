@@ -5,16 +5,19 @@ import scyan
 from scyan import Scyan
 
 
-@pytest.mark.parametrize("dataset", ["aml", "bmmc"])
-def test_init_model(dataset):
-    adata, marker_pop_matrix = scyan.data.load(dataset)
-    Scyan(adata, marker_pop_matrix)
+@pytest.fixture
+def init_data():
+    return scyan.data.load("aml", size="short")
 
 
 @pytest.fixture
-def short_model():
-    adata, marker_pop_matrix = scyan.data.load("aml", size="short")
-    return Scyan(adata, marker_pop_matrix)
+def short_model(init_data):
+    return Scyan(*init_data)
+
+
+@pytest.fixture
+def short_model_batch_effect(init_data):
+    return Scyan(*init_data, batch_key="subject", batch_ref="H1")
 
 
 def test_inverse(short_model: Scyan):
@@ -30,7 +33,11 @@ def test_run_model(short_model: Scyan):
     return short_model
 
 
-@pytest.fixture
+def test_run_model_batch_effect(short_model_batch_effect: Scyan):
+    short_model_batch_effect.fit(max_epochs=1)
+    return short_model_batch_effect
+
+
 def test_predict_model(test_run_model: Scyan):
     test_run_model.predict()
     return test_run_model

@@ -34,11 +34,16 @@ hydra:
         log: true
       model.modulo_temp:
         type: int
-        low: 1
-        high: 3
-      # model.mmd_max_samples:
-      #   type: categorical
-      #   choices: [1024, 2048]
+        low: 2
+        high: 4
+      model.mmd_max_samples:
+        type: categorical
+        choices: [512, 1024, 2048]
+      model.alpha_batch_effect:
+        type: float
+        low: 100
+        high: 2000
+        log: true
       model.hidden_size:
         type: categorical
         choices: [16, 32]
@@ -53,7 +58,7 @@ hydra:
       model.prior_std:
         type: float
         low: 0.15
-        high: 0.4
+        high: 0.35
       model.lr:
         type: float
         low: 0.0001

@@ -63,6 +63,7 @@ def _prepare_data(
     adata: AnnData,
     markers: List[str],
     batch_key: Union[str, int, None],
+    batch_ref: Union[str, int, None],
     categorical_covariate_keys: List[str],
     continuous_covariate_keys: List[str],
 ) -> Tuple[Tensor, Tensor, Tensor]:
@@ -99,10 +100,13 @@ def _prepare_data(
         dtype=torch.float32,
     )
 
-    batch = (
-        torch.tensor(adata.obs[batch_key].astype(int).values)
-        if batch_key
-        else torch.empty(adata.n_obs)
-    )
+    if batch_key is not None:
+        batch_to_id = {b: i for i, b in enumerate(adata.obs[batch_key].cat.categories)}
+        batches = torch.tensor([batch_to_id[b] for b in adata.obs[batch_key]])
+        other_batches = [
+            batch_to_id[b] for b in adata.obs[batch_key].cat.categories if b != batch_ref
+        ]
 
-    return x, covariates, batch
+        return x, covariates, batches, other_batches, batch_to_id
+
+    return x, covariates, torch.empty(adata.n_obs), [], {}
