@@ -31,7 +31,7 @@ def main(config: DictConfig) -> None:
 
     times, n_samples = [], []
 
-    for n in [adata.n_obs] + [200000, 400000, 800000, 1600000]:
+    for n in [adata.n_obs] + [200_000, 400_000, 800_000, 1_600_000, 3_200_000, 6_400_000]:
         if n > adata.n_obs:
             sampling_strategy = dict(Counter(np.random.choice(adata.obs.cell_type, n)))
             sm = SMOTE(sampling_strategy=sampling_strategy, random_state=42)
@@ -47,8 +47,8 @@ def main(config: DictConfig) -> None:
         times.append(time.perf_counter() - start)
         n_samples.append(n)
 
-        print("n:", n_samples)
-        print("times:", times)
+        print("Num samples:", n_samples)
+        print("Times:", times)
 
 
 if __name__ == "__main__":

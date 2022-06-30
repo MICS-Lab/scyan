@@ -52,12 +52,12 @@ hydra:
         high: 8
       model.prior_std:
         type: float
-        low: 0.2
+        low: 0.15
         high: 0.4
       model.lr:
         type: float
         low: 0.0001
-        high: 0.005
+        high: 0.002
         log: true
       model.batch_size:
         type: categorical
