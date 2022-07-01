@@ -53,17 +53,23 @@ class Scyan(pl.LightningModule):
     ):
         """
         Args:
-            adata (AnnData): AnnData object containing the FCS data
-            marker_pop_matrix (pd.DataFrame): Marker-population table (expert knowledge)
-            continuous_covariate_keys (List[str], optional): List of continuous covariable in adata.obs. Defaults to [].
-            categorical_covariate_keys (List[str], optional): List of categorical covariable in adata.obs. Defaults to [].
-            hidden_size (int, optional): Neural networks (s and t) hidden size. Defaults to 64.
-            n_hidden_layers (int, optional): Neural networks (s and t) number of hidden layers. Defaults to 1.
-            n_layers (int, optional): Number of coupling layers. Defaults to 6.
-            prior_std (float, optional): Standard deviation of the base distribution (H). Defaults to 0.25.
-            lr (float, optional): Learning rate. Defaults to 5e-3.
-            batch_size (int, optional): Batch size. Defaults to 16384.
-            alpha (float, optional): Constraint term weight in the loss function. Defaults to 1.0.
+            adata: `AnnData` object containing the FCS data. **Warning**: it has to be preprocessed (e.g. `asinh` or `logicle`) and standardised.
+            marker_pop_matrix: Dataframe representing the biological knowledge about markers and populations.
+            continuous_covariate_keys: Optional list of keys in `adata.obs` that refers to continuous variables to use during the training.
+            categorical_covariate_keys: Optional list of keys in `adata.obs` that refers to categorical variables to use during the training.
+            hidden_size: Hidden size of the MLP (`s`, `t`).
+            n_hidden_layers: Number of hidden layers in the MLP.
+            n_layers: Number of coupling layers.
+            prior_std: Standard deviation $\sigma$ of the cell-specific random variable $H$.
+            lr: Model learning rate.
+            batch_size: Model batch size.
+            alpha_batch_effect: Weight provided to the batch effect correction loss term.
+            temperature: Temperature to favour small populations.
+            mmd_max_samples: Maximum number of samples to give to the MMD.
+            modulo_temp: At which frequence temperature has to be applied.
+            max_samples: Maximum number of samples per epoch.
+            batch_key: Key in `adata.obs` to refers to the cell batch variable.
+            batch_ref: Batch that will be considered as the reference. By default, choose the batch with the higher number of cells.
         """
         super().__init__()
         self.adata, self.marker_pop_matrix = _validate_inputs(adata, marker_pop_matrix)
@@ -155,7 +161,7 @@ class Scyan(pl.LightningModule):
         """Model forward function
 
         Returns:
-            Tensor: Dataset latent representation
+            Tensor: Full dataset latent representation.
         """
         return self.module(self.x, self.covariates)[0]
 
@@ -168,13 +174,13 @@ class Scyan(pl.LightningModule):
         pop: Union[str, List[str], int, Tensor, None] = None,
         return_z: bool = False,
     ) -> Tuple[Tensor, Tensor]:
-        """Sampling cells by sampling from the prior distribution and going into the Normalizing Flow
+        """Sampling cells by sampling from the prior distribution and going into the Normalizing Flow.
 
         Args:
-            n_samples: Number of cells to sample
-            covariates_sample: Optional tensor of covariates. Defaults to None.
-            pop: Population to sample from. If None, sample from all populations. Defaults to None.
-            return_z: Whether to return the population Tensor. Defaults to False.
+            n_samples: Number of cells to sample.
+            covariates_sample: Optional tensor of covariates.
+            pop: Population to sample from. If None, sample from all populations.
+            return_z: Whether to return the population Tensor.
 
         Returns:
             Sampled cells expressions and, if `return_z`, the populations associated to these cells.
@@ -190,7 +196,12 @@ class Scyan(pl.LightningModule):
 
     @torch.no_grad()
     @_requires_fit
-    def batch_effect_correction(self):
+    def batch_effect_correction(self) -> Tensor:
+        """Corrects batch effect by going into the latent space, setting the reference covariate to all cells, and then reversing the flow.
+
+        Returns:
+            The corrected marker expressions on the original space. **Warning**, as we standardised data for training, this result is standardised too.
+        """
         assert (
             self.hparams.batch_key is not None
         ), "Scyan model was trained with no batch_key, thus not correcting batch effect"
@@ -205,7 +216,7 @@ class Scyan(pl.LightningModule):
         return self.module.inverse(u, ref_covariates)
 
     def training_step(self, data, _):
-        """PyTorch lightning training_step implementation"""
+        """PyTorch lightning `training_step` implementation (i.e. returning the loss)"""
         use_temp = self.current_epoch % self.hparams.modulo_temp > 0
         kl, mmd = self.module.losses(*data, use_temp)
 
@@ -219,7 +230,7 @@ class Scyan(pl.LightningModule):
         return loss
 
     def training_epoch_end(self, _):
-        """PyTorch lightning training_epoch_end implementation"""
+        """PyTorch lightning `training_epoch_end` implementation"""
         if "cell_type" in self.adata.obs:  # TODO: remove?
             if len(self.x) > 500000:
                 indices = random.sample(range(len(self.x)), 500000)
@@ -246,9 +257,9 @@ class Scyan(pl.LightningModule):
         """Model predictions
 
         Args:
-            x (Union[Tensor, None], optional): Model inputs. Defaults to None.
-            covariates (Union[Tensor, None], optional): Model covariates. Defaults to None.
-            key_added (str, optional): Key added to model.adata.obs. Defaults to "scyan_pop".
+            x (Union[Tensor, None], optional): Model inputs.
+            covariates (Union[Tensor, None], optional): Model covariates.
+            key_added (str, optional): Key added to model.adata.obs.
 
         Returns:
             pd.Series: Series of predictions
@@ -266,14 +277,14 @@ class Scyan(pl.LightningModule):
     def predict_proba(
         self, x: Union[Tensor, None] = None, covariates: Union[Tensor, None] = None
     ) -> pd.DataFrame:
-        """Model proba predictions for each population
+        """Soft predictions (i.e. an array of probability per population) for each cell.
 
         Args:
-            x (Union[Tensor, None], optional): Model inputs. Defaults to None.
-            covariates (Union[Tensor, None], optional): Model covariates. Defaults to None.
+            x: Model inputs. If `None`, use every cell.
+            covariates: Model covariates. If `None`, use every cell.
 
         Returns:
-            pd.DataFrame: Dataframe of probabilities for each population
+            Dataframe of probabilities for each population.
         """
         log_probs, *_ = self.module.compute_probabilities(
             self.x if x is None else x,
@@ -290,11 +301,11 @@ class Scyan(pl.LightningModule):
         return torch.softmax(log_probs, dim=1).mean(dim=0)
 
     def configure_optimizers(self):
-        """PyTorch lightning configure_optimizers implementation"""
+        """PyTorch lightning `configure_optimizers` implementation"""
         return torch.optim.Adam(self.parameters(), lr=self.hparams.lr)
 
     def train_dataloader(self):
-        """PyTorch lightning train_dataloader implementation"""
+        """PyTorch lightning `train_dataloader` implementation"""
         self.dataset = AdataDataset(self.x, self.covariates, self.batches)
         sampler = RandomSampler(self.dataset, max_samples=self.hparams.max_samples)
 
@@ -311,15 +322,18 @@ class Scyan(pl.LightningModule):
         patience: int = 4,
         callbacks: Union[List[pl.Callback], None] = None,
         trainer: Union[pl.Trainer, None] = None,
-    ) -> None:
-        """Train Scyan
+    ) -> "Scyan":
+        """Train the `Scyan` model. On interactive Python (e.g. Jupyter Notebooks), training can be interrupted at any time without crashing.
 
         Args:
-            max_epochs (int, optional): Maximum number of epochs. Defaults to 100.
-            min_delta (float, optional): min_delta parameters used for EarlyStopping. See Pytorch Lightning docs. Defaults to 0.5.
-            patience (int, optional): Number of epochs with no loss improvement before to stop training. Defaults to 4.
-            callbacks (List[pl.Callback], optional): Additionnal Pytorch Lightning callbacks.
-            trainer (Union[pl.Trainer, None], optional): Pytorch Lightning Trainer. Warning: it will replace the default Trainer and all ther arguments will be unused. Defaults to None.
+            max_epochs: Maximum number of epochs.
+            min_delta: min_delta parameters used for `EarlyStopping`. See Pytorch Lightning docs.
+            patience: Number of epochs with no loss improvement before to stop training.
+            callbacks: Additionnal Pytorch Lightning callbacks.
+            trainer: Optional Pytorch Lightning Trainer. **Warning**: it will replace the default Trainer and every other arguments will be unused.
+
+        Returns:
+            The trained model itself.
         """
         log.info(f"Training scyan with the following hyperparameters:\n{self.hparams}\n")
 

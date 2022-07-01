@@ -20,7 +20,7 @@ def _root_path() -> Path:
     """Gets the library root path
 
     Returns:
-        Path: scyan library root path
+        `scyan` library root path
     """
     return Path(__file__).parent.parent
 
@@ -29,11 +29,11 @@ def _wandb_plt_image(fun: Callable, figsize: Tuple[int, int] = [7, 5]):
     """Transforms a matplotlib figure into a wandb Image
 
     Args:
-        fun (Callable): Function that makes the plot - do not plt.show().
-        figsize (Tuple[int, int], optional): Matplotlib figure size. Defaults to [7, 5].
+        fun: Function that makes the plot - do not plt.show().
+        figsize: Matplotlib figure size.
 
     Returns:
-        wandb.Image: the wandb Image to be logged
+        The wandb Image to be logged.
     """
 
     from PIL import Image
@@ -53,10 +53,10 @@ def read_fcs(path: str) -> AnnData:
     """Reads a FCS file and returns an AnnData instance
 
     Args:
-        path (str): Path to the FCS file
+        path: Path to the FCS file that has to be read.
 
     Returns:
-        AnnData: AnnData instance containing the FCS data
+        `AnnData` instance containing the FCS data.
     """
     fcs_data = flowio.FlowData(str(path))
     data = np.reshape(fcs_data.events, (-1, fcs_data.channel_count))
@@ -78,11 +78,11 @@ def read_fcs(path: str) -> AnnData:
 
 
 def write_fcs(adata: AnnData, path: str) -> None:
-    """Converts an adata instance into a FCS file
+    """Writes a FCS file based on a `AnnData` object.
 
     Args:
-        adata (AnnData): AnnData instance containing all the data
-        path (str): Path where the FCS file will be saved
+        adata: `AnnData` object to save.
+        path: Path to write the file.
     """
     X = adata.X
     channel_names = list(adata.var_names)
@@ -109,15 +109,6 @@ def _subset(indices: List[str], max_obs: int):
 
 
 def _markers_to_indices(model, markers: List[str]) -> Tensor:
-    """Transforms a list of markers into their corresponding indices in the marker-population matrix
-
-    Args:
-        model (Scyan): Scyan model
-        markers (List[str]): List of marker names
-
-    Returns:
-        Tensor: Tensor of marker indices
-    """
     return torch.tensor(
         [model.marker_pop_matrix.columns.get_loc(marker) for marker in markers],
         dtype=int,
@@ -125,15 +116,6 @@ def _markers_to_indices(model, markers: List[str]) -> Tensor:
 
 
 def _pops_to_indices(model, pops: List[str]) -> Tensor:
-    """Transforms a list of populations into their corresponding indices in the marker-population matrix
-
-    Args:
-        model (Scyan): Scyan model
-        pops (List[str]): List of population names
-
-    Returns:
-        Tensor: Tensor of population indices
-    """
     return torch.tensor(
         [model.marker_pop_matrix.index.get_loc(pop) for pop in pops], dtype=int
     )
@@ -203,7 +185,17 @@ def subcluster(
     obs_key: str = "scyan_pop",
     subcluster_key: str = "subcluster_index",
     umap_display_key: str = "leiden_subcluster",
-):
+) -> None:
+    """Creates sub-clusters among the populations predicted by Scyan. Some population may not be divided.
+
+    Args:
+        model: Scyan model
+        resolution: Resolution used for leiden clustering. Higher resolution leads to more clusters.
+        cluster_size_th: Minimum number of cells to be considered as a significant cluster.
+        obs_key: Key to look for population in `adata.obs`. By default, uses the model predictions.
+        subcluster_key: Key added to `adata.obs` to indicate the index of the subcluster.
+        umap_display_key: Key added to `adata.obs` to plot the sub-clusters on a UMAP.
+    """
     adata = model.adata
     sc.pp.neighbors(adata)
     sc.tl.leiden(adata, resolution=resolution)

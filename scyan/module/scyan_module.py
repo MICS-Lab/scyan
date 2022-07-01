@@ -17,7 +17,7 @@ class ScyanModule(pl.LightningModule):
 
     Attributes:
         real_nvp (RealNVP): The Normalizing Flow (a [RealNVP][scyan.module.RealNVP] object)
-        prior (PriorDistribution): The prior U (a [PriorDistribution][scyan.module.PriorDistribution] object)
+        prior (PriorDistribution): The prior $U$ (a [PriorDistribution][scyan.module.PriorDistribution] object)
         loss_mmd (LossMMD): The MMD loss (a [LossMMD][scyan.mmd.LossMMD] object)
         pi_logit (Tensor): Logits used to learn the population weights
     """
@@ -35,19 +35,20 @@ class ScyanModule(pl.LightningModule):
         prior_std: float,
         temperature: float,
         mmd_max_samples: int,
-        batch_ref_id: Union[str, int, None],
+        batch_ref_id: Union[int, None],
     ):
         """
         Args:
-            rho (Tensor): Tensor representing the marker-population matrix
-            n_covariates (int): Number of covariates considered
-            hidden_size (int, optional): Neural networks (s and t) hidden size. Defaults to 64.
-            n_hidden_layers (int, optional): Neural networks (s and t) number of hidden layers. Defaults to 1.
-            n_layers (int, optional): Number of coupling layers. Defaults to 6.
-            prior_std (float, optional): Standard deviation of the base distribution (H). Defaults to 0.25.
-            lr (float, optional): Learning rate. Defaults to 5e-3.
-            batch_size (int): Batch size.
-            alpha (float, optional): Constraint term weight in the loss function. Defaults to 1.0.
+            rho: Tensor $\rho$ representing the knowledge table.
+            n_covariates: Number of covariates $N_{cov}$ considered.
+            other_batches: List of batches that are not the reference.
+            hidden_size: MLP (`s` and `t`) hidden size.
+            n_hidden_layers: Number of hidden layers for the MLP (`s` and `t`).
+            n_layers: Number of coupling layers.
+            prior_std: Standard deviation $\sigma$ of the cell-specific random variable $H$.
+            temperature: Temperature to favour small populations.
+            mmd_max_samples: Maximum number of samples to give to the MMD.
+            batch_ref_id: ID corresponding to the reference batch.
         """
         super().__init__()
         self.save_hyperparameters(ignore=["rho", "n_covariates", "other_batches"])
@@ -77,58 +78,58 @@ class ScyanModule(pl.LightningModule):
         self.loss_mmd = LossMMD(self.n_markers, self.hparams.prior_std, self.mean_na)
 
     def forward(self, x: Tensor, covariates: Tensor) -> Tuple[Tensor, Tensor, Tensor]:
-        """Forward implementation, going through the complete flow
+        """Forward implementation, going through the complete flow $f_{\phi}$.
 
         Args:
-            x (Tensor): Inputs
-            covariates (Tensor): Covariates
+            x: Inputs of size $(N, M)$.
+            covariates: Covariates of size $(N, N_{cov})$
 
         Returns:
-            Tuple[Tensor, Tensor, Tensor]: Tuple of (outputs, covariates, lod_det_jacobian sum)
+            Tuple of (outputs, covariates, lod_det_jacobian sum)
         """
         return self.real_nvp(x, covariates)
 
     @torch.no_grad()
     def inverse(self, u: Tensor, covariates: Tensor) -> Tensor:
-        """Goes through the complete flow in reverse direction
+        """Goes through the flow in reverse direction, i.e. $f_{\phi}^{-1}$.
 
         Args:
-            u (Tensor): Inputs
-            covariates (Tensor): Covariates
+            u: Latent expressions of size $(N, M)$.
+            covariates: Covariates of size $(N, N_{cov})$
 
         Returns:
-            Tensor: Outputs
+            Outputs of size $(N, M)$.
         """
         return self.real_nvp.inverse(u, covariates)
 
     @property
     def prior_z(self) -> distributions.Distribution:
-        """Population prior
+        """Population prior, i.e. $Categorical(\pi)$.
 
         Returns:
-            distributions.Distribution: Distribution of the population index prior
+            Distribution of the population index.
         """
         return distributions.Categorical(self.pi)
 
     @property
     def log_pi(self) -> Tensor:
-        """Returns the log population weights
-
-        Returns:
-            Tensor: Log population weights
-        """
+        """Log population weights $log \; \pi$."""
         return torch.log_softmax(self.pi_logit_ratio * self.pi_logit, dim=0)
 
     @property
     def pi(self) -> Tensor:
-        """Returns the population weights
-
-        Returns:
-            Tensor: Population weights
-        """
+        """Population weights $\pi$"""
         return torch.exp(self.log_pi)
 
-    def log_pi_temperature(self, T):
+    def log_pi_temperature(self, T: float) -> Tensor:
+        """Computes the log weights with temperature $log \; \pi^{(-T)}$
+
+        Args:
+            T: Temperature.
+
+        Returns:
+            Log weights with temperature.
+        """
         return torch.log_softmax(self.pi_logit_ratio * self.pi_logit / T, dim=0).detach()
 
     @torch.no_grad()
@@ -139,15 +140,16 @@ class ScyanModule(pl.LightningModule):
         z: Union[int, Tensor, None] = None,
         return_z: bool = False,
     ) -> Tuple[Tensor, Tensor]:
-        """Sample cells
+        """Sample cell expressions.
 
         Args:
-            n_samples (int): Number of cells to be sampled
-            covariates_sample (Union[Tensor, None], optional): Sample of cobariates. Defaults to None.
-            z (Union[str, List[str], int, Tensor, None], optional): Population indices. Defaults to None.
+            n_samples: Number of cells to sample.
+            covariates: Tensor of covariates.
+            z: Either one population index or a Tensor of population indices. If None, sampling from all populations.
+            return_z: Whether to return the population Tensor.
 
         Returns:
-            Tuple[Tensor, Tensor]: Pair of (cell expressions, population)
+            Sampled cells expressions and, if `return_z`, the populations associated to these cells.
         """
         if z is None:
             z = self.prior_z.sample((n_samples,))
@@ -168,14 +170,14 @@ class ScyanModule(pl.LightningModule):
     def compute_probabilities(
         self, x: Tensor, covariates: Tensor, use_temp: bool = False
     ) -> Tuple[Tensor, Tensor, Tensor]:
-        """Computes probabilities used to define the loss function
+        """Computes probabilities used in the loss function.
 
         Args:
-            x (Tensor): Inputs
-            covariates (Tensor): Covariates
+            x: Inputs of size $(N, M)$.
+            covariates: Covariates of size $(N, N_{cov})$.
 
         Returns:
-            Tuple[Tensor, Tensor, Tensor]: Predicted probabilities, log probabilities and sum of the log det jacobian
+            Log probabilities of size $(N, P)$, the log det jacobian and the latent expressions of size $(N, M)$.
         """
         u, _, ldj_sum = self(x, covariates)
 
@@ -212,17 +214,17 @@ class ScyanModule(pl.LightningModule):
         covariates: Tensor,
         batches: Tensor,
         use_temp: bool,
-    ) -> Tensor:
+    ) -> Tuple[Tensor, Tensor]:
         """Computes the module loss for one mini-batch.
 
         Args:
-            x (Tensor): Cytometry values
-            covariates (Tensor): Covariates values
-            batch (Tensor): Batch information used to correct batch-effect
-            use_temp (bool): Whether to consider temperature is the KL term
+            x: Inputs of size $(N, M)$.
+            covariates: Covariates of size $(N, N_{cov})$.
+            batches: Batch information used to correct batch-effect, tensor of size $(N)$
+            use_temp: Whether to consider temperature is the KL term.
 
         Returns:
-            Tensor: Sum of the KL divergence and the MMD (only for batch effect correction)
+            The KL loss term and the MMD loss term.
         """
         log_probs, ldj_sum, u = self.compute_probabilities(x, covariates, use_temp)
 

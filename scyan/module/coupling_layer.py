@@ -6,6 +6,13 @@ import pytorch_lightning as pl
 
 
 class CouplingLayer(pl.LightningModule):
+    """One single coupling layer module.
+
+    Attributes:
+        sfun (nn.Module): `s` Multi-Layer-Perceptron.
+        tfun (nn.Module): `t` Multi-Layer-Perceptron.
+    """
+
     def __init__(
         self,
         input_size: int,
@@ -14,14 +21,13 @@ class CouplingLayer(pl.LightningModule):
         n_hidden_layers: int,
         mask: Tensor,
     ):
-        """One single coupling layer module.
-
+        """
         Args:
-            input_size (int): Input size, i.e. number of markers + covariates
-            hidden_size (int): Neural networks hidden size
-            output_size (int): Output size, i.e. number of markers
-            n_hidden_layers (int): Number of s and t hidden layers
-            mask (Tensor): Mask used to separate x into (x1, x2)
+            input_size: Input size, i.e. number of markers + covariates
+            hidden_size: MLP (`s` and `t`) hidden size.
+            output_size: Output size, i.e. number of markers.
+            n_hidden_layers: Number of hidden layers for the MLP (`s` and `t`).
+            mask: Mask used to separate `x` into `(x1, x2)`
         """
         super().__init__()
         self.sfun = nn.Sequential(
@@ -49,13 +55,13 @@ class CouplingLayer(pl.LightningModule):
     def forward(
         self, inputs: Tuple[Tensor, Tensor, Union[Tensor, None]]
     ) -> Tuple[Tensor, Tensor, Tensor]:
-        """Coupling layer forward function
+        """Coupling layer forward function.
 
         Args:
-            inputs (Tuple[Tensor, Tensor, Union[Tensor, None]]): Tuple of (inputs, covariates, lod_det_jacobian sum)
+            inputs: cell expressions, covariates, lod_det_jacobian sum
 
         Returns:
-            Tuple[Tensor, Tensor, Tensor]: Tuple of (outputs, covariates, lod_det_jacobian sum)
+            outputs, covariates, lod_det_jacobian sum
         """
         x, covariates, ldj_sum = inputs
 
@@ -75,11 +81,11 @@ class CouplingLayer(pl.LightningModule):
         """Goes through the coupling layer in reverse direction
 
         Args:
-            y (Tensor): Inputs
-            covariates (Tensor): Covariates
+            y: Inputs tensor or size $(N, M)$.
+            covariates: Covariates tensor of size $(N, N_{cov})$.
 
         Returns:
-            Tensor: Outputs
+            Outputs tensor.
         """
         y_m = y * self.mask
         st_input = torch.cat([y_m, covariates], dim=1)

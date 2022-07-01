@@ -18,16 +18,18 @@ def probs_per_marker(
     population: str,
     obs_key: str = "scyan_pop",
     prob_name: str = "Prob",
-    show: bool = True,
     vmin_threshold: int = -100,
+    show: bool = True,
 ):
-    """Plots a heatmap of marker probabilities for each population
+    """Interpretability tool. Gets a group of cells and plots a heatmap of marker probabilities for each population.
 
     Args:
-        model (Scyan): Scyan model
-        where (ArrayLike): Array where cells have to be considered
-        prob_name (str, optional): Name displayed on the plot. Defaults to "Prob".
-        show (bool, optional): Whether to plt.show() or not. Defaults to True.
+        model: Scyan model.
+        population: Name of the population to interpret.
+        obs_key: Key to look for population in `adata.obs`. By default, uses the model predictions.
+        prob_name: Name to display on the plot.
+        vmin_threshold: Minimum threshold for the heatmap colorbar.
+        show: Whether or not to display the plot.
     """
     where = model.adata.obs[obs_key] == population
     u = model.module(model.x[where], model.covariates[where])[0]
@@ -55,6 +57,13 @@ def probs_per_marker(
 @torch.no_grad()
 @optional_show
 def latent_heatmap(model: Scyan, obs_key: str = "scyan_pop", show: bool = True):
+    """Shows Scyan latent space for each population.
+
+    Args:
+        model: Scyan model.
+        obs_key: Key to look for population in `adata.obs`. By default, uses the model predictions.
+        show: Whether or not to display the plot.
+    """
     u = model()
 
     df = pd.DataFrame(u.cpu().numpy(), columns=model.var_names)
@@ -72,6 +81,19 @@ def subclusters(
     figsize: Tuple[int, int] = (10, 5),
     show: bool = True,
 ):
+    """Displays Scyan latent space for each populations sub-clusters.
+
+    Args:
+        model: Scyan model.
+        obs_key: Key to look for population in `adata.obs`. By default, uses the model predictions.
+        subcluster_key: Key created by `scyan.utils.subcluster`.
+        figsize: Matplotlib figure size. Increase it if you have display issues.
+        show: Whether or not to display the plot.
+    """
+    assert (
+        subcluster_key in model.adata.obs.columns
+    ), "Subcluster key '{subcluster_key}' was not found in adata.obs - have you run scyan.utils.subcluster before?"
+
     plt.figure(figsize=figsize)
 
     u = model()

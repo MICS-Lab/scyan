@@ -5,7 +5,16 @@ import pytorch_lightning as pl
 
 
 class PriorDistribution(pl.LightningModule):
+    """Prior Distribution $U$"""
+
     def __init__(self, rho: Tensor, rho_mask: Tensor, prior_std: float, n_markers: int):
+        """
+        Args:
+            rho: Tensor $\rho$ representing the knowledge table
+            rho_mask: Mask telling where $\rho$ is NA
+            prior_std: Standard deviation $\sigma$ for $H$.
+            n_markers: Number of markers in the table.
+        """
         super().__init__()
         self.prior_std = prior_std
         self.n_markers = n_markers
@@ -21,10 +30,11 @@ class PriorDistribution(pl.LightningModule):
         self.compute_constant_terms()
 
     @property
-    def prior_h(self):
+    def prior_h(self) -> distributions.Distribution:
+        """The distribution of $H$"""
         return distributions.MultivariateNormal(self.loc, self.cov)
 
-    def compute_constant_terms(self):
+    def compute_constant_terms(self) -> None:
         self.uniform_law_radius = 1 - self.prior_std
 
         _gamma = (
@@ -38,13 +48,13 @@ class PriorDistribution(pl.LightningModule):
         self.register_buffer("na_constant_term", na_constant_term)
 
     def difference_to_modes(self, u: Tensor) -> Tensor:
-        """Difference between the latent variable U and all the modes
+        """Difference between the latent variable $U$ and all the modes (one mode per population).
 
         Args:
-            u (Tensor): Latent variables tensor
+            u: Latent variables tensor of size $(N, M)$.
 
         Returns:
-            Tensor: Tensor of difference to all modes
+            Tensor of size $(N, P, M)$ representing differences to all modes.
         """
         diff = u[:, None, :] - self.rho[None, ...]
 
@@ -54,17 +64,41 @@ class PriorDistribution(pl.LightningModule):
 
         return diff
 
-    def log_prob_per_marker(self, u: Tensor):
+    def log_prob_per_marker(self, u: Tensor) -> Tensor:
+        """Log probability per marker and per population.
+
+        Args:
+            u: Latent variables tensor of size $(N, M)$.
+
+        Returns:
+            Log probabilities tensor of size $(N, P, M)$.
+        """
         diff = self.difference_to_modes(u)  # size N x P x M
 
         return self.normal.log_prob(diff) + self.rho_mask * torch.log(self.gamma)
 
-    def log_prob(self, u: Tensor):
+    def log_prob(self, u: Tensor) -> Tensor:
+        """Log probability per population.
+
+        Args:
+            u: Latent variables tensor of size $(N, M)$.
+
+        Returns:
+            Log probabilities tensor of size $(N, P)$.
+        """
         diff = self.difference_to_modes(u)  # size N x P x M
 
         return self.prior_h.log_prob(diff) + self.na_constant_term
 
-    def sample(self, z: Tensor):
+    def sample(self, z: Tensor) -> Tensor:
+        """Sample latent cell. expressions.
+
+        Args:
+            z: Tensor of population indices.
+
+        Returns:
+            Latent expressions, i.e. a tensor of size $(len(Z), M)$.
+        """
         (n_samples,) = z.shape
 
         e = self.rho[z] + self.rho_mask[z] * self.uniform.sample(

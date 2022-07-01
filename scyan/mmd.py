@@ -8,7 +8,15 @@ def gaussian_kernel(scale: float) -> Callable:
 
 
 class LossMMD:
+    """Class used to compute the Maximum Mean Discrepancy (MMD) loss for batch-effect correction."""
+
     def __init__(self, n_markers: int, prior_std: float, mean_na: float):
+        """
+        Args:
+            n_markers: Number of markers in the table.
+            prior_std: Model standard deviation $\sigma$ for $H$.
+            mean_na: Mean number of NA per row in the table.
+        """
         self.scales = self.get_heuristic_scales(n_markers, prior_std, mean_na)
         self.kernels = [gaussian_kernel(scale) for scale in self.scales]
 
@@ -25,6 +33,15 @@ class LossMMD:
         return (kernel(dxx) - 2 * kernel(dxy) + kernel(dyy)).mean()
 
     def __call__(self, x: Tensor, y: Tensor) -> Tensor:
+        """Computes the MMD loss.
+
+        Args:
+            x: Tensor of size $(N, M)$.
+            y: Tensor of size $(N, M)$.
+
+        Returns:
+            Loss term as a one-element Tensor.
+        """
         xx, yy, xy = x.mm(x.T), y.mm(y.T), x.mm(y.T)
 
         x2 = (x ** 2).sum(dim=-1)

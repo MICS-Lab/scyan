@@ -11,12 +11,6 @@ from .utils import _root_path
 
 class AdataDataset(torch.utils.data.Dataset):
     def __init__(self, x: Tensor, covariates: Tensor, batch: Tensor):
-        """PyTorch dataset
-
-        Args:
-            x (Tensor): Inputs
-            covariates (Tensor): Covariates
-        """
         super().__init__()
         self.x = x
         self.covariates = covariates
@@ -43,13 +37,13 @@ class RandomSampler(torch.utils.data.Sampler):
 
 
 def load(dataset: str, size: str = "default") -> Union[AnnData, pd.DataFrame]:
-    """Loads a dataset
+    """Loads a dataset, i.e. its `AnnData` object and its knowledge table.
 
     Args:
-        dataset (str): Name of the dataset. Either "AML" or "BMMC".
+        dataset: Name of the dataset. Datasets available are: `"aml"`, `"bmmc"`.
 
     Returns:
-        Union[AnnData, pd.DataFrame]: AnnData instance and the marker-population matrix
+        `AnnData` instance and the marker-population matrix
     """
     data_path = _root_path() / "data" / dataset
 

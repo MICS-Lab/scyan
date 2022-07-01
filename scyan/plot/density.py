@@ -4,10 +4,6 @@ import matplotlib.pyplot as plt
 from typing import List, Union
 import numpy as np
 from scipy.stats import norm
-import matplotlib.patheffects as pe
-import matplotlib.lines as mlines
-import matplotlib
-from scipy import stats
 import torch
 
 from .. import Scyan
@@ -27,18 +23,18 @@ def kde_per_population(
     value_name: str = "Expression",
     show: bool = True,
 ):
-    """Plots a KDE for each population for a given marker
+    """Plots Kernel-Density-Estimation for each provided population and for multiple markers.
 
     Args:
-        model (Scyan): Scyan model
-        where (ArrayLike): Array where cells have to be considered.
-        cell_type_key (str): Key that gets the cell_type, e.g. 'scyan_pop'
-        markers (Union[List[str], None], optional): List of markers to consider. None means all markers being considered. Defaults to None.
-        ncols (int, optional): Number of columns to be displayed. Defaults to 4.
-        hue_name (str, optional): Hue name. Defaults to "Population".
-        var_name (str, optional): Var name. Defaults to "Marker".
-        value_name (str, optional): Value name. Defaults to "Expression".
-        show (bool, optional): Whether to plt.show() or not. Defaults to True.
+        model: Scyan model.
+        populations: Populations to interpret.
+        obs_key: Key to look for population in `adata.obs`. By default, uses the model predictions.
+        markers: List of markers to plot. If `None`, the list is chosen automatically.
+        n_markers: Number of markers to choose automatically if `markers is None`.
+        ncols: Number of figures per row.
+        var_name: Name displayed on the graphs.
+        value_name: Name displayed on the graphs.
+        show: Whether or not to display the plot.
     """
     markers = select_markers(model, markers, n_markers, obs_key, populations, 1)
 
@@ -81,6 +77,17 @@ def latent_expressions(
     radius: float = 0.05,
     show: bool = True,
 ):
+    """Plots latent expressions of a group of cells (every marker on one plot).
+
+    Args:
+        model: Scyan model.
+        population: The population to interpret.
+        obs_key: Key to look for population in `adata.obs`. By default, uses the model predictions.
+        max_value: Maximum absolute latent value.
+        num_pieces: Number of pieces to display the colorbar.
+        radius: Radius used to chunk the colorbar. Increase this value if multiple names overlap.
+        show: Whether or not to display the plot.
+    """
     condition = model.adata.obs[obs_key] == population
     u_mean = model.module(model.x[condition], model.covariates[condition])[0].mean(dim=0)
     values = u_mean.cpu().numpy().clip(-max_value, max_value)
