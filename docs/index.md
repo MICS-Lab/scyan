@@ -1,6 +1,24 @@
 # Scyan documentation
 
+Scyan stands for **S**ingle-cell **Cy**tometry **A**nnotation **N**etwork. Based on a biological knowledge prior, it provides a fast cell populations annotation without requiring any training label. Scyan is an interpretable model that can also correct batch-effect, be used for debarcoding, cell sampling and population discovery.
+
+## Overview
+
+TODO: Insert figure
+
+## Technical description
+
+Scyan is a **Python** library based on:
+
+- _Pytorch_, a deep learning framework
+- _AnnData_, a data library that works nicely with nice single-cell data
+- _Pytorch Lighning_ for model training
+- _Hydra_ for project configuration
+- _Weight & Biases_ for model monitoring
+
 ## Project layout
+
+See [Scyan on Gitlab](https://gitlab-research.centralesupelec.fr/mics_biomathematics/biomaths/scyan)
 
     config/       # Hydra configuration folder (optional use)
     data/         # Data folder containg adata files and csv tables
