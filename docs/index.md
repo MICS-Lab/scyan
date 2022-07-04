@@ -1,10 +1,19 @@
 # Scyan documentation
 
-Scyan stands for **S**ingle-cell **Cy**tometry **A**nnotation **N**etwork. Based on a biological knowledge prior, it provides a fast cell populations annotation without requiring any training label. Scyan is an interpretable model that can also correct batch-effect, be used for debarcoding, cell sampling and population discovery.
+<p align="center">
+  <img src="./assets/logo.png" />
+</p>
+
+Scyan stands for **S**ingle-cell **Cy**tometry **A**nnotation **N**etwork. Based on a biological knowledge prior, it provides a fast cell populations annotation without requiring any training label. Scyan is an interpretable model that also corrects batch-effect and can be used for debarcoding / cell sampling / population discovery.
 
 ## Overview
 
-TODO: Insert figure
+Scyan is a Bayesian probabilistic model composed of a deep invertible neural network called a Normalizing Flow (the function $f_{\phi}$). This network maps a latent distribution of cell expressions into the empirical distribution of cell expressions. The latter latent cell distribution is a mixture of gaussian-like distributions representing the sum of a cell-specific term and a population-specific term. The latent space is used for interpretability and batch effect correction. More details on the methods section of the article.
+
+<figure markdown>
+  ![Image title](./assets/overview.png)
+  <figcaption>a) Overview of the tasks that Scyan can perform. b) Overview of the model architecture. c) One coupling layer, i.e. the elementary unit that compose the Normalizing Flow.</figcaption>
+</figure>
 
 ## Technical description
 

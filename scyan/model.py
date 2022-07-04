@@ -179,7 +179,7 @@ class Scyan(pl.LightningModule):
         Args:
             n_samples: Number of cells to sample.
             covariates_sample: Optional tensor of covariates.
-            pop: Populations to sample from. If `str`, then a population name. If `int`, a population index. If `List[str]`, a list of population names. If `Tensor`, a tensor of population indices. If None, sample from all populations.
+            pop: Populations to sample from. If `str`, then a population name. If `int`, a population index. If `List[str]`, a list of population names. If `Tensor`, a tensor of population indices. By default, samples from all populations.
             return_z: Whether to return the population Tensor.
 
         Returns:
@@ -254,12 +254,12 @@ class Scyan(pl.LightningModule):
         covariates: Optional[Tensor] = None,
         key_added: Optional[str] = "scyan_pop",
     ) -> pd.Series:
-        """Model population predictions, i.e. one population is assigned for each cell.
+        """Model population predictions, i.e. one population is assigned for each cell. Predictions are saved into `adata.obs.scyan_pop` by default.
 
         Args:
             x: Model inputs.
             covariates: Model covariates.
-            key_added: Key added to model.adata.obs.
+            key_added: Key added to `model.adata.obs` to save the predictions. If `None`, then the predictions will not be saved.
 
         Returns:
             pd.Series: Series of predictions

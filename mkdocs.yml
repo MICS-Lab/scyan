@@ -36,6 +36,8 @@ plugins:
   - mkdocstrings
 markdown_extensions:
   - admonition
+  - attr_list
+  - md_in_html
   - pymdownx.details
   - pymdownx.highlight:
       anchor_linenums: true
