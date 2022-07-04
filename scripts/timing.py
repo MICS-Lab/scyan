@@ -9,20 +9,19 @@ import time
 
 import scyan
 
-from .utils import init_and_fit_model
+from . import utils
 
 
 @hydra.main(config_path="../config", config_name="config")
 def main(config: DictConfig) -> None:
-    """Runs scyan on a dataset specified by the config/config.yaml file.
-    It can be used for optuna hyperparameter search together with Weight&Biases to monitor the model.
-    Note that using this file is not optional, you can use the library as such.
+    """Runs scyan on a dataset specified by the config/config.yaml with different number of cells.
+    NB: the only purpose of this file is to time the model.
 
     Args:
-        config (DictConfig): Hydra generated configuration (automatic)
+        config: Hydra generated configuration (automatic).
 
     Returns:
-        float: metric chosen by the config to be optimized for hyperparameter search, e.g. the loss
+        Metric chosen by the config to be optimized for hyperparameter search, e.g. the loss.
     """
     pl.seed_everything(config.seed)
 
@@ -42,7 +41,7 @@ def main(config: DictConfig) -> None:
 
         start = time.perf_counter()
 
-        init_and_fit_model(adata, marker_pop_matrix, config)
+        utils.init_and_fit_model(adata, marker_pop_matrix, config)
 
         times.append(time.perf_counter() - start)
         n_samples.append(n)

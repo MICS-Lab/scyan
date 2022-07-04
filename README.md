@@ -1,4 +1,4 @@
-<img src="./docs/_static/logo.png" alt="scyan_logo" width="400"/><br />
+<img src="./docs/assets/logo.png" alt="scyan_logo" width="400"/><br />
 
 Scyan (**S**ingle-cell **Cy**tometry **A**nnotation **N**etwork) is a flow-based deep generative network that annotates mass and spectral cytometry cells. It leverages expert knowledge to make predictions without any gating or labeling required.
 

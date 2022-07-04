@@ -1,11 +1,16 @@
+import pandas as pd
 import hydra
-from typing import List
+from typing import List, Optional
 from pytorch_lightning import Callback, Trainer
 import wandb
 import logging
 import numpy as np
 import scanpy as sc
 from sklearn import metrics
+from anndata import AnnData
+from omegaconf import DictConfig
+from pytorch_lightning.loggers import WandbLogger
+import numpy.typing as npt
 
 import scyan
 from scyan.model import Scyan
@@ -13,7 +18,24 @@ from scyan.model import Scyan
 log = logging.getLogger(__name__)
 
 
-def init_and_fit_model(adata, marker_pop_matrix, config, wandb_logger=None):
+def init_and_fit_model(
+    adata: AnnData,
+    marker_pop_matrix: pd,
+    config: DictConfig,
+    wandb_logger: Optional[WandbLogger] = None,
+) -> Scyan:
+    """Initializes Scyan with the Hydra config, fit the model and runs predictions.
+    NB: if not using Hydra, then do **not** use this function.
+
+    Args:
+        adata: `AnnData` object containing the FCS data.
+        marker_pop_matrix: Dataframe representing the biological knowledge about markers and populations.
+        config: Hydra generated configuration.
+        wandb_logger: Weight & Biases logger.
+
+    Returns:
+        The model.
+    """
     model: Scyan = hydra.utils.instantiate(
         config.model,
         adata=adata,
@@ -44,7 +66,16 @@ def init_and_fit_model(adata, marker_pop_matrix, config, wandb_logger=None):
     return model
 
 
-def classification_metrics(y_true, y_pred):
+def classification_metrics(y_true: npt.ArrayLike, y_pred: npt.ArrayLike) -> dict:
+    """Computes classification metrics.
+
+    Args:
+        y_true: True annotations.
+        y_pred: Predictions.
+
+    Returns:
+        A dict of metrics.
+    """
     accuracy = metrics.accuracy_score(y_true, y_pred)
     f1 = metrics.f1_score(y_true, y_pred, average="macro")
     balanced_acc = metrics.balanced_accuracy_score(y_true, y_pred)
@@ -52,16 +83,26 @@ def classification_metrics(y_true, y_pred):
     return {"Accuracy": accuracy, "F1-Score": f1, "Balanced Accuracy": balanced_acc}
 
 
-def compute_metrics(model, config, scyan_pop_key="scyan_pop"):
+def compute_metrics(model: Scyan, config: DictConfig, obs_key: str = "scyan_pop") -> dict:
+    """Computes model metrics.
+
+    Args:
+        model: Scyan model.
+        config: Hydra generated configuration.
+        obs_key: Key in `adata.obs` where predictions are saved.
+
+    Returns:
+        A dict of metrics.
+    """
     if config.project.get("label", None):
         y_true = model.adata.obs[config.project.label]
-        y_pred = model.adata.obs[scyan_pop_key]
+        y_pred = model.adata.obs[obs_key]
         metrics_dict = classification_metrics(y_true, y_pred)
     else:
         log.info("No label provided. The classification metrics are not computed.")
         metrics_dict = {}
 
-    X, labels = model.x.cpu().numpy(), model.adata.obs[scyan_pop_key]
+    X, labels = model.x.cpu().numpy(), model.adata.obs[obs_key]
 
     n_missing_pop = len(model.marker_pop_matrix.index) - len(set(labels.values))
     metrics_dict["Number of missing pop"] = n_missing_pop
@@ -84,7 +125,16 @@ def compute_metrics(model, config, scyan_pop_key="scyan_pop"):
     return metrics_dict
 
 
-def metric_to_optimize(all_metrics, config):
+def metric_to_optimize(all_metrics: dict, config: DictConfig) -> float:
+    """Finds and average the metric that have to be hyperoptimized.
+
+    Args:
+        all_metrics: Dict of metrics.
+        config: Hydra generated configuration.
+
+    Returns:
+        The averaged metric to optimize.
+    """
     if len(all_metrics[config.optimized_metric]):
         return np.array(all_metrics[config.optimized_metric]).mean()
 
@@ -94,7 +144,14 @@ def metric_to_optimize(all_metrics, config):
     return 0
 
 
-def compute_umap(model, config, obs_key="scyan_pop"):
+def compute_umap(model: Scyan, config: DictConfig, obs_key: str = "scyan_pop") -> None:
+    """Logs a UMAP with Weight & Biases.
+
+    Args:
+        model: Scyan model.
+        config: Hydra generated configuration.
+        obs_key: Key in `adata.obs` where predictions are saved.
+    """
     palette = model.adata.uns.get("palette", None)  # Get color palette if existing
 
     if config.wandb.mode != "disabled" and config.wandb.save_umap:
