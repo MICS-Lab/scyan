@@ -36,14 +36,14 @@ hydra:
         type: int
         low: 2
         high: 4
-      model.mmd_max_samples:
-        type: categorical
-        choices: [512, 1024, 2048]
-      model.alpha_batch_effect:
-        type: float
-        low: 100
-        high: 2000
-        log: true
+      # model.mmd_max_samples:
+      #   type: categorical
+      #   choices: [512, 1024, 2048]
+      # model.alpha_batch_effect:
+      #   type: float
+      #   low: 100
+      #   high: 2000
+      #   log: true
       model.hidden_size:
         type: categorical
         choices: [16, 32]

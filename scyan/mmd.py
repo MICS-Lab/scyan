@@ -24,8 +24,11 @@ class LossMMD:
         self, n_markers: int, prior_std: float, mean_na: float
     ) -> List[float]:
         internal_scale = 2 * n_markers * prior_std ** 2
-        adjacent_modes_scale = internal_scale + 2 * mean_na / 3 + 4
-        return [internal_scale, adjacent_modes_scale]
+        return [
+            0.25 * internal_scale,
+            internal_scale,
+            4 * internal_scale,
+        ]
 
     def one_kernel_mmd(
         self, kernel: Callable, dxx: Tensor, dxy: Tensor, dyy: Tensor
