@@ -25,7 +25,7 @@ def probs_per_marker(
 
     Args:
         model: Scyan model.
-        population: Name of the population to interpret.
+        population: Name of one population to interpret. To be valid, the population name has to be in `adata.obs[obs_key]`.
         obs_key: Key to look for population in `adata.obs`. By default, uses the model predictions.
         prob_name: Name to display on the plot.
         vmin_threshold: Minimum threshold for the heatmap colorbar.
@@ -61,7 +61,7 @@ def latent_heatmap(model: Scyan, obs_key: str = "scyan_pop", show: bool = True):
 
     Args:
         model: Scyan model.
-        obs_key: Key to look for population in `adata.obs`. By default, uses the model predictions.
+        obs_key: Key to look for populations in `adata.obs`. By default, uses the model predictions.
         show: Whether or not to display the plot.
     """
     u = model()
@@ -85,7 +85,7 @@ def subclusters(
 
     Args:
         model: Scyan model.
-        obs_key: Key to look for population in `adata.obs`. By default, uses the model predictions.
+        obs_key: Key to look for populations in `adata.obs`. By default, uses the model predictions.
         subcluster_key: Key created by `scyan.utils.subcluster`.
         figsize: Matplotlib figure size. Increase it if you have display issues.
         show: Whether or not to display the plot.

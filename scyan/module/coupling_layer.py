@@ -1,7 +1,7 @@
 import torch
 from torch import Tensor
 from torch import nn
-from typing import Tuple, List, Union
+from typing import Tuple, List, Optional
 import pytorch_lightning as pl
 
 
@@ -53,7 +53,7 @@ class CouplingLayer(pl.LightningModule):
         ]
 
     def forward(
-        self, inputs: Tuple[Tensor, Tensor, Union[Tensor, None]]
+        self, inputs: Tuple[Tensor, Tensor, Optional[Tensor]]
     ) -> Tuple[Tensor, Tensor, Tensor]:
         """Coupling layer forward function.
 

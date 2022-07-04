@@ -2,7 +2,7 @@ import torch
 from torch import Tensor
 from torch import nn
 from torch import distributions
-from typing import Tuple, Union, List
+from typing import Tuple, Union, List, Optional
 import pytorch_lightning as pl
 import logging
 
@@ -35,7 +35,7 @@ class ScyanModule(pl.LightningModule):
         prior_std: float,
         temperature: float,
         mmd_max_samples: int,
-        batch_ref_id: Union[int, None],
+        batch_ref_id: Optional[int],
     ):
         """
         Args:

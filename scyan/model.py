@@ -5,7 +5,7 @@ import pytorch_lightning as pl
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from anndata import AnnData
 import pandas as pd
-from typing import Union, Tuple, List
+from typing import Union, Tuple, List, Optional
 import numpy as np
 import random
 from sklearn.metrics import accuracy_score
@@ -35,8 +35,8 @@ class Scyan(pl.LightningModule):
         self,
         adata: AnnData,
         marker_pop_matrix: pd.DataFrame,
-        continuous_covariate_keys: Union[List[str], None] = None,
-        categorical_covariate_keys: Union[List[str], None] = None,
+        continuous_covariate_keys: Optional[List[str]] = None,
+        categorical_covariate_keys: Optional[List[str]] = None,
         hidden_size: int = 16,
         n_hidden_layers: int = 7,
         n_layers: int = 7,
@@ -47,8 +47,8 @@ class Scyan(pl.LightningModule):
         temperature: float = 1.0,
         mmd_max_samples: int = 2048,
         modulo_temp: int = 2,
-        max_samples: Union[int, None] = 200_000,
-        batch_key: Union[str, None] = None,
+        max_samples: Optional[int] = 200_000,
+        batch_key: Optional[str] = None,
         batch_ref: Union[str, int, None] = None,
     ):
         """
@@ -170,7 +170,7 @@ class Scyan(pl.LightningModule):
     def sample(
         self,
         n_samples: int,
-        covariates_sample: Union[Tensor, None] = None,
+        covariates_sample: Optional[Tensor] = None,
         pop: Union[str, List[str], int, Tensor, None] = None,
         return_z: bool = False,
     ) -> Tuple[Tensor, Tensor]:
@@ -179,7 +179,7 @@ class Scyan(pl.LightningModule):
         Args:
             n_samples: Number of cells to sample.
             covariates_sample: Optional tensor of covariates.
-            pop: Population to sample from. If None, sample from all populations.
+            pop: Populations to sample from. If `str`, then a population name. If `int`, a population index. If `List[str]`, a list of population names. If `Tensor`, a tensor of population indices. If None, sample from all populations.
             return_z: Whether to return the population Tensor.
 
         Returns:
@@ -250,16 +250,16 @@ class Scyan(pl.LightningModule):
     @torch.no_grad()
     def predict(
         self,
-        x: Union[Tensor, None] = None,
-        covariates: Union[Tensor, None] = None,
-        key_added: Union[str, None] = "scyan_pop",
+        x: Optional[Tensor] = None,
+        covariates: Optional[Tensor] = None,
+        key_added: Optional[str] = "scyan_pop",
     ) -> pd.Series:
-        """Model predictions
+        """Model population predictions, i.e. one population is assigned for each cell.
 
         Args:
-            x (Union[Tensor, None], optional): Model inputs.
-            covariates (Union[Tensor, None], optional): Model covariates.
-            key_added (str, optional): Key added to model.adata.obs.
+            x: Model inputs.
+            covariates: Model covariates.
+            key_added: Key added to model.adata.obs.
 
         Returns:
             pd.Series: Series of predictions
@@ -275,7 +275,7 @@ class Scyan(pl.LightningModule):
     # @_requires_fit
     @torch.no_grad()
     def predict_proba(
-        self, x: Union[Tensor, None] = None, covariates: Union[Tensor, None] = None
+        self, x: Optional[Tensor] = None, covariates: Optional[Tensor] = None
     ) -> pd.DataFrame:
         """Soft predictions (i.e. an array of probability per population) for each cell.
 
@@ -320,8 +320,8 @@ class Scyan(pl.LightningModule):
         max_epochs: int = 100,
         min_delta: float = 1,
         patience: int = 4,
-        callbacks: Union[List[pl.Callback], None] = None,
-        trainer: Union[pl.Trainer, None] = None,
+        callbacks: Optional[List[pl.Callback]] = None,
+        trainer: Optional[pl.Trainer] = None,
     ) -> "Scyan":
         """Train the `Scyan` model. On interactive Python (e.g. Jupyter Notebooks), training can be interrupted at any time without crashing.
 

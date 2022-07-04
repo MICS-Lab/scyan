@@ -1,4 +1,4 @@
-from typing import Callable, List, Union
+from typing import Callable, List, Union, Optional
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -89,8 +89,8 @@ def ks_statistics(model: Scyan, obs_key: str, populations: List[str]):
 
 def select_markers(
     model: Scyan,
-    markers: Union[List[str], None],
-    n_markers: Union[int, None],
+    markers: Optional[List[str]],
+    n_markers: Optional[int],
     obs_key: str,
     populations: List[str],
     min_markers: int = 2,

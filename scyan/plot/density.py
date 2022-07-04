@@ -1,7 +1,7 @@
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
-from typing import List, Union
+from typing import List, Union, Optional
 import numpy as np
 from scipy.stats import norm
 import torch
@@ -16,8 +16,8 @@ def kde_per_population(
     model: Scyan,
     populations: Union[str, List[str]],
     obs_key: str = "scyan_pop",
-    markers: Union[List[str], None] = None,
-    n_markers: Union[int, None] = 3,
+    markers: Optional[List[str]] = None,
+    n_markers: Optional[int] = 3,
     ncols: int = 2,
     var_name: str = "Marker",
     value_name: str = "Expression",
@@ -27,8 +27,8 @@ def kde_per_population(
 
     Args:
         model: Scyan model.
-        populations: Populations to interpret.
-        obs_key: Key to look for population in `adata.obs`. By default, uses the model predictions.
+        populations: One population or a list of population to interpret. To be valid, a population name have to be in `adata.obs[obs_key]`.
+        obs_key: Key to look for populations in `adata.obs`. By default, uses the model predictions.
         markers: List of markers to plot. If `None`, the list is chosen automatically.
         n_markers: Number of markers to choose automatically if `markers is None`.
         ncols: Number of figures per row.
@@ -81,8 +81,8 @@ def latent_expressions(
 
     Args:
         model: Scyan model.
-        population: The population to interpret.
-        obs_key: Key to look for population in `adata.obs`. By default, uses the model predictions.
+        population: Name of one population to interpret. To be valid, the population name has to be in `adata.obs[obs_key]`.
+        obs_key: Key to look for populations in `adata.obs`. By default, uses the model predictions.
         max_value: Maximum absolute latent value.
         num_pieces: Number of pieces to display the colorbar.
         radius: Radius used to chunk the colorbar. Increase this value if multiple names overlap.

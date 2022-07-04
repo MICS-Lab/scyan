@@ -1,5 +1,5 @@
 import seaborn as sns
-from typing import List, Union
+from typing import List, Union, Optional
 import numpy as np
 
 from .. import Scyan
@@ -12,8 +12,8 @@ from .utils import optional_show, check_population, get_palette_others, select_m
 def scatter(
     model: Scyan,
     populations: Union[str, List[str]],
-    markers: Union[List[str], None] = None,
-    n_markers: Union[int, None] = 3,
+    markers: Optional[List[str]] = None,
+    n_markers: Optional[int] = 3,
     obs_key: str = "scyan_pop",
     max_obs: int = 2000,
     s: float = 1.0,
@@ -24,10 +24,10 @@ def scatter(
 
     Args:
         model: Scyan model
-        populations: One population or a list of population to be colored
+        populations: One population or a list of population to be colored. To be valid, a population name have to be in `adata.obs[obs_key]`.
         markers: List of markers to plot. If `None`, the list is chosen automatically.
         n_markers: Number of markers to choose automatically if `markers is None`.
-        obs_key: Key to look for population in `adata.obs`. By default, uses the model predictions.
+        obs_key: Key to look for populations in `adata.obs`. By default, uses the model predictions.
         max_obs: Maximum number of cells per population to be displayed.
         s: Dot marker size.
         show: Whether or not to display the plot.
