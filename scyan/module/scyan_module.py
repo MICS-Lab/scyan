@@ -40,7 +40,7 @@ class ScyanModule(pl.LightningModule):
         """
         Args:
             rho: Tensor $\rho$ representing the knowledge table.
-            n_covariates: Number of covariates $N_{cov}$ considered.
+            n_covariates: Number of covariates $M_c$ considered.
             other_batches: List of batches that are not the reference.
             hidden_size: MLP (`s` and `t`) hidden size.
             n_hidden_layers: Number of hidden layers for the MLP (`s` and `t`).
@@ -82,7 +82,7 @@ class ScyanModule(pl.LightningModule):
 
         Args:
             x: Inputs of size $(N, M)$.
-            covariates: Covariates of size $(N, N_{cov})$
+            covariates: Covariates of size $(N, M_c)$
 
         Returns:
             Tuple of (outputs, covariates, lod_det_jacobian sum)
@@ -95,7 +95,7 @@ class ScyanModule(pl.LightningModule):
 
         Args:
             u: Latent expressions of size $(N, M)$.
-            covariates: Covariates of size $(N, N_{cov})$
+            covariates: Covariates of size $(N, M_c)$
 
         Returns:
             Outputs of size $(N, M)$.
@@ -174,7 +174,7 @@ class ScyanModule(pl.LightningModule):
 
         Args:
             x: Inputs of size $(N, M)$.
-            covariates: Covariates of size $(N, N_{cov})$.
+            covariates: Covariates of size $(N, M_c)$.
 
         Returns:
             Log probabilities of size $(N, P)$, the log det jacobian and the latent expressions of size $(N, M)$.
@@ -219,7 +219,7 @@ class ScyanModule(pl.LightningModule):
 
         Args:
             x: Inputs of size $(N, M)$.
-            covariates: Covariates of size $(N, N_{cov})$.
+            covariates: Covariates of size $(N, M_c)$.
             batches: Batch information used to correct batch-effect, tensor of size $(N)$
             use_temp: Whether to consider temperature is the KL term.
 

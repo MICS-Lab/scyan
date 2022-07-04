@@ -53,7 +53,7 @@ class RealNVP(pl.LightningModule):
 
         Args:
             x: Inputs of size $(N, M)$.
-            covariates: Covariates of size $(N, N_{cov})$
+            covariates: Covariates of size $(N, M_c)$
 
         Returns:
             Tuple of (outputs, covariates, lod_det_jacobian sum)
@@ -65,7 +65,7 @@ class RealNVP(pl.LightningModule):
 
         Args:
             u: Latent expressions of size $(N, M)$.
-            covariates: Covariates of size $(N, N_{cov})$
+            covariates: Covariates of size $(N, M_c)$
 
         Returns:
             Outputs of size $(N, M)$.

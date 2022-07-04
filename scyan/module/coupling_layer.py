@@ -82,7 +82,7 @@ class CouplingLayer(pl.LightningModule):
 
         Args:
             y: Inputs tensor or size $(N, M)$.
-            covariates: Covariates tensor of size $(N, N_{cov})$.
+            covariates: Covariates tensor of size $(N, M_c)$.
 
         Returns:
             Outputs tensor.
