@@ -6,6 +6,7 @@ adata, marker_pop_matrix = scyan.data.load("aml")
 
 model = scyan.Scyan(adata, marker_pop_matrix)
 model.fit()
+model.predict()
 ```
 
 ::: scyan.Scyan
