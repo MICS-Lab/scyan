@@ -1,19 +1,20 @@
+import logging
+import random
+from typing import List, Optional, Tuple, Union
+
+import numpy as np
+import pandas as pd
+import pytorch_lightning as pl
 import torch
+from anndata import AnnData
+from pytorch_lightning.callbacks.early_stopping import EarlyStopping
+from sklearn.metrics import accuracy_score
 from torch import Tensor
 from torch.utils.data import DataLoader
-import pytorch_lightning as pl
-from pytorch_lightning.callbacks.early_stopping import EarlyStopping
-from anndata import AnnData
-import pandas as pd
-from typing import Union, Tuple, List, Optional
-import numpy as np
-import random
-from sklearn.metrics import accuracy_score
-import logging
 
-from .module import ScyanModule
 from .data import AdataDataset, RandomSampler, _prepare_data
-from .utils import _process_pop_sample, _validate_inputs, _requires_fit
+from .module import ScyanModule
+from .utils import _process_pop_sample, _requires_fit, _validate_inputs
 
 log = logging.getLogger(__name__)
 

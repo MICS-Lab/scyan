@@ -1,9 +1,46 @@
+[tool.poetry]
+name = "scyan"
+version = "0.1.0"
+description = "Single-cell Cytometry Annotation Network"
+authors = ["Blampey Quentin <quentin.blampey@gmail.com>"]
+license = "BSD-3-Clause"
+readme = "README.md"
+packages = [
+    { include = "scyan" },
+]
+
+[tool.poetry.dependencies]
+python = ">=3.9,<3.11"
+FlowIO = "^1.0.1"
+matplotlib = "^3.5.2"
+scipy = "^1.7.3"
+scikit-learn = "^1.1.1"
+seaborn = "^0.11.2"
+llvmlite = "^0.38.1"
+scanpy = "^1.9.1"
+pytorch-lightning = "^1.6.4"
+umap-learn = "^0.5.3"
+
+[tool.poetry.dev-dependencies]
+wandb = "^0.12.20"
+hydra-core = "^1.2.0"
+hydra-colorlog = "^1.2.0"
+hydra-optuna-sweeper = "^1.2.0"
+pytest = "^7.1.2"
+ipykernel = "^6.15.0"
+ipywidgets = "^7.7.1"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = "test_*.py"
 filterwarnings = [
-    "ignore::DeprecationWarning",
-    "ignore::UserWarning"
+  "ignore::DeprecationWarning",
+  "ignore::UserWarning"
 ]
 
 [tool.black]
@@ -23,3 +60,7 @@ exclude = '''
     | dist
   )/
 '''
+
+[tool.isort]
+profile = "black"
+skip_glob = ["*/__init__.py"]

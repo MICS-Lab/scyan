@@ -1,6 +1,7 @@
+from typing import Callable, List
+
 import torch
 from torch import Tensor
-from typing import Callable, List
 
 
 def gaussian_kernel(scale: float) -> Callable:

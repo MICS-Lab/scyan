@@ -1,10 +1,11 @@
-import seaborn as sns
-from typing import List, Union, Optional
+from typing import List, Optional, Union
+
 import numpy as np
+import seaborn as sns
 
 from .. import Scyan
 from ..utils import _subset
-from .utils import optional_show, check_population, get_palette_others, select_markers
+from .utils import check_population, get_palette_others, optional_show, select_markers
 
 
 @optional_show

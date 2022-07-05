@@ -1,17 +1,17 @@
-import matplotlib.pyplot as plt
-from typing import Callable, Tuple
-import scanpy as sc
-from pathlib import Path
-from anndata import AnnData
-import numpy as np
-import pandas as pd
-from pandas.api.types import is_numeric_dtype
-import flowio
-from typing import Union, List
-import torch
-from torch import Tensor
 import logging
 from functools import wraps
+from pathlib import Path
+from typing import Callable, List, Tuple, Union
+
+import flowio
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import scanpy as sc
+import torch
+from anndata import AnnData
+from pandas.api.types import is_numeric_dtype
+from torch import Tensor
 
 log = logging.getLogger(__name__)
 
@@ -36,9 +36,10 @@ def _wandb_plt_image(fun: Callable, figsize: Tuple[int, int] = [7, 5]):
         The wandb Image to be logged.
     """
 
-    from PIL import Image
-    import wandb
     import io
+
+    import wandb
+    from PIL import Image
 
     plt.rcParams["figure.figsize"] = figsize
     plt.rcParams["figure.autolayout"] = True

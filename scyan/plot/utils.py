@@ -1,10 +1,11 @@
-from typing import Callable, List, Union, Optional
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-from scipy import stats
 from collections import defaultdict
 from functools import wraps
+from typing import Callable, List, Optional, Union
+
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+from scipy import stats
 
 from .. import Scyan
 

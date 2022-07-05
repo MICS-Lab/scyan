@@ -1,8 +1,8 @@
-import torch
-from torch import Tensor
-from torch import nn
-from typing import Tuple, List, Optional
+from typing import List, Optional, Tuple
+
 import pytorch_lightning as pl
+import torch
+from torch import Tensor, nn
 
 
 class CouplingLayer(pl.LightningModule):

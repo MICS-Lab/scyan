@@ -1,13 +1,14 @@
+from itertools import groupby
 from typing import Tuple
-import pandas as pd
-import seaborn as sns
+
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+import seaborn as sns
 import torch
-from itertools import groupby
 
 from .. import Scyan
-from .utils import optional_show, check_population
+from .utils import check_population, optional_show
 
 
 @torch.no_grad()

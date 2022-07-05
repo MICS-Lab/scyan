@@ -1,7 +1,6 @@
-import torch
-from torch import Tensor
-from torch import distributions
 import pytorch_lightning as pl
+import torch
+from torch import Tensor, distributions
 
 
 class PriorDistribution(pl.LightningModule):

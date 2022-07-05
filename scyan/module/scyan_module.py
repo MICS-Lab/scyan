@@ -1,13 +1,12 @@
-import torch
-from torch import Tensor
-from torch import nn
-from torch import distributions
-from typing import Tuple, Union, List, Optional
-import pytorch_lightning as pl
 import logging
+from typing import List, Optional, Tuple, Union
 
-from . import RealNVP, PriorDistribution
+import pytorch_lightning as pl
+import torch
+from torch import Tensor, distributions, nn
+
 from ..mmd import LossMMD
+from . import PriorDistribution, RealNVP
 
 log = logging.getLogger(__name__)
 

@@ -1,10 +1,11 @@
-import torch
-from torch import Tensor
+from typing import List, Optional, Sized, Tuple, Union
+
+import numpy as np
 import pandas as pd
 import scanpy as sc
+import torch
 from anndata import AnnData
-from typing import List, Tuple, Union, Sized, Optional
-import numpy as np
+from torch import Tensor
 
 from .utils import _root_path
 
