@@ -1,0 +1,15 @@
+image: python:latest
+
+before_script:
+  - pip install .
+
+pages:
+  stage: deploy
+  only:
+    - master
+  script:
+    - mkdocs build --site-dir public
+  artifacts:
+    paths:
+    - public
+
