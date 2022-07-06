@@ -10,7 +10,7 @@ The [complete documentation can be found here.](https://2017blampeyq.pages.centr
 
 # Overview
 
-Scyan is a Bayesian probabilistic model composed of a deep invertible neural network called a Normalizing Flow (the function $f_{\phi}$). This network maps a latent distribution of cell expressions into the empirical distribution of cell expressions. The latter latent cell distribution is a mixture of gaussian-like distributions representing the sum of a cell-specific term and a population-specific term. The latent space is used for interpretability and batch effect correction. More details on the methods section of the article.
+Scyan is a Bayesian probabilistic model composed of a deep invertible neural network called a Normalizing Flow (see function `f`). This network maps a latent distribution of cell expressions into the empirical distribution of cell expressions. The latter latent cell distribution is a mixture of gaussian-like distributions representing the sum of a cell-specific term and a population-specific term. The latent space is used for interpretability and batch effect correction. More details on the methods section of the article.
 
 <p align="center">
   <img src="./docs/assets/overview.png" alt="overview_image"/>
