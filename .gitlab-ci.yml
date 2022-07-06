@@ -1,4 +1,4 @@
-image: python:3.8-alpine3.15
+image: python:3.8-buster
 
 pages:
   stage: deploy
