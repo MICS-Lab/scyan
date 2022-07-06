@@ -1,10 +1,11 @@
 from collections import defaultdict
-import wandb
-import pytorch_lightning as pl
-from pytorch_lightning.loggers import WandbLogger
+
 import hydra
-from omegaconf import DictConfig, OmegaConf
 import numpy as np
+import pytorch_lightning as pl
+import wandb
+from omegaconf import DictConfig, OmegaConf
+from pytorch_lightning.loggers import WandbLogger
 
 import scyan
 from scyan.model import Scyan

@@ -1,16 +1,17 @@
-import pandas as pd
-import hydra
-from typing import List, Optional
-from pytorch_lightning import Callback, Trainer
-import wandb
 import logging
+from typing import List, Optional
+
+import hydra
 import numpy as np
+import numpy.typing as npt
+import pandas as pd
 import scanpy as sc
-from sklearn import metrics
+import wandb
 from anndata import AnnData
 from omegaconf import DictConfig
+from pytorch_lightning import Callback, Trainer
 from pytorch_lightning.loggers import WandbLogger
-import numpy.typing as npt
+from sklearn import metrics
 
 import scyan
 from scyan.model import Scyan
