@@ -1,38 +1,96 @@
-<img src="./docs/assets/logo.png" alt="scyan_logo" width="400"/><br />
+<p align="center">
+  <img src="./docs/assets/logo.png" alt="scyan_logo" width="500"/>
+</p>
 
-Scyan (**S**ingle-cell **Cy**tometry **A**nnotation **N**etwork) is a flow-based deep generative network that annotates mass and spectral cytometry cells. It leverages expert knowledge to make predictions without any gating or labeling required.
+Scyan stands for **S**ingle-cell **Cy**tometry **A**nnotation **N**etwork. Based on a biological knowledge prior, it provides a fast cell populations annotation without requiring any training label. Scyan is an interpretable model that also corrects batch-effect and can be used for debarcoding / cell sampling / population discovery.
 
-# Model features overview
+# Documentation
 
-What can be done with Scyan?
+The [complete documentation can be found here.](https://2017blampeyq.pages.centralesupelec.fr/scyan/) It contains installation guidelines, tutorials, a description of the API, ...
+
+# Overview
+
+Scyan is a Bayesian probabilistic model composed of a deep invertible neural network called a Normalizing Flow (the function $f_{\phi}$). This network maps a latent distribution of cell expressions into the empirical distribution of cell expressions. The latter latent cell distribution is a mixture of gaussian-like distributions representing the sum of a cell-specific term and a population-specific term. The latent space is used for interpretability and batch effect correction. More details on the methods section of the article.
+
+<p align="center">
+  <img src="./docs/assets/overview.png" alt="overview_image"/>
+</p>
 
 # Getting started
 
-### Install with pip
+## Install with PyPI
 
-Comming soon
+Soon available
 
-### Install locally
+## Install locally
 
-Clone the repository and then
+> Advice (optional): if using `pip`, we advise to create a new environment via a package manager. For instance, you can create a new conda environment:
+>
+> ```bash
+> conda create --name scyan python=3.9
+> conda activate scyan
+> ```
 
+Clone the repository and move to its root
+
+```bash
+git clone git@gitlab-research.centralesupelec.fr:mics_biomathematics/biomaths/scyan.git
+cd scyan
 ```
-pip install -r requirements.txt
+
+You can install it with `pip` or `poetry`, choose one among the following:
+
+```bash
+pip install -e '.[dev,docs]'  # pip installation in development mode
+pip install .                 # pip basic installation (package only)
+poetry install -E 'dev docs'  # poetry installation in development mode
 ```
 
 ## Basic usage
 
-```python
+```py
 import scyan
 
-... # import data
+adata, marker_pop_matrix = scyan.data.load("aml")
+
 model = scyan.Scyan(adata, marker_pop_matrix)
 model.fit()
+model.predict()
 ```
 
-# Docs
+For more details, read the [documentation](https://2017blampeyq.pages.centralesupelec.fr/scyan/).
 
-- `mkdocs new [dir-name]` - Create a new project.
-- `mkdocs serve` - Start the live-reloading docs server.
-- `mkdocs build` - Build the documentation site.
-- `mkdocs -h` - Print help message and exit.
+# Technical description
+
+Scyan is a **Python** library based on:
+
+- _Pytorch_, a deep learning framework
+- _AnnData_, a data library that works nicely with nice single-cell data
+- _Pytorch Lighning_ for model training
+- _Hydra_ for project configuration
+- _Weight & Biases_ for model monitoring
+
+# Project layout
+
+    config/       # Hydra configuration folder (optional use)
+    data/         # Data folder containg adata files and csv tables
+    docs/         # The documentation folder
+    scripts/      # Scripts to reproduce the results from the article
+    scyan/                    # Library source code
+        module/               # Folder containing neural network modules
+            coupling_layer.py
+            distribution.py   # Prior distribution (called U in the article)
+            real_nvp.py       # Normalizing Flow
+            scyan_module      # Core module
+        plot/                 # Plotting tools
+            ...
+        data.py               # Data related functions and classes
+        mmd.py                # Maximum Mean Discrepancy implementation
+        model.py              # Scyan model class
+        utils.py              # Misc functions
+    .gitignore
+    LICENSE
+    mkdocs.yml    # The docs configuration file
+    pyproject.toml
+    README.md
+    requirements.txt

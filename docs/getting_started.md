@@ -11,29 +11,38 @@ Soon available
     If using `pip`, we advise to create a new environment via a package manager.
     For instance, you can create a new conda environment:
 
-    ```shell
+    ```bash
     conda create --name scyan python=3.9
     conda activate scyan
     ```
 
 Scyan can be installed with `pip` or `poetry` after cloning the repository:
 
-=== "With pip"
+=== "With pip (dev mode)"
 
-    ``` shell
+    ``` bash
     git clone git@gitlab-research.centralesupelec.fr:mics_biomathematics/biomaths/scyan.git
     cd scyan
 
-    pip install -e .
+    pip install -e '.[dev,docs]'
+    ```
+
+=== "With pip (package only)"
+
+    ``` bash
+    git clone git@gitlab-research.centralesupelec.fr:mics_biomathematics/biomaths/scyan.git
+    cd scyan
+
+    pip install .
     ```
 
 === "With poetry"
 
-    ``` shell
+    ``` bash
     git clone git@gitlab-research.centralesupelec.fr:mics_biomathematics/biomaths/scyan.git
     cd scyan
 
-    poetry install
+    poetry install -E 'dev docs'
     ```
 
 ## Usage

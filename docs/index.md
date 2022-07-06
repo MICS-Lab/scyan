@@ -1,7 +1,7 @@
 # Scyan documentation
 
 <p align="center">
-  <img src="./assets/logo.png" />
+  <img src="./assets/logo.png" alt="scyan_logo" />
 </p>
 
 Scyan stands for **S**ingle-cell **Cy**tometry **A**nnotation **N**etwork. Based on a biological knowledge prior, it provides a fast cell populations annotation without requiring any training label. Scyan is an interpretable model that also corrects batch-effect and can be used for debarcoding / cell sampling / population discovery.
