@@ -1,7 +1,7 @@
 image: python:latest
 
 before_script:
-  - pip install .
+  - pip install ".[docs]"
 
 pages:
   stage: deploy
