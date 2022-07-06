@@ -182,7 +182,8 @@ def _validate_inputs(adata: AnnData, df: pd.DataFrame):
 def subcluster(
     model,
     resolution: float = 1,
-    cluster_size_th: int = 100,
+    size_ratio_th: float = 0.02,
+    min_cells_th: int = 200,
     obs_key: str = "scyan_pop",
     subcluster_key: str = "subcluster_index",
     umap_display_key: str = "leiden_subcluster",
@@ -192,31 +193,43 @@ def subcluster(
     Args:
         model: Scyan model
         resolution: Resolution used for leiden clustering. Higher resolution leads to more clusters.
-        cluster_size_th: Minimum number of cells to be considered as a significant cluster.
+        size_ratio_th: Minimum ratio of cells to be considered as a significant cluster (compared to the parent cluster).
+        min_cells_th: Minimum number of cells to be considered as a significant cluster.
         obs_key: Key to look for population in `adata.obs`. By default, uses the model predictions.
         subcluster_key: Key added to `adata.obs` to indicate the index of the subcluster.
         umap_display_key: Key added to `adata.obs` to plot the sub-clusters on a UMAP.
     """
     adata = model.adata
-    sc.pp.neighbors(adata)
-    sc.tl.leiden(adata, resolution=resolution)
+
+    if (
+        "leiden" in adata.obs
+        and adata.uns.get("leiden", {}).get("params", {}).get("resolution") == resolution
+    ):
+        log.info(
+            "Found leiden labels with the same resolution. Skipping leiden clustering."
+        )
+    else:
+        sc.pp.neighbors(adata)
+        sc.tl.leiden(adata, resolution=resolution)
 
     adata.obs[subcluster_key] = ""
     for pop in adata.obs[obs_key].cat.categories:
         condition = adata.obs[obs_key] == pop
 
         labels = adata[condition].obs.leiden
-        counts = labels.value_counts()
+        ratios = labels.value_counts(normalize=True)
+        ratios = ratios[labels.value_counts() > min_cells_th]
 
-        if (counts > cluster_size_th).sum() < 2:
+        if (ratios > size_ratio_th).sum() < 2:
             adata.obs.loc[condition, subcluster_key] = np.nan
             continue
 
         rename_dict = {
-            k: i if v > cluster_size_th else np.nan
-            for i, (k, v) in enumerate(counts.items())
+            k: i for i, (k, v) in enumerate(ratios.items()) if v > size_ratio_th
         }
-        adata.obs.loc[condition, subcluster_key] = [rename_dict[l] for l in labels]
+        adata.obs.loc[condition, subcluster_key] = [
+            rename_dict.get(l, np.nan) for l in labels
+        ]
 
     series = adata.obs[subcluster_key]
     adata.obs[umap_display_key] = pd.Categorical(
