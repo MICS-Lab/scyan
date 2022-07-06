@@ -1,11 +1,11 @@
-image: python:3.8-buster
+image: python:3.8-alpine
 
 pages:
   stage: deploy
   only:
     - master
   script:
-    - pip install ".[docs]"
+    - python -m pip install ".[docs]"
     - mkdocs build --site-dir public
   artifacts:
     paths:
