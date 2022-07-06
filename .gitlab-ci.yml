@@ -1,13 +1,11 @@
 image: python:latest
 
-before_script:
-  - pip install ".[docs]"
-
 pages:
   stage: deploy
   only:
     - master
   script:
+    - pip install ".[docs]"
     - mkdocs build --site-dir public
   artifacts:
     paths:
