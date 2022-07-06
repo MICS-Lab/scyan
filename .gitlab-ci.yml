@@ -5,7 +5,7 @@ pages:
   only:
     - master
   script:
-    - python -m pip install ".[docs]"
+    - pip install ".[docs]"
     - mkdocs build --site-dir public
   artifacts:
     paths:
