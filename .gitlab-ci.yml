@@ -1,6 +1,8 @@
-image: python:3.8-alpine
+image: python:latest
 
 pages:
+  tags:
+    - docker
   stage: deploy
   only:
     - master
