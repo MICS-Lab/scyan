@@ -1,4 +1,4 @@
-image: python:3.8-alpine
+image: python:latest
 
 pages:
   stage: deploy
