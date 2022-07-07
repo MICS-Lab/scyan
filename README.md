@@ -79,13 +79,14 @@ Scyan is a **Python** library based on:
     tests/        # Testing the library
     scyan/                    # Library source code
         module/               # Folder containing neural network modules
-            coupling_layer.py
+            coupling_layer.py # Coupling layer
             distribution.py   # Prior distribution (called U in the article)
             real_nvp.py       # Normalizing Flow
             scyan_module      # Core module
         plot/                 # Plotting tools
             ...
-        data.py               # Data related functions and classes
+        data/                 # Folder with data related functions and classes
+            ...
         mmd.py                # Maximum Mean Discrepancy implementation
         model.py              # Scyan model class
         utils.py              # Misc functions

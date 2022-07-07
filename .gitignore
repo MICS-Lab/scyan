@@ -11,8 +11,10 @@ lightning_logs
 
 # Data files
 data/*/*
-!data/aml/table.csv
-!data/bmmc/table.csv
+!data/aml/default.csv
+!data/aml/short.h5ad
+!data/bmmc/default.csv
+!data/debarcoding/default.csv
 !data/README.md
 
 # Jupyter Notebook
