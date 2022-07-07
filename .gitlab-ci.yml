@@ -1,12 +1,13 @@
 image: python:latest
 
 pages:
+  tags:
+    - docker
   stage: deploy
   only:
     - master
+    - dev
   script:
-    - apt-get update -q -y
-    - apt-get install -y python-pip
     - pip install ".[docs]"
     - mkdocs build --site-dir public
   artifacts:

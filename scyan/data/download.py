@@ -1,7 +1,7 @@
 import logging
 import urllib
 from pathlib import Path
-from typing import Union
+from typing import Tuple, Union
 from urllib import request
 
 import pandas as pd
@@ -13,7 +13,24 @@ from ..utils import _root_path
 log = logging.getLogger(__name__)
 
 
-def get_local_file(data_path: Path, dataset: str, name: str, is_table: bool):
+def get_local_file(
+    data_path: Path, dataset: str, name: str, is_table: bool
+) -> Union[AnnData, pd.DataFrame]:
+    """Gets an `anndata` or a `csv` file into memory. If the file does not exist locally, it is downloaded from Gitlab.
+
+    Args:
+        data_path: Local path to the dataset folder.
+        dataset: Name of the dataset.
+        name: Name of the file (without extension).
+        is_table: Whether a `csv` or an `anndata` has to be loaded.
+
+    Raises:
+        FileNotFoundError: If the file does not exist on Gitlab.
+        e: Other error from the Gitlab download.
+
+    Returns:
+        An `anndata` or a `csv` object.
+    """
     filename = f"{name}.{'csv' if is_table else 'h5ad'}"
     filepath = data_path / filename
 
@@ -41,7 +58,7 @@ def get_local_file(data_path: Path, dataset: str, name: str, is_table: bool):
 
 def load(
     dataset: str, size: str = "default", table: str = "default"
-) -> Union[AnnData, pd.DataFrame]:
+) -> Tuple[AnnData, pd.DataFrame]:
     """Loads a dataset, i.e. its `AnnData` object and its knowledge table.
 
     Args:
@@ -50,15 +67,15 @@ def load(
         table: Name of the knowledge table that should be loaded. By default only one table is available, but you can add some.
 
     Returns:
-        `AnnData` instance and the marker-population matrix
+        `AnnData` instance and the marker-population matrix.
     """
     data_path = _root_path() / "data" / dataset
 
     assert (
         data_path.is_dir()
-    ), f"{data_path} is not an existing directory. Valid dataset values are 'aml', 'bmmc', 'debarcoding'"
+    ), f"{data_path} is not an existing directory. Valid dataset values are 'aml', 'bmmc', 'debarcoding' (or create your own)."
 
-    marker_pop_matrix = get_local_file(data_path, dataset, table, True)
     adata = get_local_file(data_path, dataset, size, False)
+    marker_pop_matrix = get_local_file(data_path, dataset, table, True)
 
     return adata, marker_pop_matrix
