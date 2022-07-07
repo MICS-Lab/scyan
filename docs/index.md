@@ -1,7 +1,7 @@
 # Scyan documentation
 
 <p align="center">
-  <img src="./assets/logo.png" alt="scyan_logo" />
+  <img src="./assets/logo.png" alt="scyan_logo" width="500px"/>
 </p>
 
 Scyan stands for **S**ingle-cell **Cy**tometry **A**nnotation **N**etwork. Based on a biological knowledge prior, it provides a fast cell populations annotation without requiring any training label. Scyan is an interpretable model that also corrects batch-effect and can be used for debarcoding / cell sampling / population discovery.
@@ -20,10 +20,10 @@ Scyan is a Bayesian probabilistic model composed of a deep invertible neural net
 Scyan is a **Python** library based on:
 
 - _Pytorch_, a deep learning framework
-- _AnnData_, a data library that works nicely with nice single-cell data
-- _Pytorch Lighning_ for model training
-- _Hydra_ for project configuration
-- _Weight & Biases_ for model monitoring
+- _AnnData_, a data library that works nicely with single-cell data
+- _Pytorch Lighning_, for model training
+- _Hydra_, for project configuration
+- _Weight & Biases_, for model monitoring
 
 ## Project layout
 
@@ -33,6 +33,7 @@ See [Scyan on Gitlab](https://gitlab-research.centralesupelec.fr/mics_biomathema
     data/         # Data folder containg adata files and csv tables
     docs/         # The documentation folder
     scripts/      # Scripts to reproduce the results from the article
+    tests/        # Testing the library
     scyan/                    # Library source code
         module/               # Folder containing neural network modules
             coupling_layer.py
@@ -46,8 +47,11 @@ See [Scyan on Gitlab](https://gitlab-research.centralesupelec.fr/mics_biomathema
         model.py              # Scyan model class
         utils.py              # Misc functions
     .gitignore
+    .gitlab-ci.yml    # CI that builds documentation
+    CONTRIBUTING.md   # To read before contributing
     LICENSE
-    mkdocs.yml    # The docs configuration file
-    pyproject.toml
+    mkdocs.yml        # The docs configuration file
+    poetry.lock
+    pyproject.toml    # Dependencies, project metadata and more
     README.md
-    requirements.txt
+    setup.py          # Setup file, see `pyproject.toml`

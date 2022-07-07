@@ -53,7 +53,8 @@ testpaths = ["tests"]
 python_files = "test_*.py"
 filterwarnings = [
   "ignore::DeprecationWarning",
-  "ignore::UserWarning"
+  "ignore::UserWarning",
+  "ignore:::.*anndata*"
 ]
 
 [tool.black]

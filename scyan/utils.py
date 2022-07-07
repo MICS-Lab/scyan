@@ -1,7 +1,10 @@
 import logging
 from functools import wraps
 from pathlib import Path
-from typing import Callable, List, Tuple, Union
+from typing import TYPE_CHECKING, Callable, List, Tuple, Union
+
+if TYPE_CHECKING:
+    from . import Scyan
 
 import flowio
 import matplotlib.pyplot as plt
@@ -180,7 +183,7 @@ def _validate_inputs(adata: AnnData, df: pd.DataFrame):
 
 
 def subcluster(
-    model,
+    model: "Scyan",
     resolution: float = 1,
     size_ratio_th: float = 0.02,
     min_cells_th: int = 200,
