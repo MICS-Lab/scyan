@@ -2,12 +2,9 @@ from typing import List, Optional, Sized, Tuple, Union
 
 import numpy as np
 import pandas as pd
-import scanpy as sc
 import torch
 from anndata import AnnData
 from torch import Tensor
-
-from .utils import _root_path
 
 
 class AdataDataset(torch.utils.data.Dataset):
@@ -35,23 +32,6 @@ class RandomSampler(torch.utils.data.Sampler):
 
     def __len__(self):
         return self.max_samples
-
-
-def load(dataset: str, size: str = "default") -> Union[AnnData, pd.DataFrame]:
-    """Loads a dataset, i.e. its `AnnData` object and its knowledge table.
-
-    Args:
-        dataset: Name of the dataset. Datasets available are: `"aml"`, `"bmmc"`.
-
-    Returns:
-        `AnnData` instance and the marker-population matrix
-    """
-    data_path = _root_path() / "data" / dataset
-
-    adata = sc.read_h5ad(data_path / f"{size}.h5ad")
-    marker_pop_matrix = pd.read_csv(data_path / "table.csv", index_col=0)
-
-    return adata, marker_pop_matrix
 
 
 def _prepare_data(
