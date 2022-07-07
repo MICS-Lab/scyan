@@ -76,6 +76,7 @@ Scyan is a **Python** library based on:
     data/         # Data folder containg adata files and csv tables
     docs/         # The documentation folder
     scripts/      # Scripts to reproduce the results from the article
+    tests/        # Testing the library
     scyan/                    # Library source code
         module/               # Folder containing neural network modules
             coupling_layer.py
@@ -89,8 +90,11 @@ Scyan is a **Python** library based on:
         model.py              # Scyan model class
         utils.py              # Misc functions
     .gitignore
+    .gitlab-ci.yml    # CI that builds documentation
+    CONTRIBUTING.md   # To read before contributing
     LICENSE
-    mkdocs.yml    # The docs configuration file
-    pyproject.toml
+    mkdocs.yml        # The docs configuration file
+    poetry.lock
+    pyproject.toml    # Dependencies, project metadata and more
     README.md
-    requirements.txt
+    setup.py          # Setup file, see `pyproject.toml`

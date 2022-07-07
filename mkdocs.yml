@@ -4,7 +4,7 @@ repo_name: biomaths/scyan
 copyright: Copyright &copy; 2021 - 2022 Quentin Blampey
 theme:
   name: material
-  logo: assets/logo_medium.png
+  logo: assets/logo_white.svg
   favicon: assets/favicon.png
 nav:
   - Home: index.md
