@@ -20,7 +20,7 @@ Scyan is a Bayesian probabilistic model composed of a deep invertible neural net
 
 ## Install with PyPI
 
-Soon available
+Available after publication
 
 ## Install locally
 
@@ -41,9 +41,9 @@ cd scyan
 You can install it with `pip` or `poetry`, choose one among the following:
 
 ```bash
-pip install -e '.[dev,docs]'  # pip installation in development mode
-pip install .                 # pip basic installation (package only)
-poetry install -E 'dev docs'  # poetry installation in development mode
+pip install -e '.[dev,docs,discovery]'  # pip installation in development mode
+pip install .                           # pip basic installation (package only)
+poetry install -E 'dev docs discovery'  # poetry installation in development mode
 ```
 
 ## Basic usage

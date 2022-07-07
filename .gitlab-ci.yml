@@ -6,7 +6,6 @@ pages:
   stage: deploy
   only:
     - master
-    - dev
   script:
     - pip install ".[docs]"
     - mkdocs build --site-dir public

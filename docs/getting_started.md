@@ -2,7 +2,7 @@
 
 ### Via PyPI
 
-Soon available
+Available after publication
 
 ### Local installation
 
@@ -24,7 +24,7 @@ Scyan can be installed with `pip` or `poetry` after cloning the repository:
     git clone git@gitlab-research.centralesupelec.fr:mics_biomathematics/biomaths/scyan.git
     cd scyan
 
-    pip install -e '.[dev,docs]'
+    pip install -e '.[dev,docs,discovery]'
     ```
 
 === "With pip (package only)"
@@ -42,7 +42,7 @@ Scyan can be installed with `pip` or `poetry` after cloning the repository:
     git clone git@gitlab-research.centralesupelec.fr:mics_biomathematics/biomaths/scyan.git
     cd scyan
 
-    poetry install -E 'dev docs'
+    poetry install -E 'dev docs discovery'
     ```
 
 ## Usage
