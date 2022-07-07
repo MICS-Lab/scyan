@@ -4,8 +4,8 @@ pages:
   stage: deploy
   only:
     - master
+    - dev
   script:
-    - apk add py3-pip
     - pip install ".[docs]"
     - mkdocs build --site-dir public
   artifacts:
