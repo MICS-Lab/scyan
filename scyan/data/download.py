@@ -60,6 +60,12 @@ def load(
     dataset: str, size: str = "default", table: str = "default"
 ) -> Tuple[AnnData, pd.DataFrame]:
     """Loads a dataset, i.e. its `AnnData` object and its knowledge table.
+    If the dataset was not loaded yet, it is automatically downloaded (requires internet connection).
+    !!! note
+        If `scyan` repository was cloned, then the data will be saved in the `data` folder of the repository, else at `<home_path>/.scyan_data`
+    !!! note
+        You can add other datasets inside the data folder (see note above) and load them with this function.
+        Just make sure you create a specific folder for your dataset, and save your `anndata` object and your table in `h5ad` and `csv` formats respectively.
 
     Args:
         dataset: Name of the dataset. Datasets available are: `"aml"`, `"bmmc"`, `"debarcoding"`.
@@ -67,7 +73,7 @@ def load(
         table: Name of the knowledge table that should be loaded. By default only one table is available, but you can add some.
 
     Returns:
-        `AnnData` instance and the marker-population matrix.
+        `AnnData` instance and the knowledge table.
     """
     data_path = _root_path() / "data"
 

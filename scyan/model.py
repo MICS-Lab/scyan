@@ -20,7 +20,18 @@ log = logging.getLogger(__name__)
 
 
 class Scyan(pl.LightningModule):
-    """Scyan, a.k.a Single-cell Cytometry Annotation Network.
+    """
+    ```py
+    ### Usage example
+    import scyan
+
+    adata, marker_pop_matrix = scyan.data.load("aml")
+
+    model = scyan.Scyan(adata, marker_pop_matrix)
+    model.fit()
+    model.predict()
+    ```
+    Scyan, a.k.a Single-cell Cytometry Annotation Network.
     It is a wrapper to the ScyanModule that contains the core logic (the loss implementation, the forward function, ...).
     While ScyanModule works on tensors, this class works directly on AnnData objects.
 
