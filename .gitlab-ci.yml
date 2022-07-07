@@ -5,7 +5,8 @@ pages:
   only:
     - master
   script:
-    - apt install python3-pip
+    - apt-get update -q -y
+    - apt-get install -y python-pip
     - pip install ".[docs]"
     - mkdocs build --site-dir public
   artifacts:
