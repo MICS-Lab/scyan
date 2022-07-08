@@ -83,6 +83,8 @@ def subclusters(
     show: bool = True,
 ):
     """Displays Scyan latent space for each populations sub-clusters.
+    !!! warning
+        To run this plot function, you have to run [scyan.utils.subcluster][scyan.utils.subcluster] first.
 
     Args:
         model: Scyan model.

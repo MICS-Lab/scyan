@@ -1,12 +1,23 @@
 image: python:latest
 
-pages:
+default:
   tags:
     - docker
+
+before_script:
+  - pip install ".[docs]"
+
+pytest:
+  stage: test
+  only:
+    - master
+  script:
+    - pytest
+
+pages:
   stage: deploy
   only:
     - master
-    - dev
   script:
     - pip install ".[docs]"
     - mkdocs build --site-dir public

@@ -192,6 +192,13 @@ def subcluster(
     umap_display_key: str = "leiden_subcluster",
 ) -> None:
     """Creates sub-clusters among the populations predicted by Scyan. Some population may not be divided.
+    !!! info
+        After having run this method, you can analyze the results with:
+        ```python
+        import scanpy as sc
+        sc.pl.umap(adata, color="leiden_subcluster") # Visualize the sub clusters
+        scyan.plot.subclusters(model) # Scyan latent space on each sub cluster
+        ```
 
     Args:
         model: Scyan model

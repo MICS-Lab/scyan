@@ -24,16 +24,18 @@ nav:
       - scyan.plot.subclusters: api/subclusters.md
       - scyan.plot.latent_expressions: api/latent_expressions.md
       - scyan.plot.kde_per_population: api/kde_per_population.md
-    - I/O, Datasets, Misc:
-      - scyan.data.load: api/load.md
+    - Loading datasets: api/load.md
+    - I/O:
       - scyan.utils.read_fcs: api/read_fcs.md
       - scyan.utils.write_fcs: api/write_fcs.md
+    - Misc:
       - scyan.utils.subcluster: api/subcluster.md
       - scyan.mmd.LossMMD: api/loss_mmd.md
   - Cite us: cite.md
 plugins:
   - search
   - mkdocstrings
+  - mkdocs-jupyter
 markdown_extensions:
   - admonition
   - attr_list

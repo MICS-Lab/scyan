@@ -1,3 +1,5 @@
+# scyan.data.load
+
 ```py
 ### Usage example
 import scyan
