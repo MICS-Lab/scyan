@@ -8,7 +8,7 @@ before_script:
   - pip install ".[docs]"
 
 pytest:
-  stage: testing
+  stage: test
   only:
     - master
   script:
