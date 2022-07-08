@@ -1,8 +1,20 @@
 image: python:latest
 
-pages:
+default:
   tags:
     - docker
+
+before_script:
+  - pip install ".[docs]"
+
+pytest:
+  stage: testing
+  only:
+    - master
+  script:
+    - pytest
+
+pages:
   stage: deploy
   only:
     - master
