@@ -23,6 +23,7 @@ llvmlite = "^0.38.1"
 scanpy = "^1.9.1"
 pytorch-lightning = "^1.6.4"
 umap-learn = "^0.5.3"
+FlowUtils = "^1.0.0"
 wandb = {version = "^0.12.20", optional = true}
 hydra-core = {version = "^1.2.0", optional = true}
 hydra-colorlog = {version = "^1.2.0", optional = true}

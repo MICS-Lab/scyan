@@ -18,7 +18,7 @@ Available after publication
 
 Scyan can be installed with `pip` or `poetry` after cloning the repository:
 
-=== "With pip (dev mode)"
+=== "With pip (editable mode)"
 
     ``` bash
     git clone git@gitlab-research.centralesupelec.fr:mics_biomathematics/biomaths/scyan.git
@@ -36,7 +36,7 @@ Scyan can be installed with `pip` or `poetry` after cloning the repository:
     pip install .
     ```
 
-=== "With poetry"
+=== "With poetry (editable mode)"
 
     ``` bash
     git clone git@gitlab-research.centralesupelec.fr:mics_biomathematics/biomaths/scyan.git

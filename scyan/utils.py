@@ -7,10 +7,12 @@ if TYPE_CHECKING:
     from . import Scyan
 
 import flowio
+import flowutils
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scanpy as sc
+import scipy
 import torch
 from anndata import AnnData
 from pandas.api.types import is_numeric_dtype
@@ -53,11 +55,15 @@ def _wandb_plt_image(fun: Callable, figsize: Tuple[int, int] = [7, 5]):
     return wandb.Image(Image.open(img_buf))
 
 
-def read_fcs(path: str, select_markers: Optional[Callable] = None) -> AnnData:
+def read_fcs(
+    path: str, names_selection: Optional[List[str]] = None, log_names: bool = True
+) -> AnnData:
     """Reads a FCS file and returns an AnnData instance
 
     Args:
         path: Path to the FCS file that has to be read.
+        names_selection: If `None`, automatically detect if a channel has to be loaded in `obs` (e.g. Time) or if it is a marker (e.g. CD4). Else, you can provide a list of channels to select as variables.
+        log_names: If `True` and if `names_selection` is not `None`, then it logs all the names detected from the FCS file.
 
     Returns:
         `AnnData` instance containing the FCS data.
@@ -66,19 +72,22 @@ def read_fcs(path: str, select_markers: Optional[Callable] = None) -> AnnData:
     data = np.reshape(fcs_data.events, (-1, fcs_data.channel_count))
 
     names = np.array(
-        [[value["PnN"], value.get("PnS", None)] for value in fcs_data.channels.values()]
+        [value.get("PnS", value["PnN"]) for value in fcs_data.channels.values()]
     )
 
-    if select_markers is None:
-        is_marker = names[:, 1] != None
+    if names_selection is None:
+        is_marker = np.array(["PnS" in value for value in fcs_data.channels.values()])
     else:
-        pass  # TODO
+        if log_names:
+            log.info(f"Found {len(names)} names: {', '.join(names)}")
+
+        is_marker = np.array([name in names_selection for name in names])
 
     X = data[:, is_marker]
-    var = pd.DataFrame(index=names[is_marker, 1])
+    var = pd.DataFrame(index=names[is_marker])
     obs = pd.DataFrame(
         data=data[:, ~is_marker],
-        columns=names[~is_marker, 0],
+        columns=names[~is_marker],
         index=range(data.shape[0]),
     )
 
@@ -184,6 +193,42 @@ def _validate_inputs(adata: AnnData, df: pd.DataFrame):
         )
 
     return adata, df
+
+
+def auto_logicle_transform(adata: AnnData, q: float = 0.05, m: float = 4.5) -> None:
+    """Implementation from Charles-Antoine Dutertre (logicle transform).
+
+    Args:
+        adata: An `anndata` object.
+        q: See logicle article. Defaults to 0.05.
+        m: See logicle article. Defaults to 4.5.
+    """
+    for marker in adata.var_names:
+        column = adata[:, marker].X.toarray().flatten()
+
+        w = 0
+        t = column.max()
+        negative_values = column[column < 0]
+
+        if negative_values.size:
+            threshold = np.quantile(negative_values, 0.25) - 1.5 * scipy.stats.iqr(
+                negative_values
+            )
+            negative_values = negative_values[negative_values >= threshold]
+
+            if negative_values.size:
+                r = 1e-8 + np.quantile(negative_values, q)
+                if 10**m * abs(r) > t:
+                    w = (m - np.log10(t / abs(r))) / 2
+
+        if not w or w > 2:
+            logging.warning(
+                f"Auto logicle transformation failed for {marker}. Using default logicle."
+            )
+            w, t = 1, 5e5
+
+        column = flowutils.transforms.logicle(column, None, t=t, m=m, w=w)
+        adata[:, marker] = column.clip(np.quantile(column, 1e-5))
 
 
 def subcluster(

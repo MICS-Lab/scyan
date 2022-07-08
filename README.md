@@ -41,9 +41,9 @@ cd scyan
 You can install it with `pip` or `poetry`, choose one among the following:
 
 ```bash
-pip install -e '.[dev,docs,discovery]'  # pip installation in development mode
-pip install .                           # pip basic installation (package only)
-poetry install -E 'dev docs discovery'  # poetry installation in development mode
+pip install -e '.[dev,docs,discovery]'  # pip installation in editable mode
+pip install .                           # pip minimal installation (package only)
+poetry install -E 'dev docs discovery'  # poetry installation in editable mode
 ```
 
 ## Basic usage
