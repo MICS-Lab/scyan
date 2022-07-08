@@ -1,7 +1,7 @@
 import logging
 from functools import wraps
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, List, Tuple, Union
+from typing import TYPE_CHECKING, Callable, List, Optional, Tuple, Union
 
 if TYPE_CHECKING:
     from . import Scyan
@@ -53,7 +53,7 @@ def _wandb_plt_image(fun: Callable, figsize: Tuple[int, int] = [7, 5]):
     return wandb.Image(Image.open(img_buf))
 
 
-def read_fcs(path: str) -> AnnData:
+def read_fcs(path: str, select_markers: Optional[Callable] = None) -> AnnData:
     """Reads a FCS file and returns an AnnData instance
 
     Args:
@@ -68,7 +68,11 @@ def read_fcs(path: str) -> AnnData:
     names = np.array(
         [[value["PnN"], value.get("PnS", None)] for value in fcs_data.channels.values()]
     )
-    is_marker = names[:, 1] != None
+
+    if select_markers is None:
+        is_marker = names[:, 1] != None
+    else:
+        pass  # TODO
 
     X = data[:, is_marker]
     var = pd.DataFrame(index=names[is_marker, 1])
@@ -100,7 +104,7 @@ def write_fcs(adata: AnnData, path: str) -> None:
         X = np.concatenate((X, adata.obsm[key]), axis=1)
         channel_names += [f"{key}{i+1}" for i in range(adata.obsm[key].shape[1])]
 
-    print(f"Found {len(channel_names)} channels: {', '.join(channel_names)}")
+    log.info(f"Found {len(channel_names)} channels: {', '.join(channel_names)}")
 
     with open(path, "wb") as f:
         flowio.create_fcs(X.flatten(), channel_names, f)

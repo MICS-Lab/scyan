@@ -19,7 +19,6 @@ pages:
   only:
     - master
   script:
-    - pip install ".[docs]"
     - mkdocs build --site-dir public
   artifacts:
     paths:
