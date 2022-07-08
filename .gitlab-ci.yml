@@ -5,7 +5,7 @@ default:
     - docker
 
 before_script:
-  - pip install ".[docs]"
+  - pip install ".[docs,dev]"
 
 pytest:
   stage: test
