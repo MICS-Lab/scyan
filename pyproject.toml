@@ -2,8 +2,8 @@
 name = "scyan"
 version = "0.1.0"
 description = "Single-cell Cytometry Annotation Network"
-documentation = "https://2017blampeyq.pages.centralesupelec.fr/scyan/"
-homepage = "https://gitlab-research.centralesupelec.fr/mics_biomathematics/biomaths/scyan"
+documentation = "https://mics_biomathematics.pages.centralesupelec.fr/biomaths/scyan/"
+homepage = "https://mics_biomathematics.pages.centralesupelec.fr/biomaths/scyan/"
 repository = "https://gitlab-research.centralesupelec.fr/mics_biomathematics/biomaths/scyan"
 authors = ["Blampey Quentin <quentin.blampey@gmail.com>"]
 license = "BSD-3-Clause"

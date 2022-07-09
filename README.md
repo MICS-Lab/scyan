@@ -6,7 +6,7 @@ Scyan stands for **S**ingle-cell **Cy**tometry **A**nnotation **N**etwork. Based
 
 # Documentation
 
-The [complete documentation can be found here.](https://2017blampeyq.pages.centralesupelec.fr/scyan/) It contains installation guidelines, tutorials, a description of the API, ...
+The [complete documentation can be found here.](https://mics_biomathematics.pages.centralesupelec.fr/biomaths/scyan/) It contains installation guidelines, tutorials, a description of the API, ...
 
 # Overview
 
@@ -58,7 +58,7 @@ model.fit()
 model.predict()
 ```
 
-For more details, read the [documentation](https://2017blampeyq.pages.centralesupelec.fr/scyan/).
+For more details, read the [documentation](https://mics_biomathematics.pages.centralesupelec.fr/biomaths/scyan/).
 
 # Technical description
 
