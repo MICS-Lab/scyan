@@ -6,7 +6,7 @@ Scyan stands for **S**ingle-cell **Cy**tometry **A**nnotation **N**etwork. Based
 
 # Documentation
 
-The [complete documentation can be found here.](https://2017blampeyq.pages.centralesupelec.fr/scyan/) It contains installation guidelines, tutorials, a description of the API, ...
+The [complete documentation can be found here.](https://mics_biomathematics.pages.centralesupelec.fr/biomaths/scyan/) It contains installation guidelines, tutorials, a description of the API, ...
 
 # Overview
 
@@ -41,9 +41,9 @@ cd scyan
 You can install it with `pip` or `poetry`, choose one among the following:
 
 ```bash
-pip install -e '.[dev,docs,discovery]'  # pip installation in development mode
-pip install .                           # pip basic installation (package only)
-poetry install -E 'dev docs discovery'  # poetry installation in development mode
+pip install -e '.[dev,docs,discovery]'  # pip installation in editable mode
+pip install .                           # pip minimal installation (package only)
+poetry install -E 'dev docs discovery'  # poetry installation in editable mode
 ```
 
 ## Basic usage
@@ -58,7 +58,7 @@ model.fit()
 model.predict()
 ```
 
-For more details, read the [documentation](https://2017blampeyq.pages.centralesupelec.fr/scyan/).
+For more details, read the [documentation](https://mics_biomathematics.pages.centralesupelec.fr/biomaths/scyan/).
 
 # Technical description
 
