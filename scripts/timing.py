@@ -1,11 +1,7 @@
 import time
-from collections import Counter
 
 import hydra
-import numpy as np
 import pytorch_lightning as pl
-from anndata import AnnData
-from imblearn.over_sampling import SMOTE
 from omegaconf import DictConfig
 
 import scyan
@@ -16,7 +12,7 @@ from . import utils
 @hydra.main(config_path="../config", config_name="config")
 def main(config: DictConfig) -> None:
     """Runs scyan on a dataset specified by the config/config.yaml with different number of cells.
-    NB: the only purpose of this file is to time the model.
+    NB: the only purpose of this file is to time the model on AML.
 
     Args:
         config: Hydra generated configuration (automatic).
@@ -31,14 +27,11 @@ def main(config: DictConfig) -> None:
 
     times, n_samples = [], []
 
+    correction_mode = config.project.get("batch_key") is not None
+
     for n in [adata.n_obs] + [200_000, 400_000, 800_000, 1_600_000, 3_200_000, 6_400_000]:
         if n > adata.n_obs:
-            sampling_strategy = dict(Counter(np.random.choice(adata.obs.cell_type, n)))
-            sm = SMOTE(sampling_strategy=sampling_strategy, random_state=42)
-            X, cell_type = sm.fit_resample(adata.X, adata.obs.cell_type.values)
-
-            adata = AnnData(X=X, var=adata.var)
-            adata.obs["cell_type"] = cell_type
+            adata = utils.oversample(adata, n, correction_mode)
 
         start = time.perf_counter()
 

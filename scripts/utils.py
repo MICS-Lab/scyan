@@ -1,4 +1,5 @@
 import logging
+from collections import Counter
 from typing import List, Optional
 
 import hydra
@@ -8,6 +9,7 @@ import pandas as pd
 import scanpy as sc
 import wandb
 from anndata import AnnData
+from imblearn.over_sampling import SMOTE
 from omegaconf import DictConfig
 from pytorch_lightning import Callback, Trainer
 from pytorch_lightning.loggers import WandbLogger
@@ -165,3 +167,34 @@ def compute_umap(model: Scyan, config: DictConfig, obs_key: str = "scyan_pop") -
                 )
             }
         )
+
+
+def oversample(adata: AnnData, n: int, correction_mode: bool) -> AnnData:
+    """Oversample cells from the AML dataset.
+
+    Args:
+        adata: The AnnData object.
+        n: The number of cells desired.
+        correction_mode: True if correcting batch effect.
+
+    Returns:
+        The anndata object with 'n' cells.
+    """
+    if correction_mode:
+        y = adata.obs.cell_type.astype(str) + adata.obs.subject.astype(str)
+    else:
+        y = adata.obs.cell_type
+
+    sampling_strategy = dict(Counter(np.random.choice(y, n)))
+    sm = SMOTE(sampling_strategy=sampling_strategy, random_state=42)
+
+    X, y = sm.fit_resample(adata.X, y.values)
+    adata = AnnData(X=X, var=adata.var)
+
+    if correction_mode:
+        adata.obs["cell_type"] = [name[:-2] for name in y]
+        adata.obs["subject"] = [name[-2:] for name in y]
+    else:
+        adata.obs["cell_type"] = y
+
+    return adata
