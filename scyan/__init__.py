@@ -13,5 +13,6 @@ logging.basicConfig(level=logging.INFO)
 
 from .model import Scyan
 from . import data, plot, utils
+from .utils import read_fcs, write_fcs
 
 pl.seed_everything(0)

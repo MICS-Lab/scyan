@@ -1,5 +1,4 @@
 import pytest
-from typing import List
 
 import scyan
 from scyan import Scyan

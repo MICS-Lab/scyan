@@ -63,7 +63,7 @@ def read_fcs(
     Args:
         path: Path to the FCS file that has to be read.
         names_selection: If `None`, automatically detect if a channel has to be loaded in `obs` (e.g. Time) or if it is a marker (e.g. CD4). Else, you can provide a list of channels to select as variables.
-        log_names: If `True` and if `names_selection` is not `None`, then it logs all the names detected from the FCS file.
+        log_names: If `True` and if `names_selection` is not `None`, then it logs all the names detected from the FCS file. It can be useful to set `names_selection` properly.
 
     Returns:
         `AnnData` instance containing the FCS data.
@@ -79,7 +79,9 @@ def read_fcs(
         is_marker = np.array(["PnS" in value for value in fcs_data.channels.values()])
     else:
         if log_names:
-            log.info(f"Found {len(names)} names: {', '.join(names)}")
+            log.info(
+                f"Found {len(names)} names: {', '.join(names)}. Set log_names=False to disable this log."
+            )
 
         is_marker = np.array([name in names_selection for name in names])
 
@@ -196,7 +198,8 @@ def _validate_inputs(adata: AnnData, df: pd.DataFrame):
 
 
 def auto_logicle_transform(adata: AnnData, q: float = 0.05, m: float = 4.5) -> None:
-    """Implementation from Charles-Antoine Dutertre (logicle transform).
+    """[Logicle transformation](https://pubmed.ncbi.nlm.nih.gov/16604519/), implementation from Charles-Antoine Dutertre.
+    We recommend it for flow cytometry or spectral flow cytometry data.
 
     Args:
         adata: An `anndata` object.
@@ -229,6 +232,27 @@ def auto_logicle_transform(adata: AnnData, q: float = 0.05, m: float = 4.5) -> N
 
         column = flowutils.transforms.logicle(column, None, t=t, m=m, w=w)
         adata[:, marker] = column.clip(np.quantile(column, 1e-5))
+
+
+def asinh_transform(adata: AnnData, translation: float = 1, cofactor: float = 5):
+    """Performs asinh transformation for cell-expressions: $asinh((x - translation)/cofactor)$.
+
+    Args:
+        adata: An `anndata` object.
+        translation: Constant substracted from cell-expression before division by the cofactor.
+        cofactor: Scaling factor before computing the asinh.
+    """
+    adata.X = np.arcsinh((adata.X - translation) / cofactor)
+
+
+def scale(adata: AnnData, max_value: float = 10, **kwargs):
+    """Standardise data using scanpy.
+
+    Args:
+        adata: An `anndata` object.
+        max_value: Clip to this value after scaling. Defaults to 10.
+    """
+    sc.pp.scale(adata, max_value=max_value, **kwargs)
 
 
 def subcluster(
