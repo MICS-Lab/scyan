@@ -55,7 +55,7 @@ class Scyan(pl.LightningModule):
         prior_std: float = 0.2,
         lr: float = 1e-3,
         batch_size: int = 16_384,
-        alpha_batch_effect: float = 200.0,
+        alpha_batch_effect: float = 50.0,
         temperature: float = 1.0,
         mmd_max_samples: int = 2048,
         modulo_temp: int = 2,
@@ -78,9 +78,9 @@ class Scyan(pl.LightningModule):
             alpha_batch_effect: Weight provided to the batch effect correction loss term.
             temperature: Temperature to favour small populations.
             mmd_max_samples: Maximum number of samples to give to the MMD.
-            modulo_temp: At which frequence temperature has to be applied.
+            modulo_temp: At which frequency temperature has to be applied.
             max_samples: Maximum number of samples per epoch.
-            batch_key: Key in `adata.obs` to refers to the cell batch variable.
+            batch_key: Key in `adata.obs` that refers to the cell batch variable.
             batch_ref: Batch that will be considered as the reference. By default, choose the batch with the higher number of cells.
         """
         super().__init__()
@@ -88,7 +88,9 @@ class Scyan(pl.LightningModule):
         self.continuous_covariate_keys = continuous_covariate_keys or []
         self.categorical_covariate_keys = categorical_covariate_keys or []
         self.n_pops = len(self.marker_pop_matrix)
+
         self._is_fitted = False
+        self._num_workers = 0
 
         self.save_hyperparameters(
             ignore=[
@@ -134,7 +136,7 @@ class Scyan(pl.LightningModule):
         return self.marker_pop_matrix.columns
 
     def _prepare_data(self) -> None:
-        """Initializes the data and the covariates"""
+        """Initialize the data and the covariates"""
         if self.hparams.batch_key is None:
             assert (
                 self.hparams.batch_ref is None
@@ -186,7 +188,7 @@ class Scyan(pl.LightningModule):
         pop: Union[str, List[str], int, Tensor, None] = None,
         return_z: bool = False,
     ) -> Tuple[Tensor, Tensor]:
-        """Sampling cells by sampling from the prior distribution and going into the Normalizing Flow.
+        """Sampling cells by sampling from the prior distribution and going into the normalizing flow.
 
         Args:
             n_samples: Number of cells to sample.
@@ -209,7 +211,7 @@ class Scyan(pl.LightningModule):
     @torch.no_grad()
     @_requires_fit
     def batch_effect_correction(self) -> Tensor:
-        """Corrects batch effect by going into the latent space, setting the reference covariate to all cells, and then reversing the flow.
+        """Correct batch effect by going into the latent space, setting the reference covariate to all cells, and then reversing the flow.
 
         Returns:
             The corrected marker expressions on the original space. **Warning**, as we standardised data for training, this result is standardised too.
@@ -228,7 +230,7 @@ class Scyan(pl.LightningModule):
         return self.module.inverse(u, ref_covariates)
 
     def training_step(self, data, _):
-        """PyTorch lightning `training_step` implementation (i.e. returning the loss)"""
+        """PyTorch lightning `training_step` implementation (i.e. returning the loss). See [ScyanModule][scyan.module.ScyanModule] for more details."""
         use_temp = self.current_epoch % self.hparams.modulo_temp > 0
         kl, mmd = self.module.losses(*data, use_temp)
 
@@ -241,24 +243,24 @@ class Scyan(pl.LightningModule):
 
         return loss
 
-    def training_epoch_end(self, _):
-        """PyTorch lightning `training_epoch_end` implementation"""
-        if "cell_type" in self.adata.obs:  # TODO: remove?
-            if len(self.x) > 500000:
-                indices = random.sample(range(len(self.x)), 500000)
-                x = self.x[indices]
-                covariates = self.covariates[indices]
-                labels = self.adata.obs.cell_type[indices]
-                acc = accuracy_score(
-                    labels, self.predict(x, covariates, key_added=None).values
-                )
-            else:
-                acc = accuracy_score(
-                    self.adata.obs.cell_type, self.predict(key_added=None).values
-                )
-            self.log("accuracy_score", acc, prog_bar=True)
+    # def training_epoch_end(self, _):
+    #     """PyTorch lightning `training_epoch_end` implementation"""
+    #     if "cell_type" in self.adata.obs:  # TODO: remove?
+    #         if len(self.x) > 500000:
+    #             indices = random.sample(range(len(self.x)), 500000)
+    #             x = self.x[indices]
+    #             covariates = self.covariates[indices]
+    #             labels = self.adata.obs.cell_type[indices]
+    #             acc = accuracy_score(
+    #                 labels, self.predict(x, covariates, key_added=None).values
+    #             )
+    #         else:
+    #             acc = accuracy_score(
+    #                 self.adata.obs.cell_type, self.predict(key_added=None).values
+    #             )
+    #         self.log("accuracy_score", acc, prog_bar=True)
 
-    # @_requires_fit
+    @_requires_fit
     @torch.no_grad()
     def predict(
         self,
@@ -274,7 +276,7 @@ class Scyan(pl.LightningModule):
             key_added: Key added to `model.adata.obs` to save the predictions. If `None`, then the predictions will not be saved.
 
         Returns:
-            pd.Series: Series of predictions
+            pd.Series: Series of predictions.
         """
         df = self.predict_proba(x, covariates)
         populations = df.idxmax(axis=1).astype("category")
@@ -282,9 +284,15 @@ class Scyan(pl.LightningModule):
         if key_added is not None:
             self.adata.obs[key_added] = pd.Categorical(populations.values)
 
+        missing_pops = self.n_pops - len(populations.cat.categories)
+        if missing_pops:
+            log.info(
+                f"{missing_pops} population(s) were not predicted. It may be due to errors in the knowledge table, the model hyperparameters choices (see https://mics_biomathematics.pages.centralesupelec.fr/biomaths/scyan/parameters/), or maybe these populations are really absent from this dataset."
+            )
+
         return populations
 
-    # @_requires_fit
+    @_requires_fit
     @torch.no_grad()
     def predict_proba(
         self, x: Optional[Tensor] = None, covariates: Optional[Tensor] = None
@@ -325,6 +333,7 @@ class Scyan(pl.LightningModule):
             self.dataset,
             batch_size=self.hparams.batch_size,
             sampler=sampler,
+            num_workers=self._num_workers,
         )
 
     def fit(
@@ -332,6 +341,7 @@ class Scyan(pl.LightningModule):
         max_epochs: int = 100,
         min_delta: float = 1,
         patience: int = 4,
+        num_workers: int = 0,
         callbacks: Optional[List[pl.Callback]] = None,
         trainer: Optional[pl.Trainer] = None,
     ) -> "Scyan":
@@ -349,6 +359,8 @@ class Scyan(pl.LightningModule):
         """
         log.info(f"Training scyan with the following hyperparameters:\n{self.hparams}\n")
 
+        self._num_workers = num_workers
+
         if trainer is not None:
             trainer.fit(self)
             return self
@@ -361,9 +373,12 @@ class Scyan(pl.LightningModule):
         )
         _callbacks = [esc] + (callbacks or [])
 
-        trainer = pl.Trainer(max_epochs=max_epochs, callbacks=_callbacks)
+        trainer = pl.Trainer(
+            max_epochs=max_epochs, callbacks=_callbacks, log_every_n_steps=10
+        )
         trainer.fit(self)
 
         self._is_fitted = True
+        log.info("Successfully ended traning.")
 
         return self

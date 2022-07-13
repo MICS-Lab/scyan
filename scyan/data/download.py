@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 def get_local_file(
     dataset_path: Path, dataset: str, name: str, is_table: bool
 ) -> Union[AnnData, pd.DataFrame]:
-    """Gets an `anndata` or a `csv` file into memory. If the file does not exist locally, it is downloaded from Gitlab.
+    """Get an `anndata` or a `csv` file into memory. If the file does not exist locally, it is downloaded from Gitlab.
 
     Args:
         dataset_path: Local path to the dataset folder.
@@ -59,7 +59,7 @@ def get_local_file(
 def load(
     dataset: str, size: str = "default", table: str = "default"
 ) -> Tuple[AnnData, pd.DataFrame]:
-    """Loads a dataset, i.e. its `AnnData` object and its knowledge table.
+    """Load a dataset, i.e. its `AnnData` object and its knowledge table.
     If the dataset was not loaded yet, it is automatically downloaded (requires internet connection).
     !!! note
         If `scyan` repository was cloned, then the data will be saved in the `data` folder of the repository, else at `<home_path>/.scyan_data`

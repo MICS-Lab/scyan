@@ -24,7 +24,7 @@ class LossMMD:
     def get_heuristic_scales(
         self, n_markers: int, prior_std: float, mean_na: float
     ) -> List[float]:
-        internal_scale = 2 * n_markers * prior_std ** 2
+        internal_scale = 2 * n_markers * prior_std**2
         return [
             0.25 * internal_scale,
             internal_scale,
@@ -37,7 +37,7 @@ class LossMMD:
         return (kernel(dxx) - 2 * kernel(dxy) + kernel(dyy)).mean()
 
     def __call__(self, x: Tensor, y: Tensor) -> Tensor:
-        """Computes the MMD loss.
+        """Compute the MMD loss.
 
         Args:
             x: Tensor of size $(N, M)$.
@@ -48,8 +48,8 @@ class LossMMD:
         """
         xx, yy, xy = x.mm(x.T), y.mm(y.T), x.mm(y.T)
 
-        x2 = (x ** 2).sum(dim=-1)
-        y2 = (y ** 2).sum(dim=-1)
+        x2 = (x**2).sum(dim=-1)
+        y2 = (y**2).sum(dim=-1)
 
         dxx = x2[:, None] + x2[None, :] - 2 * xx
         dxy = x2[:, None] + y2[None, :] - 2 * xy

@@ -90,7 +90,7 @@ class ScyanModule(pl.LightningModule):
 
     @torch.no_grad()
     def inverse(self, u: Tensor, covariates: Tensor) -> Tensor:
-        """Goes through the flow in reverse direction, i.e. $f_{\phi}^{-1}$.
+        """Go through the flow in reverse direction, i.e. $f_{\phi}^{-1}$.
 
         Args:
             u: Latent expressions of size $(N, M)$.
@@ -121,7 +121,7 @@ class ScyanModule(pl.LightningModule):
         return torch.exp(self.log_pi)
 
     def log_pi_temperature(self, T: float) -> Tensor:
-        """Computes the log weights with temperature $log \; \pi^{(-T)}$
+        """Compute the log weights with temperature $log \; \pi^{(-T)}$
 
         Args:
             T: Temperature.
@@ -169,7 +169,7 @@ class ScyanModule(pl.LightningModule):
     def compute_probabilities(
         self, x: Tensor, covariates: Tensor, use_temp: bool = False
     ) -> Tuple[Tensor, Tensor, Tensor]:
-        """Computes probabilities used in the loss function.
+        """Compute probabilities used in the loss function.
 
         Args:
             x: Inputs of size $(N, M)$.
@@ -214,7 +214,7 @@ class ScyanModule(pl.LightningModule):
         batches: Tensor,
         use_temp: bool,
     ) -> Tuple[Tensor, Tensor]:
-        """Computes the module loss for one mini-batch.
+        """Compute the module loss for one mini-batch.
 
         Args:
             x: Inputs of size $(N, M)$.

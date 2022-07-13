@@ -15,7 +15,7 @@ from . import utils
 
 @hydra.main(config_path="../config", config_name="config")
 def main(config: DictConfig) -> float:
-    """Runs scyan on a dataset specified by the config/config.yaml file.
+    """Run scyan on a dataset specified by the config/config.yaml file.
     It can be used for optuna hyperparameter search together with Weight_&_Biases to monitor the model.
     NB: using this file is optional. If you don't need hyperoptimization and monitoring then use the library directly.
 
@@ -26,7 +26,9 @@ def main(config: DictConfig) -> float:
         Metric chosen by the config to be optimized for hyperparameter search, e.g. the loss.
     """
     adata, marker_pop_matrix = scyan.data.load(
-        config.project.name, size=config.project.size
+        config.project.name,
+        size=config.project.get("size", "default"),
+        table=config.project.get("table", "default"),
     )
 
     all_metrics = defaultdict(list)

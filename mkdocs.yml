@@ -9,7 +9,12 @@ theme:
 nav:
   - Home: index.md
   - Getting Started: getting_started.md
-  - Tutorials: tutorials.md
+  - Tutorials:
+    - tutorials/preprocessing.ipynb
+    - tutorials/aml.ipynb
+    - tutorials/bmmc.ipynb
+    - tutorials/debarcoding.ipynb
+    - tutorials/batch_effect_correction.ipynb
   - API: 
     - scyan.Scyan: api/model.md
     - Modules:
@@ -26,12 +31,20 @@ nav:
       - scyan.plot.kde_per_population: api/kde_per_population.md
     - Loading datasets: api/load.md
     - I/O:
-      - scyan.utils.read_fcs: api/read_fcs.md
-      - scyan.utils.write_fcs: api/write_fcs.md
+      - scyan.read_fcs: api/read_fcs.md
+      - scyan.write_fcs: api/write_fcs.md
+    - Preprocessing:
+      - scyan.utils.auto_logicle_transform: api/auto_logicle.md
+      - scyan.utils.asinh_transform: api/asinh.md
+      - scyan.utils.scale: api/scale.md
     - Misc:
       - scyan.utils.subcluster: api/subcluster.md
       - scyan.mmd.LossMMD: api/loss_mmd.md
-  - Parameters selection: parameters.md
+  - Advanced usage:
+    - Add your own dataset: advanced/data.md
+    - Selecting parameters: advanced/parameters.md
+    - Configuration and monitoring: advanced/hydra_wandb.md
+    - CLI / Running scripts: advanced/scripts.md
   - Cite us: cite.md
 plugins:
   - search

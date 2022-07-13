@@ -4,15 +4,15 @@
   <img src="./assets/logo.png" alt="scyan_logo" width="500px"/>
 </p>
 
-Scyan stands for **S**ingle-cell **Cy**tometry **A**nnotation **N**etwork. Based on a biological knowledge prior, it provides a fast cell populations annotation without requiring any training label. Scyan is an interpretable model that also corrects batch-effect and can be used for debarcoding / cell sampling / population discovery.
+Scyan stands for **S**ingle-cell **Cy**tometry **A**nnotation **N**etwork. Based on biological knowledge prior, it provides a fast cell population annotation without requiring any training label. Scyan is an interpretable model that also corrects batch-effect and can be used for debarcoding / cell sampling / population discovery.
 
 ## Overview
 
-Scyan is a Bayesian probabilistic model composed of a deep invertible neural network called a Normalizing Flow (the function $f_{\phi}$). This network maps a latent distribution of cell expressions into the empirical distribution of cell expressions. The latter latent cell distribution is a mixture of gaussian-like distributions representing the sum of a cell-specific term and a population-specific term. The latent space is used for interpretability and batch effect correction. More details on the methods section of the article.
+Scyan is a Bayesian probabilistic model composed of a deep invertible neural network called a normalizing flow (the function $f_{\phi}$). This network maps a latent distribution of cell expressions into the empirical distribution of cell expressions. The latter latent cell distribution is a mixture of gaussian-like distributions representing the sum of a cell-specific term and a population-specific term. The latent space is used for interpretability and batch effect correction. More details on the methods section of the article.
 
 <figure markdown>
   ![Image title](./assets/overview.png)
-  <figcaption>a) Overview of the tasks that Scyan can perform. b) Overview of the model architecture. c) One coupling layer, i.e. the elementary unit that compose the Normalizing Flow.</figcaption>
+  <figcaption>a) Overview of the tasks that Scyan can perform. b) Overview of the model architecture. c) One coupling layer, i.e. the elementary unit that composes the Normalizing Flow.</figcaption>
 </figure>
 
 ## Technical description
@@ -42,11 +42,12 @@ See [Scyan on Gitlab](https://gitlab-research.centralesupelec.fr/mics_biomathema
             scyan_module      # Core module
         plot/                 # Plotting tools
             ...
-        data/                 # Folder with data related functions and classes
+        data/                 # Folder with data-related functions and classes
             ...
         mmd.py                # Maximum Mean Discrepancy implementation
         model.py              # Scyan model class
         utils.py              # Misc functions
+    .gitattributes
     .gitignore
     .gitlab-ci.yml    # CI that builds documentation
     CONTRIBUTING.md   # To read before contributing

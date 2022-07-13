@@ -78,7 +78,7 @@ class CouplingLayer(pl.LightningModule):
         return y, covariates, ldj_sum
 
     def inverse(self, y: Tensor, covariates: Tensor) -> Tensor:
-        """Goes through the coupling layer in reverse direction
+        """Go through the coupling layer in reverse direction.
 
         Args:
             y: Inputs tensor or size $(N, M)$.

@@ -8,6 +8,8 @@ from torch import Tensor
 
 
 class AdataDataset(torch.utils.data.Dataset):
+    """Pyorch Dataset"""
+
     def __init__(self, x: Tensor, covariates: Tensor, batch: Tensor):
         super().__init__()
         self.x = x
@@ -22,6 +24,8 @@ class AdataDataset(torch.utils.data.Dataset):
 
 
 class RandomSampler(torch.utils.data.Sampler):
+    """Random sampling during training. It stops the epoch when we reached `max_samples` samples (if provided)."""
+
     def __init__(self, data_source: Sized, max_samples: Optional[int]):
         self.data_source = data_source
         self.n_samples = len(data_source)
@@ -42,7 +46,7 @@ def _prepare_data(
     categorical_covariate_keys: List[str],
     continuous_covariate_keys: List[str],
 ) -> Tuple[Tensor, Tensor, Tensor]:
-    """Initializes the data and the covariates"""
+    """Initialize the data and the covariates"""
     x = torch.tensor(adata[:, markers].X)
 
     if (batch_key is not None) and batch_key not in categorical_covariate_keys:

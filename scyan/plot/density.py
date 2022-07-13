@@ -24,7 +24,7 @@ def kde_per_population(
     value_name: str = "Expression",
     show: bool = True,
 ):
-    """Plots Kernel-Density-Estimation for each provided population and for multiple markers.
+    """Plot Kernel-Density-Estimation for each provided population and for multiple markers.
 
     Args:
         model: Scyan model.
@@ -78,7 +78,7 @@ def latent_expressions(
     radius: float = 0.05,
     show: bool = True,
 ):
-    """Plots latent expressions of a group of cells (every marker on one plot).
+    """Plot latent expressions of a group of cells (every marker in one plot).
 
     Args:
         model: Scyan model.

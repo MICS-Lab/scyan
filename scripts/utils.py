@@ -27,7 +27,7 @@ def init_and_fit_model(
     config: DictConfig,
     wandb_logger: Optional[WandbLogger] = None,
 ) -> Scyan:
-    """Initializes Scyan with the Hydra config, fit the model and runs predictions.
+    """Initialize Scyan with the Hydra config, fit the model and run predictions.
     NB: if not using Hydra, then do **not** use this function.
 
     Args:
@@ -70,7 +70,7 @@ def init_and_fit_model(
 
 
 def classification_metrics(y_true: npt.ArrayLike, y_pred: npt.ArrayLike) -> dict:
-    """Computes classification metrics.
+    """Compute classification metrics.
 
     Args:
         y_true: True annotations.
@@ -87,7 +87,7 @@ def classification_metrics(y_true: npt.ArrayLike, y_pred: npt.ArrayLike) -> dict
 
 
 def compute_metrics(model: Scyan, config: DictConfig, obs_key: str = "scyan_pop") -> dict:
-    """Computes model metrics.
+    """Compute model metrics.
 
     Args:
         model: Scyan model.
@@ -129,7 +129,7 @@ def compute_metrics(model: Scyan, config: DictConfig, obs_key: str = "scyan_pop"
 
 
 def metric_to_optimize(all_metrics: dict, config: DictConfig) -> float:
-    """Finds and average the metric that have to be hyperoptimized.
+    """Find and average the metric that have to be hyperoptimized.
 
     Args:
         all_metrics: Dict of metrics.
@@ -148,7 +148,7 @@ def metric_to_optimize(all_metrics: dict, config: DictConfig) -> float:
 
 
 def compute_umap(model: Scyan, config: DictConfig, obs_key: str = "scyan_pop") -> None:
-    """Logs a UMAP with Weight & Biases.
+    """Log a UMAP with Weight & Biases.
 
     Args:
         model: Scyan model.
