@@ -55,7 +55,7 @@ class Scyan(pl.LightningModule):
         prior_std: float = 0.2,
         lr: float = 1e-3,
         batch_size: int = 16_384,
-        alpha_batch_effect: float = 200.0,
+        alpha_batch_effect: float = 50.0,
         temperature: float = 1.0,
         mmd_max_samples: int = 2048,
         modulo_temp: int = 2,
@@ -88,7 +88,9 @@ class Scyan(pl.LightningModule):
         self.continuous_covariate_keys = continuous_covariate_keys or []
         self.categorical_covariate_keys = categorical_covariate_keys or []
         self.n_pops = len(self.marker_pop_matrix)
+
         self._is_fitted = False
+        self._num_workers = 0
 
         self.save_hyperparameters(
             ignore=[
@@ -228,7 +230,7 @@ class Scyan(pl.LightningModule):
         return self.module.inverse(u, ref_covariates)
 
     def training_step(self, data, _):
-        """PyTorch lightning `training_step` implementation (i.e. returning the loss)"""
+        """PyTorch lightning `training_step` implementation (i.e. returning the loss). See [ScyanModule][scyan.module.ScyanModule] for more details."""
         use_temp = self.current_epoch % self.hparams.modulo_temp > 0
         kl, mmd = self.module.losses(*data, use_temp)
 
@@ -258,7 +260,7 @@ class Scyan(pl.LightningModule):
                 )
             self.log("accuracy_score", acc, prog_bar=True)
 
-    # @_requires_fit
+    @_requires_fit
     @torch.no_grad()
     def predict(
         self,
@@ -282,9 +284,15 @@ class Scyan(pl.LightningModule):
         if key_added is not None:
             self.adata.obs[key_added] = pd.Categorical(populations.values)
 
+        missing_pops = self.n_pops - len(populations.cat.categories)
+        if missing_pops:
+            log.info(
+                f"{missing_pops} population(s) were not predicted. It may be due to errors in the knowledge table, the model hyperparameters choices (see https://mics_biomathematics.pages.centralesupelec.fr/biomaths/scyan/parameters/), or maybe these populations are really absent from this dataset."
+            )
+
         return populations
 
-    # @_requires_fit
+    @_requires_fit
     @torch.no_grad()
     def predict_proba(
         self, x: Optional[Tensor] = None, covariates: Optional[Tensor] = None
@@ -325,6 +333,7 @@ class Scyan(pl.LightningModule):
             self.dataset,
             batch_size=self.hparams.batch_size,
             sampler=sampler,
+            num_workers=self._num_workers,
         )
 
     def fit(
@@ -332,6 +341,7 @@ class Scyan(pl.LightningModule):
         max_epochs: int = 100,
         min_delta: float = 1,
         patience: int = 4,
+        num_workers: int = 0,
         callbacks: Optional[List[pl.Callback]] = None,
         trainer: Optional[pl.Trainer] = None,
     ) -> "Scyan":
@@ -349,6 +359,8 @@ class Scyan(pl.LightningModule):
         """
         log.info(f"Training scyan with the following hyperparameters:\n{self.hparams}\n")
 
+        self._num_workers = num_workers
+
         if trainer is not None:
             trainer.fit(self)
             return self
@@ -361,9 +373,12 @@ class Scyan(pl.LightningModule):
         )
         _callbacks = [esc] + (callbacks or [])
 
-        trainer = pl.Trainer(max_epochs=max_epochs, callbacks=_callbacks)
+        trainer = pl.Trainer(
+            max_epochs=max_epochs, callbacks=_callbacks, log_every_n_steps=10
+        )
         trainer.fit(self)
 
         self._is_fitted = True
+        log.info("Successfully ended traning.")
 
         return self

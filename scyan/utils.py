@@ -187,11 +187,17 @@ def _validate_inputs(adata: AnnData, df: pd.DataFrame):
 
     assert (
         np.abs(X).max() < 1e3
-    ), "The provided values are very high, have you run preprocessing first? E.g., asinh or logicle transformations."
+    ), "The provided values are very high, have you run preprocessing first? E.g., consider 'scyan.utils.asinh_transform' or 'scyan.utils.auto_logicle_transform'"
 
     if np.abs(X.mean(axis=0)).max() > 0.2 or np.abs(X.std(axis=0) - 1).max() > 0.2:
         log.warn(
-            "It seems that the data is not standardised. We advise to use scanpy scaling (sc.pp.scale) before to use Scyan."
+            "It seems that the data is not standardised. We advise to use scaling (scyan.utils.scale) before initializing the model."
+        )
+
+    duplicates = df.duplicated()
+    if duplicates.any():
+        log.warn(
+            f"Found duplicate populations in the knowledge matrix. We advise to update or remove the following rows: {', '.join(duplicates[duplicates].index)}"
         )
 
     return adata, df
