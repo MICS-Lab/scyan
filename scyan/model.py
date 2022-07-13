@@ -78,9 +78,9 @@ class Scyan(pl.LightningModule):
             alpha_batch_effect: Weight provided to the batch effect correction loss term.
             temperature: Temperature to favour small populations.
             mmd_max_samples: Maximum number of samples to give to the MMD.
-            modulo_temp: At which frequence temperature has to be applied.
+            modulo_temp: At which frequency temperature has to be applied.
             max_samples: Maximum number of samples per epoch.
-            batch_key: Key in `adata.obs` to refers to the cell batch variable.
+            batch_key: Key in `adata.obs` that refers to the cell batch variable.
             batch_ref: Batch that will be considered as the reference. By default, choose the batch with the higher number of cells.
         """
         super().__init__()
@@ -136,7 +136,7 @@ class Scyan(pl.LightningModule):
         return self.marker_pop_matrix.columns
 
     def _prepare_data(self) -> None:
-        """Initializes the data and the covariates"""
+        """Initialize the data and the covariates"""
         if self.hparams.batch_key is None:
             assert (
                 self.hparams.batch_ref is None
@@ -188,7 +188,7 @@ class Scyan(pl.LightningModule):
         pop: Union[str, List[str], int, Tensor, None] = None,
         return_z: bool = False,
     ) -> Tuple[Tensor, Tensor]:
-        """Sampling cells by sampling from the prior distribution and going into the Normalizing Flow.
+        """Sampling cells by sampling from the prior distribution and going into the normalizing flow.
 
         Args:
             n_samples: Number of cells to sample.
@@ -211,7 +211,7 @@ class Scyan(pl.LightningModule):
     @torch.no_grad()
     @_requires_fit
     def batch_effect_correction(self) -> Tensor:
-        """Corrects batch effect by going into the latent space, setting the reference covariate to all cells, and then reversing the flow.
+        """Correct batch effect by going into the latent space, setting the reference covariate to all cells, and then reversing the flow.
 
         Returns:
             The corrected marker expressions on the original space. **Warning**, as we standardised data for training, this result is standardised too.
@@ -243,22 +243,22 @@ class Scyan(pl.LightningModule):
 
         return loss
 
-    def training_epoch_end(self, _):
-        """PyTorch lightning `training_epoch_end` implementation"""
-        if "cell_type" in self.adata.obs:  # TODO: remove?
-            if len(self.x) > 500000:
-                indices = random.sample(range(len(self.x)), 500000)
-                x = self.x[indices]
-                covariates = self.covariates[indices]
-                labels = self.adata.obs.cell_type[indices]
-                acc = accuracy_score(
-                    labels, self.predict(x, covariates, key_added=None).values
-                )
-            else:
-                acc = accuracy_score(
-                    self.adata.obs.cell_type, self.predict(key_added=None).values
-                )
-            self.log("accuracy_score", acc, prog_bar=True)
+    # def training_epoch_end(self, _):
+    #     """PyTorch lightning `training_epoch_end` implementation"""
+    #     if "cell_type" in self.adata.obs:  # TODO: remove?
+    #         if len(self.x) > 500000:
+    #             indices = random.sample(range(len(self.x)), 500000)
+    #             x = self.x[indices]
+    #             covariates = self.covariates[indices]
+    #             labels = self.adata.obs.cell_type[indices]
+    #             acc = accuracy_score(
+    #                 labels, self.predict(x, covariates, key_added=None).values
+    #             )
+    #         else:
+    #             acc = accuracy_score(
+    #                 self.adata.obs.cell_type, self.predict(key_added=None).values
+    #             )
+    #         self.log("accuracy_score", acc, prog_bar=True)
 
     @_requires_fit
     @torch.no_grad()
@@ -276,7 +276,7 @@ class Scyan(pl.LightningModule):
             key_added: Key added to `model.adata.obs` to save the predictions. If `None`, then the predictions will not be saved.
 
         Returns:
-            pd.Series: Series of predictions
+            pd.Series: Series of predictions.
         """
         df = self.predict_proba(x, covariates)
         populations = df.idxmax(axis=1).astype("category")

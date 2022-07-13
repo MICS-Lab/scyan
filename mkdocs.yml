@@ -11,6 +11,10 @@ nav:
   - Getting Started: getting_started.md
   - Tutorials:
     - tutorials/preprocessing.ipynb
+    - tutorials/aml.ipynb
+    - tutorials/bmmc.ipynb
+    - tutorials/debarcoding.ipynb
+    - tutorials/batch_effect_correction.ipynb
   - API: 
     - scyan.Scyan: api/model.md
     - Modules:
@@ -36,7 +40,11 @@ nav:
     - Misc:
       - scyan.utils.subcluster: api/subcluster.md
       - scyan.mmd.LossMMD: api/loss_mmd.md
-  - Parameters selection: parameters.md
+  - Advanced usage:
+    - Add your own dataset: advanced/data.md
+    - Selecting parameters: advanced/parameters.md
+    - Configuration and monitoring: advanced/hydra_wandb.md
+    - CLI / Running scripts: advanced/scripts.md
   - Cite us: cite.md
 plugins:
   - search

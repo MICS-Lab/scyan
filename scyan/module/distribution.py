@@ -4,7 +4,7 @@ from torch import Tensor, distributions
 
 
 class PriorDistribution(pl.LightningModule):
-    """Prior Distribution $U$"""
+    """Prior distribution $U$"""
 
     def __init__(self, rho: Tensor, rho_mask: Tensor, prior_std: float, n_markers: int):
         """
@@ -21,7 +21,7 @@ class PriorDistribution(pl.LightningModule):
         self.register_buffer("rho", rho)
         self.register_buffer("rho_mask", rho_mask)
         self.register_buffer("loc", torch.zeros((n_markers)))
-        self.register_buffer("cov", torch.eye((n_markers)) * self.prior_std ** 2)
+        self.register_buffer("cov", torch.eye((n_markers)) * self.prior_std**2)
 
         self.uniform = distributions.Uniform(-1, 1)
         self.normal = distributions.Normal(0, self.prior_std)
@@ -90,7 +90,7 @@ class PriorDistribution(pl.LightningModule):
         return self.prior_h.log_prob(diff) + self.na_constant_term
 
     def sample(self, z: Tensor) -> Tensor:
-        """Sample latent cell. expressions.
+        """Sample latent cell expressions.
 
         Args:
             z: Tensor of population indices.

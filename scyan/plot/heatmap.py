@@ -22,7 +22,7 @@ def probs_per_marker(
     vmin_threshold: int = -100,
     show: bool = True,
 ):
-    """Interpretability tool. Gets a group of cells and plots a heatmap of marker probabilities for each population.
+    """Interpretability tool: get a group of cells and plot a heatmap of marker probabilities for each population.
 
     Args:
         model: Scyan model.
@@ -58,7 +58,7 @@ def probs_per_marker(
 @torch.no_grad()
 @optional_show
 def latent_heatmap(model: Scyan, obs_key: str = "scyan_pop", show: bool = True):
-    """Shows Scyan latent space for each population.
+    """Show Scyan latent space for each population.
 
     Args:
         model: Scyan model.
@@ -82,7 +82,7 @@ def subclusters(
     figsize: Tuple[int, int] = (10, 5),
     show: bool = True,
 ):
-    """Displays Scyan latent space for each populations sub-clusters.
+    """Display Scyan latent space for each population sub-clusters.
     !!! warning
         To run this plot function, you have to run [scyan.utils.subcluster][scyan.utils.subcluster] first.
 

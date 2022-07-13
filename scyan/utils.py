@@ -22,7 +22,7 @@ log = logging.getLogger(__name__)
 
 
 def _root_path() -> Path:
-    """Gets the library root path
+    """Get the library root path
 
     Returns:
         `scyan` library root path
@@ -31,7 +31,7 @@ def _root_path() -> Path:
 
 
 def _wandb_plt_image(fun: Callable, figsize: Tuple[int, int] = [7, 5]):
-    """Transforms a matplotlib figure into a wandb Image
+    """Transform a matplotlib figure into a wandb Image
 
     Args:
         fun: Function that makes the plot - do not plt.show().
@@ -58,7 +58,7 @@ def _wandb_plt_image(fun: Callable, figsize: Tuple[int, int] = [7, 5]):
 def read_fcs(
     path: str, names_selection: Optional[List[str]] = None, log_names: bool = True
 ) -> AnnData:
-    """Reads a FCS file and returns an AnnData instance
+    """Read a FCS file and return an AnnData instance
 
     Args:
         path: Path to the FCS file that has to be read.
@@ -97,7 +97,7 @@ def read_fcs(
 
 
 def write_fcs(adata: AnnData, path: str) -> None:
-    """Writes a FCS file based on a `AnnData` object.
+    """Write a FCS file based on a `AnnData` object.
 
     Args:
         adata: `AnnData` object to save.
@@ -179,7 +179,7 @@ def _validate_inputs(adata: AnnData, df: pd.DataFrame):
 
     if not df.dtypes.apply(is_numeric_dtype).all():
         log.warn(
-            "Some columns of the marker-population table are not numeric / NaN. Every non-numeric value will be considered as NaN."
+            "Some columns of the marker-population table are not numeric / NaN. Every non-numeric value will be transformed into NaN."
         )
         df = df.apply(pd.to_numeric, errors="coerce")
 
@@ -187,17 +187,17 @@ def _validate_inputs(adata: AnnData, df: pd.DataFrame):
 
     assert (
         np.abs(X).max() < 1e3
-    ), "The provided values are very high, have you run preprocessing first? E.g., consider 'scyan.utils.asinh_transform' or 'scyan.utils.auto_logicle_transform'"
+    ), "The provided values are very high: have you run preprocessing first? E.g., consider 'scyan.utils.asinh_transform' or 'scyan.utils.auto_logicle_transform'"
 
     if np.abs(X.mean(axis=0)).max() > 0.2 or np.abs(X.std(axis=0) - 1).max() > 0.2:
         log.warn(
-            "It seems that the data is not standardised. We advise to use scaling (scyan.utils.scale) before initializing the model."
+            "It seems that the data is not standardised. We advise using scaling (scyan.utils.scale) before initializing the model."
         )
 
     duplicates = df.duplicated()
     if duplicates.any():
         log.warn(
-            f"Found duplicate populations in the knowledge matrix. We advise to update or remove the following rows: {', '.join(duplicates[duplicates].index)}"
+            f"Found duplicate populations in the knowledge matrix. We advise updating or removing the following rows: {', '.join(duplicates[duplicates].index)}"
         )
 
     return adata, df
@@ -241,11 +241,11 @@ def auto_logicle_transform(adata: AnnData, q: float = 0.05, m: float = 4.5) -> N
 
 
 def asinh_transform(adata: AnnData, translation: float = 1, cofactor: float = 5):
-    """Performs asinh transformation for cell-expressions: $asinh((x - translation)/cofactor)$.
+    """Asinh transformation for cell-expressions: $asinh((x - translation)/cofactor)$.
 
     Args:
         adata: An `anndata` object.
-        translation: Constant substracted from cell-expression before division by the cofactor.
+        translation: Constant substracted to cell expression before division by the cofactor.
         cofactor: Scaling factor before computing the asinh.
     """
     adata.X = np.arcsinh((adata.X - translation) / cofactor)
@@ -270,7 +270,7 @@ def subcluster(
     subcluster_key: str = "subcluster_index",
     umap_display_key: str = "leiden_subcluster",
 ) -> None:
-    """Creates sub-clusters among the populations predicted by Scyan. Some population may not be divided.
+    """Create sub-clusters among the populations predicted by Scyan. Some population may not be divided.
     !!! info
         After having run this method, you can analyze the results with:
         ```python
