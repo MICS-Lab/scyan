@@ -1,4 +1,5 @@
 import logging
+import warnings
 from functools import wraps
 from pathlib import Path
 from typing import TYPE_CHECKING, Callable, List, Optional, Tuple, Union
@@ -19,6 +20,8 @@ from pandas.api.types import is_numeric_dtype
 from torch import Tensor
 
 log = logging.getLogger(__name__)
+
+warnings.filterwarnings("ignore", message="Transforming to str index")
 
 
 def _root_path() -> Path:

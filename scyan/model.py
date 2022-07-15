@@ -340,7 +340,7 @@ class Scyan(pl.LightningModule):
         self,
         max_epochs: int = 100,
         min_delta: float = 1,
-        patience: int = 4,
+        patience: int = 2,
         num_workers: int = 0,
         callbacks: Optional[List[pl.Callback]] = None,
         trainer: Optional[pl.Trainer] = None,

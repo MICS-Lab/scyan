@@ -38,6 +38,7 @@ nav:
       - scyan.utils.asinh_transform: api/asinh.md
       - scyan.utils.scale: api/scale.md
     - Misc:
+      - scyan.data.add: api/add.md
       - scyan.utils.subcluster: api/subcluster.md
       - scyan.mmd.LossMMD: api/loss_mmd.md
   - Advanced usage:
