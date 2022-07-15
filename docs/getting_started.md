@@ -75,6 +75,7 @@ model.predict()
 ### Additional resources
 
 - Read the tutorials (e.g. [preprocessing](./tutorials/preprocessing.ipynb) or [usage example with interpretability](./tutorials/bmmc.ipynb)).
+- Read our [advice](./advanced/advice.md) to design the knowledge table.
 - Read the API (e.g. [scyan.Scyan](./api/model.md)).
 - [Save and load your own dataset](./advanced/data.md).
 - [How to choose the model parameters if you don't want to use the default ones](./advanced/parameters.md).

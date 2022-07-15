@@ -125,9 +125,9 @@ def load(
     """Load a dataset, i.e. its `AnnData` object and its knowledge table.
     If the dataset was not loaded yet, it is automatically downloaded (requires internet connection).
     !!! note
-        If `scyan` repository was cloned, then the data will be saved in the `data` folder of the repository, else at `<home_path>/.scyan_data`
+        If you want to load your own dataset, you first have to [create it](../../advanced/data).
     !!! note
-        You can add other datasets with [scyan.data.add](./add.md).
+        If `scyan` repository was cloned, then the data will be saved in the `data` folder of the repository, else at `<home_path>/.scyan_data`
 
     Args:
         dataset_name: Name of the dataset. Datasets available are: `"aml"`, `"bmmc"`, `"debarcoding"`.
