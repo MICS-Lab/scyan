@@ -1,1 +1,1 @@
-::: scyan.utils.asinh_transform
+::: scyan.preprocess.asinh_transform

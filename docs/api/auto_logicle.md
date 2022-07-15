@@ -1,1 +1,1 @@
-::: scyan.utils.auto_logicle_transform
+::: scyan.preprocess.auto_logicle_transform
