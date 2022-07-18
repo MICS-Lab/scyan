@@ -90,7 +90,7 @@ class PriorDistribution(pl.LightningModule):
         return self.prior_h.log_prob(diff) + self.na_constant_term
 
     def sample(self, z: Tensor) -> Tensor:
-        """Sample latent cell expressions.
+        """Sampling latent cell-marker expressions.
 
         Args:
             z: Tensor of population indices.

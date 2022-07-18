@@ -11,10 +11,9 @@ nav:
   - Getting Started: getting_started.md
   - Tutorials:
     - tutorials/preprocessing.ipynb
-    - tutorials/aml.ipynb
     - tutorials/bmmc.ipynb
-    - tutorials/debarcoding.ipynb
     - tutorials/batch_effect_correction.ipynb
+    - tutorials/debarcoding.ipynb
   - API: 
     - scyan.Scyan: api/model.md
     - Modules:

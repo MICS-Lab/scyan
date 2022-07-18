@@ -139,7 +139,7 @@ class ScyanModule(pl.LightningModule):
         z: Union[int, Tensor, None] = None,
         return_z: bool = False,
     ) -> Tuple[Tensor, Tensor]:
-        """Sample cell expressions.
+        """Sampling cell-marker expressions.
 
         Args:
             n_samples: Number of cells to sample.

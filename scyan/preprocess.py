@@ -56,7 +56,7 @@ def asinh_transform(adata: AnnData, translation: float = 1, cofactor: float = 5)
 
     Args:
         adata: An `anndata` object.
-        translation: Constant substracted to cell expression before division by the cofactor.
+        translation: Constant substracted to the marker expression before division by the cofactor.
         cofactor: Scaling factor before computing the asinh.
     """
     adata.X = np.arcsinh((adata.X - translation) / cofactor)

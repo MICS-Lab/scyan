@@ -58,7 +58,7 @@ class CouplingLayer(pl.LightningModule):
         """Coupling layer forward function.
 
         Args:
-            inputs: cell expressions, covariates, lod_det_jacobian sum
+            inputs: cell-marker expressions, covariates, lod_det_jacobian sum
 
         Returns:
             outputs, covariates, lod_det_jacobian sum
