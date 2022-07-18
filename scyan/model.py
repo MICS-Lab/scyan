@@ -344,21 +344,19 @@ class Scyan(pl.LightningModule):
 
         self._num_workers = num_workers
 
-        if trainer is not None:
-            trainer.fit(self)
-            return self
+        if trainer is None:
+            esc = EarlyStopping(
+                monitor="loss_epoch",
+                min_delta=min_delta,
+                patience=patience,
+                check_on_train_epoch_end=True,
+            )
+            _callbacks = [esc] + (callbacks or [])
 
-        esc = EarlyStopping(
-            monitor="loss_epoch",
-            min_delta=min_delta,
-            patience=patience,
-            check_on_train_epoch_end=True,
-        )
-        _callbacks = [esc] + (callbacks or [])
+            trainer = pl.Trainer(
+                max_epochs=max_epochs, callbacks=_callbacks, log_every_n_steps=10
+            )
 
-        trainer = pl.Trainer(
-            max_epochs=max_epochs, callbacks=_callbacks, log_every_n_steps=10
-        )
         trainer.fit(self)
 
         self._is_fitted = True
