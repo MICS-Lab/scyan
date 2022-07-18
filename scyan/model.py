@@ -52,7 +52,7 @@ class Scyan(pl.LightningModule):
         hidden_size: int = 16,
         n_hidden_layers: int = 7,
         n_layers: int = 7,
-        prior_std: float = 0.2,
+        prior_std: float = 0.3,
         lr: float = 1e-3,
         batch_size: int = 16_384,
         alpha_batch_effect: float = 50.0,
@@ -243,23 +243,6 @@ class Scyan(pl.LightningModule):
 
         return loss
 
-    # def training_epoch_end(self, _):
-    #     """PyTorch lightning `training_epoch_end` implementation"""
-    #     if "cell_type" in self.adata.obs:  # TODO: remove?
-    #         if len(self.x) > 500000:
-    #             indices = random.sample(range(len(self.x)), 500000)
-    #             x = self.x[indices]
-    #             covariates = self.covariates[indices]
-    #             labels = self.adata.obs.cell_type[indices]
-    #             acc = accuracy_score(
-    #                 labels, self.predict(x, covariates, key_added=None).values
-    #             )
-    #         else:
-    #             acc = accuracy_score(
-    #                 self.adata.obs.cell_type, self.predict(key_added=None).values
-    #             )
-    #         self.log("accuracy_score", acc, prog_bar=True)
-
     @_requires_fit
     @torch.no_grad()
     def predict(
@@ -287,7 +270,7 @@ class Scyan(pl.LightningModule):
         missing_pops = self.n_pops - len(populations.cat.categories)
         if missing_pops:
             log.info(
-                f"{missing_pops} population(s) were not predicted. It may be due to errors in the knowledge table, the model hyperparameters choices (see https://mics_biomathematics.pages.centralesupelec.fr/biomaths/scyan/parameters/), or maybe these populations are really absent from this dataset."
+                f"{missing_pops} population(s) were not predicted. It may be due to:\n  - Errors in the knowledge table (see https://mics_biomathematics.pages.centralesupelec.fr/biomaths/scyan/advanced/advice/)\n  - The model hyperparameters choice (see https://mics_biomathematics.pages.centralesupelec.fr/biomaths/scyan/advanced/parameters/)\n  - Or maybe these populations are really absent from this dataset."
             )
 
         return populations
@@ -340,7 +323,7 @@ class Scyan(pl.LightningModule):
         self,
         max_epochs: int = 100,
         min_delta: float = 1,
-        patience: int = 4,
+        patience: int = 2,
         num_workers: int = 0,
         callbacks: Optional[List[pl.Callback]] = None,
         trainer: Optional[pl.Trainer] = None,
@@ -361,21 +344,19 @@ class Scyan(pl.LightningModule):
 
         self._num_workers = num_workers
 
-        if trainer is not None:
-            trainer.fit(self)
-            return self
+        if trainer is None:
+            esc = EarlyStopping(
+                monitor="loss_epoch",
+                min_delta=min_delta,
+                patience=patience,
+                check_on_train_epoch_end=True,
+            )
+            _callbacks = [esc] + (callbacks or [])
 
-        esc = EarlyStopping(
-            monitor="loss_epoch",
-            min_delta=min_delta,
-            patience=patience,
-            check_on_train_epoch_end=True,
-        )
-        _callbacks = [esc] + (callbacks or [])
+            trainer = pl.Trainer(
+                max_epochs=max_epochs, callbacks=_callbacks, log_every_n_steps=10
+            )
 
-        trainer = pl.Trainer(
-            max_epochs=max_epochs, callbacks=_callbacks, log_every_n_steps=10
-        )
         trainer.fit(self)
 
         self._is_fitted = True

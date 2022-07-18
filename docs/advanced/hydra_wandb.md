@@ -6,8 +6,8 @@ For that, clone the repository and make an editable install of the project (see 
 
 ## Create a new project configuration
 
-Create a new project at `config/project/<your-project>.yaml`.
-Provide a `name`. It should be the one where you store your data (see how to [create your dataset](./data.md)). We advise to have `name = <your-project> = <your-dataset-name>`.
+Create a new project at `config/project/<your-project-name>.yaml`.
+Provide a `name`. It should be the one where you store your data (see how to [create your dataset](./data.md)). We advise to have `name = <your-project-name> = <your-dataset-name>`.
 
 Add optionally:
 
@@ -34,4 +34,4 @@ Update `config/sweeper/optuna.yaml` to select the parameters you want to optimiz
 
 !!! check
 
-    Now that you have configured your project, you can run the scripts (see [running scripts](./scripts.md)) by providing the argument `project=<your-project>`.
+    Now that you have configured your project, you can run the scripts (see [running scripts](./scripts.md)) by providing the argument `project=<your-project-name>`.

@@ -8,6 +8,7 @@ import torch
 from scipy.stats import norm
 
 from .. import Scyan
+from ..utils import _requires_fit
 from .utils import check_population, get_palette_others, optional_show, select_markers
 
 
@@ -67,6 +68,7 @@ def kde_per_population(
 
 
 @torch.no_grad()
+@_requires_fit
 @optional_show
 @check_population()
 def latent_expressions(

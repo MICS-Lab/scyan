@@ -11,10 +11,9 @@ nav:
   - Getting Started: getting_started.md
   - Tutorials:
     - tutorials/preprocessing.ipynb
-    - tutorials/aml.ipynb
     - tutorials/bmmc.ipynb
-    - tutorials/debarcoding.ipynb
     - tutorials/batch_effect_correction.ipynb
+    - tutorials/debarcoding.ipynb
   - API: 
     - scyan.Scyan: api/model.md
     - Modules:
@@ -34,15 +33,17 @@ nav:
       - scyan.read_fcs: api/read_fcs.md
       - scyan.write_fcs: api/write_fcs.md
     - Preprocessing:
-      - scyan.utils.auto_logicle_transform: api/auto_logicle.md
-      - scyan.utils.asinh_transform: api/asinh.md
-      - scyan.utils.scale: api/scale.md
+      - scyan.preprocess.auto_logicle_transform: api/auto_logicle.md
+      - scyan.preprocess.asinh_transform: api/asinh.md
+      - scyan.preprocess.scale: api/scale.md
+      - scyan.preprocess.subcluster: api/subcluster.md
     - Misc:
-      - scyan.utils.subcluster: api/subcluster.md
+      - scyan.data.add: api/add.md
       - scyan.mmd.LossMMD: api/loss_mmd.md
   - Advanced usage:
     - Add your own dataset: advanced/data.md
     - Selecting parameters: advanced/parameters.md
+    - Advice to make the knowledge table: advanced/advice.md
     - Configuration and monitoring: advanced/hydra_wandb.md
     - CLI / Running scripts: advanced/scripts.md
   - Cite us: cite.md

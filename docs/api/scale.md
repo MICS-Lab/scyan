@@ -1,1 +1,1 @@
-::: scyan.utils.scale
+::: scyan.preprocess.scale

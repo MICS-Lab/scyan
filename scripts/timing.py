@@ -31,7 +31,9 @@ def main(config: DictConfig) -> None:
 
     for n in [adata.n_obs] + [200_000, 400_000, 800_000, 1_600_000, 3_200_000, 6_400_000]:
         if n > adata.n_obs:
+            print(f"Oversampling cells to N={n}...")
             adata = utils.oversample(adata, n, correction_mode)
+            print("Oversampling completed.")
 
         start = time.perf_counter()
 
