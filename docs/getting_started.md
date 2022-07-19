@@ -10,7 +10,7 @@
     conda activate scyan
     ```
 
-Scyan can be installed with `pip` or `poetry`. Choose one of the following, depending on your needs:
+Scyan can be installed with `pip` or `poetry` if you have python >=3.8, <3.11. Choose one of the following, depending on your needs:
 
 === "With PyPI"
 
@@ -48,7 +48,7 @@ Scyan can be installed with `pip` or `poetry`. Choose one of the following, depe
 
 ## Usage
 
-### Example
+### Minimal example
 
 ```py
 import scyan
@@ -73,9 +73,9 @@ model.predict()
 
     Make sure every marker from the table (i.e. columns names of the DataFrame) is inside the data, i.e. in `adata.var_names`.
 
-### Additional resources
+## Resources to guide you
 
-- Read the tutorials (e.g. [preprocessing](./tutorials/preprocessing.ipynb) or [usage example with interpretability](./tutorials/bmmc.ipynb)).
+- Read the tutorials (e.g. [how to prepare your data](./tutorials/preprocessing.ipynb) or [usage example with interpretability](./tutorials/usage.ipynb)).
 - Read our [advice](./advanced/advice.md) to design the knowledge table.
 - Read the API to know more about what you can do (e.g. [scyan.Scyan](./api/model.md)).
 - [Save and load your own dataset](./advanced/data.md).
