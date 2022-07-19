@@ -2,13 +2,11 @@ import logging
 import random
 from typing import List, Optional, Tuple, Union
 
-import numpy as np
 import pandas as pd
 import pytorch_lightning as pl
 import torch
 from anndata import AnnData
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
-from sklearn.metrics import accuracy_score
 from torch import Tensor
 from torch.utils.data import DataLoader
 
@@ -202,7 +200,6 @@ class Scyan(pl.LightningModule):
         z = _process_pop_sample(self, pop)
 
         if covariates_sample is None:
-            # TODO: sample where pop
             indices = random.sample(range(self.adata.n_obs), n_samples)
             covariates_sample = self.covariates[indices]
 
@@ -296,12 +293,6 @@ class Scyan(pl.LightningModule):
         probs = torch.softmax(log_probs, dim=1)
 
         return pd.DataFrame(probs.cpu().numpy(), columns=self.pop_names)
-
-    @property
-    @torch.no_grad()
-    def pi_hat(self) -> Tensor:  # TODO: remove?
-        log_probs, *_ = self.module.compute_probabilities(self.x, self.covariates)
-        return torch.softmax(log_probs, dim=1).mean(dim=0)
 
     def configure_optimizers(self):
         """PyTorch lightning `configure_optimizers` implementation"""

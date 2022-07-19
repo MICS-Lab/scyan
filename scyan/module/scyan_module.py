@@ -196,7 +196,7 @@ class ScyanModule(pl.LightningModule):
         if n_samples < 500:
             log.warn(f"Correcting batch effect with few samples ({n_samples})")
 
-        pop_weights = 1 / self.pi.detach()  # TODO: use temp ? use u2 ?
+        pop_weights = 1 / self.pi.detach()
 
         indices1 = torch.multinomial(pop_weights[pop1], n_samples)
         indices2 = torch.multinomial(pop_weights[pop2], n_samples)
