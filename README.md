@@ -6,7 +6,7 @@ Scyan stands for **S**ingle-cell **Cy**tometry **A**nnotation **N**etwork. Based
 
 # Documentation
 
-The [complete documentation can be found here.](https://mics_biomathematics.pages.centralesupelec.fr/biomaths/scyan/) It contains installation guidelines, tutorials, a description of the API, ...
+The [complete documentation can be found here](https://mics_biomathematics.pages.centralesupelec.fr/biomaths/scyan/). It contains installation guidelines, tutorials, a description of the API, etc.
 
 # Overview
 
@@ -18,27 +18,30 @@ Scyan is a Bayesian probabilistic model composed of a deep invertible neural net
 
 # Getting started
 
+Scyan can be installed on every OS with `pip` or [`poetry`](https://python-poetry.org/docs/).
+The only requirement is to have `python` installed (>=3.8, <3.11). Still, we advice to use `python=3.9`, which is the python version for which `scyan` is the more stable.
+
 ## Install with PyPI
 
 Available after publication
 
 ## Install locally
 
-> Advice (optional): if using `pip`, we advise creating a new environment via a package manager. For instance, you can create a new conda environment:
+> Advice (optional): We advise creating a new environment via a package manager (except if you use Poetry, which will automatically create the environment). For instance, you can create a new `conda` environment:
 >
 > ```bash
 > conda create --name scyan python=3.9
 > conda activate scyan
 > ```
 
-Clone the repository and move to its root
+Clone the repository and move to its root:
 
 ```bash
 git clone git@gitlab-research.centralesupelec.fr:mics_biomathematics/biomaths/scyan.git
 cd scyan
 ```
 
-You can install it with `pip` or `poetry`, choose one among the following:
+You can install it with `pip` or `poetry`, choose one among the following (it should take at most a few minutes):
 
 ```bash
 pip install -e '.[dev,docs,discovery]'  # pip installation in editable mode
@@ -58,7 +61,8 @@ model.fit()
 model.predict()
 ```
 
-For more details read the [documentation](https://mics_biomathematics.pages.centralesupelec.fr/biomaths/scyan/).
+The latter should run in approximately 40 seconds (once the dataset was loaded).
+For more usage demo, read the [tutorials](https://mics_biomathematics.pages.centralesupelec.fr/biomaths/scyan/tutorials/usage/) or the complete [documentation](https://mics_biomathematics.pages.centralesupelec.fr/biomaths/scyan/).
 
 # Technical description
 
@@ -74,7 +78,7 @@ Scyan is a **Python** library based on:
 
     config/       # Hydra configuration folder (optional use)
     data/         # Data folder containg adata files and csv tables
-    docs/         # The documentation folder
+    docs/         # The folder used to build the documentation
     scripts/      # Scripts to reproduce the results from the article
     tests/        # Testing the library
     scyan/                    # Library source code
@@ -89,6 +93,7 @@ Scyan is a **Python** library based on:
             ...
         mmd.py                # Maximum Mean Discrepancy implementation
         model.py              # Scyan model class
+        preprocess.py         # Preprocessing functions
         utils.py              # Misc functions
     .gitattributes
     .gitignore

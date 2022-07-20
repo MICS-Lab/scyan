@@ -27,11 +27,11 @@ Scyan is a **Python** library based on:
 
 ## Project layout
 
-See [Scyan on Gitlab](https://gitlab-research.centralesupelec.fr/mics_biomathematics/biomaths/scyan)
+See [Scyan on Github](https://github.com/MICS-Lab/scyan)
 
     config/       # Hydra configuration folder (optional use)
     data/         # Data folder containg adata files and csv tables
-    docs/         # The documentation folder
+    docs/         # The folder used to build the documentation
     scripts/      # Scripts to reproduce the results from the article
     tests/        # Testing the library
     scyan/                    # Library source code
@@ -46,6 +46,7 @@ See [Scyan on Gitlab](https://gitlab-research.centralesupelec.fr/mics_biomathema
             ...
         mmd.py                # Maximum Mean Discrepancy implementation
         model.py              # Scyan model class
+        preprocess.py         # Preprocessing functions
         utils.py              # Misc functions
     .gitattributes
     .gitignore

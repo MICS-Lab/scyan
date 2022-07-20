@@ -1,16 +1,20 @@
 ## Installation
 
+Scyan can be installed on every OS with `pip` or [`poetry`](https://python-poetry.org/docs/).
+The only requirement is to have `python` installed (>=3.8, <3.11). Still, we advice to use `python=3.9`, which is the python version for which `scyan` is the more stable.
+
 !!! note "Advice (optional)"
 
-    We advise creating a new environment via a package manager (except if you use Poetry).
-    For instance, you can create a new conda environment:
+    We advise creating a new environment via a package manager (except if you use Poetry, which will automatically create the environment).
+
+    For instance, you can create a new `conda` environment:
 
     ```bash
     conda create --name scyan python=3.9
     conda activate scyan
     ```
 
-Scyan can be installed with `pip` or `poetry` if you have python >=3.8, <3.11. Choose one of the following, depending on your needs:
+Choose one of the following, depending on your needs (it should take at most a few minutes):
 
 === "With PyPI"
 
@@ -67,7 +71,7 @@ model.predict()
 
 !!! note "Help to create the `adata` object and the `marker_pop_matrix`"
 
-    Read the [preprocessing tutorial](./tutorials/preprocessing.ipynb) if you have a FCS file and want explanations to initialize `Scyan`.
+    Read the [preprocessing tutorial](./tutorials/preprocessing.ipynb) if you have a FCS file and want explanations to initialise `Scyan`.
 
 !!! check
 

@@ -170,7 +170,7 @@ class Scyan(pl.LightningModule):
         return self.batch_to_id.get(self.hparams.batch_ref)
 
     def forward(self) -> Tensor:
-        """Model forward function
+        """Model forward function (not used during training). The core logic and the functions used for training are implemented in [ScyanModule][scyan.module.ScyanModule] (or see [scyan.Scyan.training_step][scyan.Scyan.training_step]).
 
         Returns:
             Tensor: Full dataset latent representation.
