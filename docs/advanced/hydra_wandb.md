@@ -1,20 +1,20 @@
 # Configuration and monitoring
 
-If needed, you can use [Hydra](https://hydra.cc/docs/intro/) to manage your configuration. It allows to easily run the scripts or run hyperparameter optimization. You can also monitor your jobs with [Weight & Biases](https://wandb.ai/site)
+If needed, you can use [Hydra](https://hydra.cc/docs/intro/) to manage your configuration. It allows to run the scripts or run hyperparameter optimization easily. You can also monitor your jobs with [Weight & Biases](https://wandb.ai/site)
 
 For that, clone the repository and make an editable install of the project (see [Getting Started](https://mics_biomathematics.pages.centralesupelec.fr/biomaths/scyan/getting_started/)). Then, you have to follow the step listed below.
 
 ## Create a new project configuration
 
-Create a new project at `config/project/<your-project-name>.yaml`.
-Provide a `name`. It should be the one where you store your data (see how to [create your dataset](./data.md)). We advise to have `name = <your-project-name> = <your-dataset-name>`.
+Create a new project at `config/project/<your-project-name>.yaml`, where `<your-project-name>` is the one you used to [create your dataset](./data.md).
+In this file, add `name: <your-project-name>`.
 
 Add optionally:
 
-- `size` or `table` if you don't want to use the default table or anndata files from your dataset.
+- `size` or `table` if you don't want to use your dataset's default table or anndata files.
 - `batch_key` (and eventually `batch_ref`) if you want to correct the batch effect.
 - You can add some `continuous_covariate_keys` and `categorical_covariate_keys` (as a list of items).
-- `wandb_project_name`, the name of your Weight and Biases project for model monitoring. It will log all the metrics over the different epochs and saves different figures online.
+- `wandb_project_name`, the name of your Weight and Biases project for model monitoring. It will log all the metrics over the epochs and save different figures online.
 
 ## Other configuration
 
@@ -30,7 +30,7 @@ Update `config/config.yaml` for some basic configuration. The most important con
 
 ## (Optional) Hyperparameter optimization configuration
 
-Update `config/sweeper/optuna.yaml` to select the parameters you want to optimize and their ranges. In particular, select the right number of trials, or update it via the command line.
+Update `config/sweeper/optuna.yaml` to select the parameters you want to optimize and their ranges. In particular, choose the number of trials you desire or update it via the command line.
 
 !!! check
 

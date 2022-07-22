@@ -1,5 +1,5 @@
 site_name: Scyan
-repo_url: https://gitlab-research.centralesupelec.fr/mics_biomathematics/biomaths/scyan
+repo_url: https://github.com/MICS-Lab/scyan
 repo_name: biomaths/scyan
 copyright: Copyright &copy; 2021 - 2022 Quentin Blampey
 theme:
@@ -43,8 +43,8 @@ nav:
       - scyan.mmd.LossMMD: api/loss_mmd.md
   - Advanced usage:
     - Add your own dataset: advanced/data.md
-    - Selecting parameters: advanced/parameters.md
     - Advice to make the knowledge table: advanced/advice.md
+    - Selecting parameters: advanced/parameters.md
     - Configuration and monitoring: advanced/hydra_wandb.md
     - CLI / Running scripts: advanced/scripts.md
   - Cite us: cite.md

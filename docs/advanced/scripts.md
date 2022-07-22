@@ -2,7 +2,7 @@
 
 !!! caution
 
-    You can run `Scyan` without using these scripts. Use it **only if** you want to use Hydra and/or Weight and Biases. Before continuing, also make sure that you have [configured your project](./hydra_wandb.md).
+    You can run `Scyan` without using these scripts. Use it **only if** you want to use Hydra and/or Weight and Biases. Before continuing, ensure that you have [configured your project](./hydra_wandb.md).
 
 ## Usage examples
 
