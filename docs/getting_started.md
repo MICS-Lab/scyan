@@ -1,7 +1,7 @@
 ## Installation
 
 Scyan can be installed on every OS with `pip` or [`poetry`](https://python-poetry.org/docs/).
-The only requirement is to have `python` installed (>=3.8, <3.11). Still, we advice to use `python=3.9`, which is the python version for which `scyan` is the more stable.
+The only requirement is to have `python` installed (>=3.8, <3.11). Still, we advise using `python=3.9`, the python version for which `scyan` is the more stable.
 
 !!! note "Advice (optional)"
 
@@ -67,11 +67,11 @@ model.predict()
 ### Inputs details
 
 - `adata` is an [AnnData](https://anndata.readthedocs.io/en/latest/) object, whose variables (`adata.var`) corresponds to markers, and observations (`adata.obs`) to cells. `adata.X` is a matrix of size ($N$ cells, $M$ markers) representing cell-marker expressions after being **preprocessed** ([asinh](./api/asinh.md) or [logicle](./api/auto_logicle.md)) and [**standardized**](./api/scale.md).
-- `marker_pop_matrix` is a [pandas DataFrame](https://pandas.pydata.org/) with $P$ rows (one per population) and $M$ columns (one per marker). Each value represents the knowledge about the expected expression, i.e. `-1` for negative expression, `1` for positive expression or `NA` if we don't know. It can also be any float value such as `0` or `0.5` for mid and low expressions respectively (use it only when necessary).
+- `marker_pop_matrix` is a [pandas DataFrame](https://pandas.pydata.org/) with $P$ rows (one per population) and $M$ columns (one per marker). Each value represents the knowledge about the expected expression, i.e. `-1` for negative expression, `1` for positive expression, or `NA` if we don't know. It can also be any float value such as `0` or `0.5` for mid and low expressions, respectively (use it only when necessary).
 
 !!! note "Help to create the `adata` object and the `marker_pop_matrix`"
 
-    Read the [preprocessing tutorial](./tutorials/preprocessing.ipynb) if you have a FCS file and want explanations to initialise `Scyan`.
+    Read the [preprocessing tutorial](./tutorials/preprocessing.ipynb) if you have a FCS file and want explanations to initialize `Scyan`.
 
 !!! check
 

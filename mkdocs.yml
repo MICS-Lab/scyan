@@ -43,8 +43,8 @@ nav:
       - scyan.mmd.LossMMD: api/loss_mmd.md
   - Advanced usage:
     - Add your own dataset: advanced/data.md
-    - Selecting parameters: advanced/parameters.md
     - Advice to make the knowledge table: advanced/advice.md
+    - Selecting parameters: advanced/parameters.md
     - Configuration and monitoring: advanced/hydra_wandb.md
     - CLI / Running scripts: advanced/scripts.md
   - Cite us: cite.md

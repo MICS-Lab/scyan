@@ -50,10 +50,10 @@ class PriorDistribution(pl.LightningModule):
         """Difference between the latent variable $U$ and all the modes (one mode per population).
 
         Args:
-            u: Latent variables tensor of size $(N, M)$.
+            u: Latent variables tensor of size $(B, M)$.
 
         Returns:
-            Tensor of size $(N, P, M)$ representing differences to all modes.
+            Tensor of size $(B, P, M)$ representing differences to all modes.
         """
         diff = u[:, None, :] - self.rho[None, ...]
 
@@ -67,10 +67,10 @@ class PriorDistribution(pl.LightningModule):
         """Log probability per marker and per population.
 
         Args:
-            u: Latent variables tensor of size $(N, M)$.
+            u: Latent variables tensor of size $(B, M)$.
 
         Returns:
-            Log probabilities tensor of size $(N, P, M)$.
+            Log probabilities tensor of size $(B, P, M)$.
         """
         diff = self.difference_to_modes(u)  # size N x P x M
 
@@ -80,10 +80,10 @@ class PriorDistribution(pl.LightningModule):
         """Log probability per population.
 
         Args:
-            u: Latent variables tensor of size $(N, M)$.
+            u: Latent variables tensor of size $(B, M)$.
 
         Returns:
-            Log probabilities tensor of size $(N, P)$.
+            Log probabilities tensor of size $(B, P)$.
         """
         diff = self.difference_to_modes(u)  # size N x P x M
 

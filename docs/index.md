@@ -8,11 +8,11 @@ Scyan stands for **S**ingle-cell **Cy**tometry **A**nnotation **N**etwork. Based
 
 ## Overview
 
-Scyan is a Bayesian probabilistic model composed of a deep invertible neural network called a normalizing flow (the function $f_{\phi}$). This network maps a latent distribution of cell expressions into the empirical distribution of cell expressions. The latter latent cell distribution is a mixture of gaussian-like distributions representing the sum of a cell-specific term and a population-specific term. The latent space is used for interpretability and batch effect correction. More details on the methods section of the article.
+Scyan is a Bayesian probabilistic model composed of a deep invertible neural network called a normalizing flow (the function $f_{\phi}$). It maps a latent distribution of cell expressions into the empirical distribution of cell expressions. This cell distribution is a mixture of gaussian-like distributions representing the sum of a cell-specific and a population-specific term. Also, interpretability and batch effect correction are based on the model latent space — more details in the article's Methods section.
 
 <figure markdown>
   ![Image title](./assets/overview.png)
-  <figcaption>a) Overview of the tasks that Scyan can perform. b) Overview of the model architecture. c) One coupling layer, i.e. the elementary unit that composes the Normalizing Flow.</figcaption>
+  <figcaption>a) Overview of the tasks that Scyan can perform. b) Overview of the model architecture. c) One coupling layer, i.e., the elementary unit that composes the Normalizing Flow.</figcaption>
 </figure>
 
 ## Technical description
@@ -30,7 +30,7 @@ Scyan is a **Python** library based on:
 See [Scyan on Github](https://github.com/MICS-Lab/scyan)
 
     config/       # Hydra configuration folder (optional use)
-    data/         # Data folder containg adata files and csv tables
+    data/         # Data folder containing adata files and csv tables
     docs/         # The folder used to build the documentation
     scripts/      # Scripts to reproduce the results from the article
     tests/        # Testing the library
@@ -55,6 +55,6 @@ See [Scyan on Github](https://github.com/MICS-Lab/scyan)
     LICENSE
     mkdocs.yml        # The docs configuration file
     poetry.lock
-    pyproject.toml    # Dependencies, project metadata and more
+    pyproject.toml    # Dependencies, project metadata, and more
     README.md
     setup.py          # Setup file, see `pyproject.toml`

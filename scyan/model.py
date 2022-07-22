@@ -19,16 +19,6 @@ log = logging.getLogger(__name__)
 
 class Scyan(pl.LightningModule):
     """
-    ```py
-    ### Usage example
-    import scyan
-
-    adata, marker_pop_matrix = scyan.data.load("aml")
-
-    model = scyan.Scyan(adata, marker_pop_matrix)
-    model.fit()
-    model.predict()
-    ```
     Scyan, a.k.a Single-cell Cytometry Annotation Network.
     It is a wrapper to the ScyanModule that contains the core logic (the loss implementation, the forward function, ...).
     While ScyanModule works on tensors, this class works directly on AnnData objects.
@@ -36,7 +26,7 @@ class Scyan(pl.LightningModule):
     Attributes:
         adata (AnnData): The provided `adata`
         marker_pop_matrix (pd.Dataframe): The table knowledge
-        n_pops (int): Number of populations considered
+        n_pops (int): Number of populations considered, i.e. $P$
         hparams (object): Model hyperparameters
         module (ScyanModule): A [ScyanModule][scyan.module.ScyanModule] object
     """
@@ -63,8 +53,8 @@ class Scyan(pl.LightningModule):
     ):
         """
         Args:
-            adata: `AnnData` object containing the FCS data. **Warning**: it has to be preprocessed (e.g. `asinh` or `logicle`) and standardised.
-            marker_pop_matrix: Dataframe representing the biological knowledge about markers and populations.
+            adata: `AnnData` object containing the FCS data ($N$ cells). **Warning**: it has to be preprocessed (e.g. `asinh` or `logicle`) and standardised.
+            marker_pop_matrix: Dataframe of shape $(P, M)$ representing the biological knowledge about markers and populations.
             continuous_covariate_keys: Optional list of keys in `adata.obs` that refers to continuous variables to use during the training.
             categorical_covariate_keys: Optional list of keys in `adata.obs` that refers to categorical variables to use during the training.
             hidden_size: Hidden size of the MLP (`s`, `t`).
@@ -74,11 +64,11 @@ class Scyan(pl.LightningModule):
             lr: Model learning rate.
             batch_size: Model batch size.
             alpha_batch_effect: Weight provided to the batch effect correction loss term.
-            temperature: Temperature to favour small populations.
+            temperature: Temperature to favor small populations.
             mmd_max_samples: Maximum number of samples to give to the MMD.
             modulo_temp: At which frequency temperature has to be applied.
             max_samples: Maximum number of samples per epoch.
-            batch_key: Key in `adata.obs` that refers to the cell batch variable.
+            batch_key: Key in `adata.obs` referring to the cell batch variable.
             batch_ref: Batch that will be considered as the reference. By default, choose the batch with the higher number of cells.
         """
         super().__init__()
@@ -173,7 +163,7 @@ class Scyan(pl.LightningModule):
         """Model forward function (not used during training). The core logic and the functions used for training are implemented in [ScyanModule][scyan.module.ScyanModule] (or see [scyan.Scyan.training_step][scyan.Scyan.training_step]).
 
         Returns:
-            Tensor: Full dataset latent representation.
+            Full dataset latent representation.
         """
         return self.module(self.x, self.covariates)[0]
 
@@ -248,7 +238,7 @@ class Scyan(pl.LightningModule):
         covariates: Optional[Tensor] = None,
         key_added: Optional[str] = "scyan_pop",
     ) -> pd.Series:
-        """Model population predictions, i.e. one population is assigned for each cell. Predictions are saved into `adata.obs.scyan_pop` by default.
+        """Model population predictions, i.e. one population is assigned for each cell. Predictions are saved in `adata.obs.scyan_pop` by default.
 
         Args:
             x: Model inputs.
@@ -256,7 +246,7 @@ class Scyan(pl.LightningModule):
             key_added: Key added to `model.adata.obs` to save the predictions. If `None`, then the predictions will not be saved.
 
         Returns:
-            pd.Series: Series of predictions.
+            Population predictions (pandas `Series` of length $N$).
         """
         df = self.predict_proba(x, covariates)
         populations = df.idxmax(axis=1).astype("category")
@@ -284,7 +274,7 @@ class Scyan(pl.LightningModule):
             covariates: Model covariates. If `None`, use every cell.
 
         Returns:
-            Dataframe of probabilities for each population.
+            Dataframe of shape `(N, P)` with probabilities for each population.
         """
         log_probs, *_ = self.module.compute_probabilities(
             self.x if x is None else x,
@@ -319,14 +309,14 @@ class Scyan(pl.LightningModule):
         callbacks: Optional[List[pl.Callback]] = None,
         trainer: Optional[pl.Trainer] = None,
     ) -> "Scyan":
-        """Train the `Scyan` model. On interactive Python (e.g. Jupyter Notebooks), training can be interrupted at any time without crashing.
+        """Train the `Scyan` model. On interactive Python (e.g., Jupyter Notebooks), training can be interrupted at any time without crashing.
 
         Args:
             max_epochs: Maximum number of epochs.
             min_delta: min_delta parameters used for `EarlyStopping`. See Pytorch Lightning docs.
-            patience: Number of epochs with no loss improvement before to stop training.
-            callbacks: Additionnal Pytorch Lightning callbacks.
-            trainer: Optional Pytorch Lightning Trainer. **Warning**: it will replace the default Trainer and every other arguments will be unused.
+            patience: Number of epochs with no loss improvement before stopping training.
+            callbacks: Additional Pytorch Lightning callbacks.
+            trainer: Optional Pytorch Lightning Trainer. **Warning**: it will replace the default Trainer, and every other argument will be unused.
 
         Returns:
             The trained model itself.

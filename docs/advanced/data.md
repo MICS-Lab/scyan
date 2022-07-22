@@ -2,15 +2,15 @@
 
 ## Prepare your Python objects
 
-You have to prepare your cytometry data and create your knowledge table as described in the [preprocessing tutorial](../tutorials/preprocessing.ipynb).
+You must prepare your cytometry data and create your knowledge table as described in the [preprocessing tutorial](../tutorials/preprocessing.ipynb).
 
 !!! tips
 
-    Read our [advice](../advanced/advice.md) to create this table. A great table leads to better predictions.
+    Read our [advice](../advanced/advice.md) to create the knowledge table. A great table leads to better predictions.
 
 !!! info
 
-    You can have an example of a data object and of a knowledge-table by running:
+    If needed, you have an example of an `adata` object and a knowledge-table if you run:
 
     ```python
     adata, marker_pop_matrix = scyan.data.load("aml")

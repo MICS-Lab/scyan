@@ -80,8 +80,8 @@ class ScyanModule(pl.LightningModule):
         """Forward implementation, going through the complete flow $f_{\phi}$.
 
         Args:
-            x: Inputs of size $(N, M)$.
-            covariates: Covariates of size $(N, M_c)$
+            x: Inputs of size $(B, M)$.
+            covariates: Covariates of size $(B, M_c)$
 
         Returns:
             Tuple of (outputs, covariates, lod_det_jacobian sum)
@@ -93,11 +93,11 @@ class ScyanModule(pl.LightningModule):
         """Go through the flow in reverse direction, i.e. $f_{\phi}^{-1}$.
 
         Args:
-            u: Latent expressions of size $(N, M)$.
-            covariates: Covariates of size $(N, M_c)$
+            u: Latent expressions of size $(B, M)$.
+            covariates: Covariates of size $(B, M_c)$
 
         Returns:
-            Outputs of size $(N, M)$.
+            Outputs of size $(B, M)$.
         """
         return self.real_nvp.inverse(u, covariates)
 
@@ -172,11 +172,11 @@ class ScyanModule(pl.LightningModule):
         """Compute probabilities used in the loss function.
 
         Args:
-            x: Inputs of size $(N, M)$.
-            covariates: Covariates of size $(N, M_c)$.
+            x: Inputs of size $(B, M)$.
+            covariates: Covariates of size $(B, M_c)$.
 
         Returns:
-            Log probabilities of size $(N, P)$, the log det jacobian and the latent expressions of size $(N, M)$.
+            Log probabilities of size $(B, P)$, the log det jacobian and the latent expressions of size $(B, M)$.
         """
         u, _, ldj_sum = self(x, covariates)
 
@@ -217,9 +217,9 @@ class ScyanModule(pl.LightningModule):
         """Compute the module loss for one mini-batch.
 
         Args:
-            x: Inputs of size $(N, M)$.
-            covariates: Covariates of size $(N, M_c)$.
-            batches: Batch information used to correct batch-effect, tensor of size $(N)$
+            x: Inputs of size $(B, M)$.
+            covariates: Covariates of size $(B, M_c)$.
+            batches: Batch information used to correct batch-effect (tensor of size $(B)$)
             use_temp: Whether to consider temperature is the KL term.
 
         Returns:

@@ -40,8 +40,8 @@ class LossMMD:
         """Compute the MMD loss.
 
         Args:
-            x: Tensor of size $(N, M)$.
-            y: Tensor of size $(N, M)$.
+            x: Tensor of size $(B, M)$.
+            y: Tensor of size $(B, M)$.
 
         Returns:
             Loss term as a one-element Tensor.
