@@ -75,7 +75,7 @@ def add(
     *objects: List[Union[AnnData, pd.DataFrame, umap.UMAP]],
     filenames: Union[str, List[str]] = "default",
 ) -> None:
-    """Add an object to a dataset (or create it if not existing). Objects can be `AnnData` objects, a knowledge-table or a UMAP reducer.
+    """Add an object to a dataset (or create it if not existing). Objects can be `AnnData` objects, a knowledge-table (i.e. a `pd.DataFrame`), or a `UMAP` reducer.
 
     !!! note
         You will be able to load this dataset with [scyan.data.load](./load.md) as long as you added at least a knowledge-table and a `adata` object.

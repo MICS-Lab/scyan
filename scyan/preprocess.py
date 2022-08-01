@@ -1,5 +1,5 @@
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List, Optional
 
 import flowutils
 import numpy as np
@@ -7,6 +7,7 @@ import pandas as pd
 import scanpy as sc
 import scipy
 from anndata import AnnData
+from umap import UMAP
 
 if TYPE_CHECKING:
     from . import Scyan
@@ -62,12 +63,13 @@ def asinh_transform(adata: AnnData, translation: float = 1, cofactor: float = 5)
     adata.X = np.arcsinh((adata.X - translation) / cofactor)
 
 
-def scale(adata: AnnData, max_value: float = 10, **kwargs):
+def scale(adata: AnnData, max_value: float = 10, **kwargs: int):
     """Standardise data using scanpy.
 
     Args:
         adata: An `anndata` object.
         max_value: Clip to this value after scaling. Defaults to 10.
+        **kwargs: Optional `sc.pp.scale` kwargs.
     """
     sc.pp.scale(adata, max_value=max_value, **kwargs)
 
@@ -139,3 +141,41 @@ def subcluster(
             adata.obs[obs_key].astype(str) + " -> " + series.astype(str),
         )
     )
+
+
+def umap(
+    adata: AnnData,
+    markers: Optional[List[str]],
+    obsm_key: str = "X_umap",
+    min_dist: float = 0.5,
+    **umap_kwargs: int,
+) -> UMAP:
+    """Run a [UMAP](https://umap-learn.readthedocs.io/en/latest/) on a specific set of markers (or all markers by default). It can be useful to show differences that are due to some markers of interest, instead of using the whole panel.
+
+    !!! info
+
+        This function returns a UMAP reducer. You can reuse it with `reducer.transform(...)` or save it with [`scyan.data.add`](../add).
+
+    !!! note
+
+        To actually plot the UMAP, use [`sc.pl.umap`](https://scanpy.readthedocs.io/en/stable/generated/scanpy.pl.umap.html).
+
+    Args:
+        adata: An `anndata` object.
+        markers: List marker names. By default, use all the panel markers.
+        obsm_key: Key for `adata.obsm` to add the embedding. Defaults to "X_umap", i.e. you will be able to display the UMAP with `scanpy`.
+        min_dist: Min dist UMAP parameter. Defaults to 0.5.
+        **umap_kwargs: Optional kwargs to provide to the `UMAP` initialization.
+
+    Returns:
+        UMAP reducer.
+    """
+    reducer = UMAP(min_dist=min_dist, **umap_kwargs)
+
+    if markers is None:
+        markers = adata.var_names
+
+    embedding = reducer.fit_transform(adata[:, markers].X)
+    adata.obsm[obsm_key] = embedding
+
+    return reducer

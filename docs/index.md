@@ -22,8 +22,8 @@ Scyan is a **Python** library based on:
 - _Pytorch_, a deep learning framework
 - _AnnData_, a data library that works nicely with single-cell data
 - _Pytorch Lighning_, for model training
-- _Hydra_, for project configuration
-- _Weight & Biases_, for model monitoring
+- _Hydra_, for project configuration (optional)
+- _Weight & Biases_, for model monitoring (optional)
 
 ## Project layout
 
@@ -33,7 +33,7 @@ See [Scyan on Github](https://github.com/MICS-Lab/scyan)
     data/         # Data folder containing adata files and csv tables
     docs/         # The folder used to build the documentation
     scripts/      # Scripts to reproduce the results from the article
-    tests/        # Testing the library
+    tests/        # Folder containing tests
     scyan/                    # Library source code
         module/               # Folder containing neural network modules
             coupling_layer.py # Coupling layer

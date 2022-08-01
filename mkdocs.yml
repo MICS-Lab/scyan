@@ -1,6 +1,6 @@
 site_name: Scyan
 repo_url: https://github.com/MICS-Lab/scyan
-repo_name: biomaths/scyan
+repo_name: MICS-Lab/scyan
 copyright: Copyright &copy; 2021 - 2022 Quentin Blampey
 theme:
   name: material
@@ -38,6 +38,7 @@ nav:
       - scyan.preprocess.asinh_transform: api/asinh.md
       - scyan.preprocess.scale: api/scale.md
       - scyan.preprocess.subcluster: api/subcluster.md
+      - scyan.preprocess.umap: api/umap.md
     - Misc:
       - scyan.data.add: api/add.md
       - scyan.mmd.LossMMD: api/loss_mmd.md

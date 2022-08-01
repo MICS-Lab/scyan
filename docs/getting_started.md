@@ -1,7 +1,8 @@
 ## Installation
 
 Scyan can be installed on every OS with `pip` or [`poetry`](https://python-poetry.org/docs/).
-The only requirement is to have `python` installed (>=3.8, <3.11). Still, we advise using `python=3.9`, the python version for which `scyan` is the more stable.
+
+On MacOS / Linux, `python>=3.8,<3.11` is required, while `python>=3.8,<3.10` is required on Windows. The preferred Python version is `3.9`.
 
 !!! note "Advice (optional)"
 
@@ -23,28 +24,28 @@ Choose one of the following, depending on your needs (it should take at most a f
     pip install scyan
     ```
 
-=== "Local install (pip, editable mode)"
+=== "Local install (pip, library only)"
 
     ``` bash
-    git clone git@gitlab-research.centralesupelec.fr:mics_biomathematics/biomaths/scyan.git
-    cd scyan
-
-    pip install -e '.[dev,docs,discovery]'
-    ```
-
-=== "Local install (pip, package only)"
-
-    ``` bash
-    git clone git@gitlab-research.centralesupelec.fr:mics_biomathematics/biomaths/scyan.git
+    git clone https://github.com/MICS-Lab/scyan.git
     cd scyan
 
     pip install .
     ```
 
+=== "Local install (pip, editable mode)"
+
+    ``` bash
+    git clone https://github.com/MICS-Lab/scyan.git
+    cd scyan
+
+    pip install -e '.[dev,docs,discovery]'
+    ```
+
 === "Poetry (editable mode)"
 
     ``` bash
-    git clone git@gitlab-research.centralesupelec.fr:mics_biomathematics/biomaths/scyan.git
+    git clone https://github.com/MICS-Lab/scyan.git
     cd scyan
 
     poetry install -E 'dev docs discovery'

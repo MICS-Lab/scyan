@@ -19,7 +19,8 @@ Scyan is a Bayesian probabilistic model composed of a deep invertible neural net
 # Getting started
 
 Scyan can be installed on every OS with `pip` or [`poetry`](https://python-poetry.org/docs/).
-The only requirement is to have `python` installed (>=3.8, <3.11). Still, we advise using `python=3.9`, the python version for which `scyan` is the more stable.
+
+On MacOS / Linux, `python>=3.8,<3.11` is required, while `python>=3.8,<3.10` is required on Windows. The preferred Python version is `3.9`.
 
 ## Install with PyPI
 
@@ -37,15 +38,15 @@ Available after publication
 Clone the repository and move to its root:
 
 ```bash
-git clone git@gitlab-research.centralesupelec.fr:mics_biomathematics/biomaths/scyan.git
+git clone https://github.com/MICS-Lab/scyan.git
 cd scyan
 ```
 
-You can install it with `pip` or `poetry`; choose one among the following (it should take at most a few minutes):
+Choose one of the following, depending on your needs (it should take at most a few minutes):
 
 ```bash
+pip install .                           # pip minimal installation (library only)
 pip install -e '.[dev,docs,discovery]'  # pip installation in editable mode
-pip install .                           # pip minimal installation (package only)
 poetry install -E 'dev docs discovery'  # poetry installation in editable mode
 ```
 
@@ -71,8 +72,8 @@ Scyan is a **Python** library based on:
 - _Pytorch_, a deep learning framework
 - _AnnData_, a data library that works nicely with single-cell data
 - _Pytorch Lighning_, for model training
-- _Hydra_, for project configuration
-- _Weight & Biases_, for model monitoring
+- _Hydra_, for project configuration (optional)
+- _Weight & Biases_, for model monitoring (optional)
 
 # Project layout
 
@@ -80,7 +81,7 @@ Scyan is a **Python** library based on:
     data/         # Data folder containing adata files and csv tables
     docs/         # The folder used to build the documentation
     scripts/      # Scripts to reproduce the results from the article
-    tests/        # Testing the library
+    tests/        # Folder containing tests
     scyan/                    # Library source code
         module/               # Folder containing neural network modules
             coupling_layer.py # Coupling layer
