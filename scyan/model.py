@@ -167,8 +167,15 @@ class Scyan(pl.LightningModule):
         """
         return self.module(self.x, self.covariates)[0]
 
-    def _repeat_ref_covariates(self, k: Optional[int] = None):
-        """Repeat the covariates from the reference batch along axis 0"""
+    def _repeat_ref_covariates(self, k: Optional[int] = None) -> Tensor:
+        """Repeat the covariates from the reference batch along axis 0.
+
+        Args:
+            k: Number of repetitions. By default, the number of cells $N$.
+
+        Returns:
+            A tensor of covariates of shape $(k, M_c)$
+        """
         n_repetitions = self.adata.n_obs if k is None else k
 
         ref_covariate = self.covariates[
