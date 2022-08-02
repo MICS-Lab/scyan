@@ -155,7 +155,7 @@ class ScyanModule(pl.LightningModule):
         elif isinstance(z, int):
             z = torch.full((n_samples,), z)
         elif isinstance(z, torch.Tensor):
-            pass
+            z = z.to(int)
         else:
             raise ValueError(
                 f"z has to be 'None', an 'int' or a 'torch.Tensor'. Found type {type(z)}."

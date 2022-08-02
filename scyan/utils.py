@@ -126,20 +126,23 @@ def _subset(indices: List[str], max_obs: int):
 
 def _markers_to_indices(model, markers: List[str]) -> Tensor:
     return torch.tensor(
-        [model.marker_pop_matrix.columns.get_loc(marker) for marker in markers],
+        [model.var_names.get_loc(marker) for marker in markers],
         dtype=int,
     )
 
 
+def _pop_to_index(model, pop: str):
+    assert pop in model.pop_names, f"Found invalid population name '{pop}'"
+    return model.pop_names.get_loc(pop)
+
+
 def _pops_to_indices(model, pops: List[str]) -> Tensor:
-    return torch.tensor(
-        [model.marker_pop_matrix.index.get_loc(pop) for pop in pops], dtype=int
-    )
+    return torch.tensor([_pop_to_index(model, pop) for pop in pops], dtype=int)
 
 
 def _process_pop_sample(model, pop: Union[str, List[str], int, Tensor, None] = None):
     if isinstance(pop, str):
-        return model.marker_pop_matrix.index.get_loc(pop)
+        return _pop_to_index(model, pop)
     if isinstance(pop, list):
         return _pops_to_indices(model, pop)
     else:

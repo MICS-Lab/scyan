@@ -107,7 +107,7 @@ def compute_metrics(model: Scyan, config: DictConfig, obs_key: str = "scyan_pop"
 
     X, labels = model.x.cpu().numpy(), model.adata.obs[obs_key]
 
-    n_missing_pop = len(model.marker_pop_matrix.index) - len(set(labels.values))
+    n_missing_pop = len(model.pop_names) - len(set(labels.values))
     metrics_dict["Number of missing pop"] = n_missing_pop
 
     dbs = metrics.davies_bouldin_score(X, labels)

@@ -167,6 +167,15 @@ class Scyan(pl.LightningModule):
         """
         return self.module(self.x, self.covariates)[0]
 
+    def _repeat_ref_covariates(self, k: Optional[int] = None):
+        """Repeat the covariates from the reference batch along axis 0"""
+        n_repetitions = self.adata.n_obs if k is None else k
+
+        ref_covariate = self.covariates[
+            self.adata.obs[self.hparams.batch_key] == self.hparams.batch_ref
+        ][0]
+        return ref_covariate.repeat((n_repetitions, 1))
+
     @torch.no_grad()
     @_requires_fit
     def sample(
@@ -180,9 +189,9 @@ class Scyan(pl.LightningModule):
 
         Args:
             n_samples: Number of cells to sample.
-            covariates_sample: Optional tensor of covariates.
-            pop: Populations to sample from. If `str`, then a population name. If `int`, a population index. If `List[str]`, a list of population names. If `Tensor`, a tensor of population indices. By default, samples from all populations.
-            return_z: Whether to return the population Tensor.
+            covariates_sample: Optional tensor of covariates. If not provided: if the model was trained for batch correction then the reference covariates are repeated, else we sample from all the covariates.
+            pop: Optional population to sample from (by default, sample from all populations). If `str`, then a population name. If `int`, a population index. If `List[str]`, a list of population names. If `Tensor`, a tensor of population indices.
+            return_z: Whether to return the population `Tensor` (i.e., a tensor of population indices, whose order corresponds to `model.pop_names`).
 
         Returns:
             Sampled cells expressions and, if `return_z`, the populations associated to these cells.
@@ -190,8 +199,11 @@ class Scyan(pl.LightningModule):
         z = _process_pop_sample(self, pop)
 
         if covariates_sample is None:
-            indices = random.sample(range(self.adata.n_obs), n_samples)
-            covariates_sample = self.covariates[indices]
+            if self.hparams.batch_key is None:
+                indices = random.sample(range(self.adata.n_obs), n_samples)
+                covariates_sample = self.covariates[indices]
+            else:
+                covariates_sample = self._repeat_ref_covariates(n_samples)
 
         return self.module.sample(n_samples, covariates_sample, z=z, return_z=return_z)
 
@@ -208,11 +220,7 @@ class Scyan(pl.LightningModule):
         ), "Scyan model was trained with no batch_key, thus not correcting batch effect"
 
         u = self()
-
-        ref_covariate = self.covariates[
-            self.adata.obs[self.hparams.batch_key] == self.hparams.batch_ref
-        ][0]
-        ref_covariates = ref_covariate.repeat((self.adata.n_obs, 1))
+        ref_covariates = self._repeat_ref_covariates()
 
         return self.module.inverse(u, ref_covariates)
 
