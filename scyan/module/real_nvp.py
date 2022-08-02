@@ -8,7 +8,7 @@ from . import CouplingLayer
 
 
 class RealNVP(pl.LightningModule):
-    """Normalizing Flow module, and more specifically the RealNVP transformation $f_{\phi}$.
+    """Normalizing flow module (more specifically the RealNVP transformation $f_{\phi}$).
 
     Attributes:
         module (nn.Sequential): Sequence of [coupling layers][scyan.module.CouplingLayer].
@@ -52,8 +52,8 @@ class RealNVP(pl.LightningModule):
         """Forward implementation, i.e. $f_{\phi}$.
 
         Args:
-            x: Inputs of size $(N, M)$.
-            covariates: Covariates of size $(N, M_c)$
+            x: Inputs of size $(B, M)$.
+            covariates: Covariates of size $(B, M_c)$
 
         Returns:
             Tuple of (outputs, covariates, lod_det_jacobian sum)
@@ -61,14 +61,14 @@ class RealNVP(pl.LightningModule):
         return self.module((x, covariates, None))
 
     def inverse(self, u: Tensor, covariates: Tensor) -> Tensor:
-        """Goes through the RealNVP in reverse direction, i.e. $f_{\phi}^{-1}$.
+        """Go through the RealNVP in reverse direction, i.e. $f_{\phi}^{-1}$.
 
         Args:
-            u: Latent expressions of size $(N, M)$.
-            covariates: Covariates of size $(N, M_c)$
+            u: Latent expressions of size $(B, M)$.
+            covariates: Covariates of size $(B, M_c)$
 
         Returns:
-            Outputs of size $(N, M)$.
+            Outputs of size $(B, M)$.
         """
         for module in reversed(self.module_list):
             u = module.inverse(u, covariates)

@@ -43,5 +43,21 @@ def test_predict_model(test_run_model: Scyan):
     return test_run_model
 
 
-def test_sample(test_run_model: Scyan):
+def test_sample1(test_run_model: Scyan):
     test_run_model.sample(123)
+
+
+def test_sample2(test_run_model: Scyan):
+    test_run_model.sample(123, pop="CD4 T cells")
+
+
+def test_sample3(test_run_model: Scyan):
+    test_run_model.sample(123, pop=3)
+
+
+def test_sample4(test_run_model: Scyan):
+    test_run_model.sample(2, pop=["CD4 T cells", "CD8 T cells"])
+
+
+def test_sample5(test_run_model: Scyan):
+    test_run_model.sample(3, pop=torch.Tensor([1, 3, 7]))

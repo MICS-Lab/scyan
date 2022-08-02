@@ -1,1 +1,1 @@
-::: scyan.utils.write_fcs
+::: scyan.write_fcs

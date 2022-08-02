@@ -27,7 +27,7 @@ class CouplingLayer(pl.LightningModule):
             hidden_size: MLP (`s` and `t`) hidden size.
             output_size: Output size, i.e. number of markers.
             n_hidden_layers: Number of hidden layers for the MLP (`s` and `t`).
-            mask: Mask used to separate `x` into `(x1, x2)`
+            mask: Mask used to separate $x$ into $(x^{(1)}, x^{(2)})$
         """
         super().__init__()
         self.sfun = nn.Sequential(
@@ -58,7 +58,7 @@ class CouplingLayer(pl.LightningModule):
         """Coupling layer forward function.
 
         Args:
-            inputs: cell expressions, covariates, lod_det_jacobian sum
+            inputs: cell-marker expressions, covariates, lod_det_jacobian sum
 
         Returns:
             outputs, covariates, lod_det_jacobian sum
@@ -78,11 +78,11 @@ class CouplingLayer(pl.LightningModule):
         return y, covariates, ldj_sum
 
     def inverse(self, y: Tensor, covariates: Tensor) -> Tensor:
-        """Goes through the coupling layer in reverse direction
+        """Go through the coupling layer in reverse direction.
 
         Args:
-            y: Inputs tensor or size $(N, M)$.
-            covariates: Covariates tensor of size $(N, M_c)$.
+            y: Inputs tensor or size $(B, M)$.
+            covariates: Covariates tensor of size $(B, M_c)$.
 
         Returns:
             Outputs tensor.

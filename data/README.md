@@ -1,6 +1,5 @@
 # Data folder
 
-This folder contain every data file used by the project and the tutorials
+This folder contains every data file used by the project and the tutorials.
 
-1. The `aml.csv` and `bmmc.csv` files contains the marker-pop matrices for the AML and BMMC dataset respectively
-2. Two other files, `aml.h5ad` and `bmmc.h5ad`, are gitignored but automatically loaded when running the project. Because of the file size, we prefer not to store it on the main repository.
+See the [documentation](https://mics_biomathematics.pages.centralesupelec.fr/biomaths/scyan/advanced/data/) for more details or explanations for the creation of your own dataset.

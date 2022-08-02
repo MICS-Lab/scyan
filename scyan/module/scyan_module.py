@@ -80,8 +80,8 @@ class ScyanModule(pl.LightningModule):
         """Forward implementation, going through the complete flow $f_{\phi}$.
 
         Args:
-            x: Inputs of size $(N, M)$.
-            covariates: Covariates of size $(N, M_c)$
+            x: Inputs of size $(B, M)$.
+            covariates: Covariates of size $(B, M_c)$
 
         Returns:
             Tuple of (outputs, covariates, lod_det_jacobian sum)
@@ -90,14 +90,14 @@ class ScyanModule(pl.LightningModule):
 
     @torch.no_grad()
     def inverse(self, u: Tensor, covariates: Tensor) -> Tensor:
-        """Goes through the flow in reverse direction, i.e. $f_{\phi}^{-1}$.
+        """Go through the flow in reverse direction, i.e. $f_{\phi}^{-1}$.
 
         Args:
-            u: Latent expressions of size $(N, M)$.
-            covariates: Covariates of size $(N, M_c)$
+            u: Latent expressions of size $(B, M)$.
+            covariates: Covariates of size $(B, M_c)$
 
         Returns:
-            Outputs of size $(N, M)$.
+            Outputs of size $(B, M)$.
         """
         return self.real_nvp.inverse(u, covariates)
 
@@ -121,7 +121,7 @@ class ScyanModule(pl.LightningModule):
         return torch.exp(self.log_pi)
 
     def log_pi_temperature(self, T: float) -> Tensor:
-        """Computes the log weights with temperature $log \; \pi^{(-T)}$
+        """Compute the log weights with temperature $log \; \pi^{(-T)}$
 
         Args:
             T: Temperature.
@@ -139,7 +139,7 @@ class ScyanModule(pl.LightningModule):
         z: Union[int, Tensor, None] = None,
         return_z: bool = False,
     ) -> Tuple[Tensor, Tensor]:
-        """Sample cell expressions.
+        """Sampling cell-marker expressions.
 
         Args:
             n_samples: Number of cells to sample.
@@ -155,7 +155,7 @@ class ScyanModule(pl.LightningModule):
         elif isinstance(z, int):
             z = torch.full((n_samples,), z)
         elif isinstance(z, torch.Tensor):
-            pass
+            z = z.to(int)
         else:
             raise ValueError(
                 f"z has to be 'None', an 'int' or a 'torch.Tensor'. Found type {type(z)}."
@@ -169,14 +169,14 @@ class ScyanModule(pl.LightningModule):
     def compute_probabilities(
         self, x: Tensor, covariates: Tensor, use_temp: bool = False
     ) -> Tuple[Tensor, Tensor, Tensor]:
-        """Computes probabilities used in the loss function.
+        """Compute probabilities used in the loss function.
 
         Args:
-            x: Inputs of size $(N, M)$.
-            covariates: Covariates of size $(N, M_c)$.
+            x: Inputs of size $(B, M)$.
+            covariates: Covariates of size $(B, M_c)$.
 
         Returns:
-            Log probabilities of size $(N, P)$, the log det jacobian and the latent expressions of size $(N, M)$.
+            Log probabilities of size $(B, P)$, the log det jacobian and the latent expressions of size $(B, M)$.
         """
         u, _, ldj_sum = self(x, covariates)
 
@@ -196,7 +196,7 @@ class ScyanModule(pl.LightningModule):
         if n_samples < 500:
             log.warn(f"Correcting batch effect with few samples ({n_samples})")
 
-        pop_weights = 1 / self.pi.detach()  # TODO: use temp ? use u2 ?
+        pop_weights = 1 / self.pi.detach()
 
         indices1 = torch.multinomial(pop_weights[pop1], n_samples)
         indices2 = torch.multinomial(pop_weights[pop2], n_samples)
@@ -214,12 +214,12 @@ class ScyanModule(pl.LightningModule):
         batches: Tensor,
         use_temp: bool,
     ) -> Tuple[Tensor, Tensor]:
-        """Computes the module loss for one mini-batch.
+        """Compute the module loss for one mini-batch.
 
         Args:
-            x: Inputs of size $(N, M)$.
-            covariates: Covariates of size $(N, M_c)$.
-            batches: Batch information used to correct batch-effect, tensor of size $(N)$
+            x: Inputs of size $(B, M)$.
+            covariates: Covariates of size $(B, M_c)$.
+            batches: Batch information used to correct batch-effect (tensor of size $(B)$)
             use_temp: Whether to consider temperature is the KL term.
 
         Returns:

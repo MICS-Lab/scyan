@@ -8,10 +8,12 @@ import seaborn as sns
 import torch
 
 from .. import Scyan
+from ..utils import _requires_fit
 from .utils import check_population, optional_show
 
 
 @torch.no_grad()
+@_requires_fit
 @optional_show
 @check_population()
 def probs_per_marker(
@@ -22,7 +24,7 @@ def probs_per_marker(
     vmin_threshold: int = -100,
     show: bool = True,
 ):
-    """Interpretability tool. Gets a group of cells and plots a heatmap of marker probabilities for each population.
+    """Interpretability tool: get a group of cells and plot a heatmap of marker probabilities for each population.
 
     Args:
         model: Scyan model.
@@ -56,9 +58,10 @@ def probs_per_marker(
 
 
 @torch.no_grad()
+@_requires_fit
 @optional_show
 def latent_heatmap(model: Scyan, obs_key: str = "scyan_pop", show: bool = True):
-    """Shows Scyan latent space for each population.
+    """Show Scyan latent space for each population.
 
     Args:
         model: Scyan model.
@@ -74,6 +77,7 @@ def latent_heatmap(model: Scyan, obs_key: str = "scyan_pop", show: bool = True):
 
 
 @torch.no_grad()
+@_requires_fit
 @optional_show
 def subclusters(
     model: Scyan,
@@ -82,20 +86,20 @@ def subclusters(
     figsize: Tuple[int, int] = (10, 5),
     show: bool = True,
 ):
-    """Displays Scyan latent space for each populations sub-clusters.
+    """Display Scyan latent space for each population sub-clusters.
     !!! warning
-        To run this plot function, you have to run [scyan.utils.subcluster][scyan.utils.subcluster] first.
+        To run this plot function, you have to run [scyan.preprocess.subcluster][scyan.preprocess.subcluster] first.
 
     Args:
         model: Scyan model.
         obs_key: Key to look for populations in `adata.obs`. By default, uses the model predictions.
-        subcluster_key: Key created by `scyan.utils.subcluster`.
+        subcluster_key: Key created by `scyan.preprocess.subcluster`.
         figsize: Matplotlib figure size. Increase it if you have display issues.
         show: Whether or not to display the plot.
     """
     assert (
         subcluster_key in model.adata.obs.columns
-    ), "Subcluster key '{subcluster_key}' was not found in adata.obs - have you run scyan.utils.subcluster before?"
+    ), "Subcluster key '{subcluster_key}' was not found in adata.obs - have you run scyan.preprocess.subcluster before?"
 
     plt.figure(figsize=figsize)
 

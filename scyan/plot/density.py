@@ -8,6 +8,7 @@ import torch
 from scipy.stats import norm
 
 from .. import Scyan
+from ..utils import _requires_fit
 from .utils import check_population, get_palette_others, optional_show, select_markers
 
 
@@ -24,7 +25,7 @@ def kde_per_population(
     value_name: str = "Expression",
     show: bool = True,
 ):
-    """Plots Kernel-Density-Estimation for each provided population and for multiple markers.
+    """Plot Kernel-Density-Estimation for each provided population and for multiple markers.
 
     Args:
         model: Scyan model.
@@ -67,6 +68,7 @@ def kde_per_population(
 
 
 @torch.no_grad()
+@_requires_fit
 @optional_show
 @check_population()
 def latent_expressions(
@@ -78,7 +80,7 @@ def latent_expressions(
     radius: float = 0.05,
     show: bool = True,
 ):
-    """Plots latent expressions of a group of cells (every marker on one plot).
+    """Plot latent expressions of a group of cells (every marker in one plot).
 
     Args:
         model: Scyan model.

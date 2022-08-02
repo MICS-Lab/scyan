@@ -4,7 +4,7 @@ from torch import Tensor, distributions
 
 
 class PriorDistribution(pl.LightningModule):
-    """Prior Distribution $U$"""
+    """Prior distribution $U$"""
 
     def __init__(self, rho: Tensor, rho_mask: Tensor, prior_std: float, n_markers: int):
         """
@@ -21,7 +21,7 @@ class PriorDistribution(pl.LightningModule):
         self.register_buffer("rho", rho)
         self.register_buffer("rho_mask", rho_mask)
         self.register_buffer("loc", torch.zeros((n_markers)))
-        self.register_buffer("cov", torch.eye((n_markers)) * self.prior_std ** 2)
+        self.register_buffer("cov", torch.eye((n_markers)) * self.prior_std**2)
 
         self.uniform = distributions.Uniform(-1, 1)
         self.normal = distributions.Normal(0, self.prior_std)
@@ -50,10 +50,10 @@ class PriorDistribution(pl.LightningModule):
         """Difference between the latent variable $U$ and all the modes (one mode per population).
 
         Args:
-            u: Latent variables tensor of size $(N, M)$.
+            u: Latent variables tensor of size $(B, M)$.
 
         Returns:
-            Tensor of size $(N, P, M)$ representing differences to all modes.
+            Tensor of size $(B, P, M)$ representing differences to all modes.
         """
         diff = u[:, None, :] - self.rho[None, ...]
 
@@ -67,10 +67,10 @@ class PriorDistribution(pl.LightningModule):
         """Log probability per marker and per population.
 
         Args:
-            u: Latent variables tensor of size $(N, M)$.
+            u: Latent variables tensor of size $(B, M)$.
 
         Returns:
-            Log probabilities tensor of size $(N, P, M)$.
+            Log probabilities tensor of size $(B, P, M)$.
         """
         diff = self.difference_to_modes(u)  # size N x P x M
 
@@ -80,17 +80,17 @@ class PriorDistribution(pl.LightningModule):
         """Log probability per population.
 
         Args:
-            u: Latent variables tensor of size $(N, M)$.
+            u: Latent variables tensor of size $(B, M)$.
 
         Returns:
-            Log probabilities tensor of size $(N, P)$.
+            Log probabilities tensor of size $(B, P)$.
         """
         diff = self.difference_to_modes(u)  # size N x P x M
 
         return self.prior_h.log_prob(diff) + self.na_constant_term
 
     def sample(self, z: Tensor) -> Tensor:
-        """Sample latent cell. expressions.
+        """Sampling latent cell-marker expressions.
 
         Args:
             z: Tensor of population indices.

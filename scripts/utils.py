@@ -1,4 +1,5 @@
 import logging
+from collections import Counter
 from typing import List, Optional
 
 import hydra
@@ -8,6 +9,7 @@ import pandas as pd
 import scanpy as sc
 import wandb
 from anndata import AnnData
+from imblearn.over_sampling import SMOTE
 from omegaconf import DictConfig
 from pytorch_lightning import Callback, Trainer
 from pytorch_lightning.loggers import WandbLogger
@@ -25,7 +27,7 @@ def init_and_fit_model(
     config: DictConfig,
     wandb_logger: Optional[WandbLogger] = None,
 ) -> Scyan:
-    """Initializes Scyan with the Hydra config, fit the model and runs predictions.
+    """Initialize Scyan with the Hydra config, fit the model and run predictions.
     NB: if not using Hydra, then do **not** use this function.
 
     Args:
@@ -68,7 +70,7 @@ def init_and_fit_model(
 
 
 def classification_metrics(y_true: npt.ArrayLike, y_pred: npt.ArrayLike) -> dict:
-    """Computes classification metrics.
+    """Compute classification metrics.
 
     Args:
         y_true: True annotations.
@@ -85,7 +87,7 @@ def classification_metrics(y_true: npt.ArrayLike, y_pred: npt.ArrayLike) -> dict
 
 
 def compute_metrics(model: Scyan, config: DictConfig, obs_key: str = "scyan_pop") -> dict:
-    """Computes model metrics.
+    """Compute model metrics.
 
     Args:
         model: Scyan model.
@@ -105,7 +107,7 @@ def compute_metrics(model: Scyan, config: DictConfig, obs_key: str = "scyan_pop"
 
     X, labels = model.x.cpu().numpy(), model.adata.obs[obs_key]
 
-    n_missing_pop = len(model.marker_pop_matrix.index) - len(set(labels.values))
+    n_missing_pop = len(model.pop_names) - len(set(labels.values))
     metrics_dict["Number of missing pop"] = n_missing_pop
 
     dbs = metrics.davies_bouldin_score(X, labels)
@@ -127,7 +129,7 @@ def compute_metrics(model: Scyan, config: DictConfig, obs_key: str = "scyan_pop"
 
 
 def metric_to_optimize(all_metrics: dict, config: DictConfig) -> float:
-    """Finds and average the metric that have to be hyperoptimized.
+    """Find and average the metric that have to be hyperoptimized.
 
     Args:
         all_metrics: Dict of metrics.
@@ -146,7 +148,7 @@ def metric_to_optimize(all_metrics: dict, config: DictConfig) -> float:
 
 
 def compute_umap(model: Scyan, config: DictConfig, obs_key: str = "scyan_pop") -> None:
-    """Logs a UMAP with Weight & Biases.
+    """Log a UMAP with Weight & Biases.
 
     Args:
         model: Scyan model.
@@ -165,3 +167,34 @@ def compute_umap(model: Scyan, config: DictConfig, obs_key: str = "scyan_pop") -
                 )
             }
         )
+
+
+def oversample(adata: AnnData, n: int, correction_mode: bool) -> AnnData:
+    """Oversample cells from the AML dataset.
+
+    Args:
+        adata: The AnnData object.
+        n: The number of cells desired.
+        correction_mode: True if correcting batch effect.
+
+    Returns:
+        The anndata object with 'n' cells.
+    """
+    if correction_mode:
+        y = adata.obs.cell_type.astype(str) + adata.obs.subject.astype(str)
+    else:
+        y = adata.obs.cell_type
+
+    sampling_strategy = dict(Counter(np.random.choice(y, n)))
+    sm = SMOTE(sampling_strategy=sampling_strategy, random_state=42)
+
+    X, y = sm.fit_resample(adata.X, y.values)
+    adata = AnnData(X=X, var=adata.var)
+
+    if correction_mode:
+        adata.obs["cell_type"] = [name[:-2] for name in y]
+        adata.obs["subject"] = [name[-2:] for name in y]
+    else:
+        adata.obs["cell_type"] = y
+
+    return adata

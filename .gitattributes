@@ -1,0 +1,2 @@
+# Ignoring scyan tutorials (notebooks) for Git language statistics
+*.ipynb -linguist-detectable

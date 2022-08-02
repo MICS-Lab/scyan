@@ -1,6 +1,6 @@
 site_name: Scyan
-repo_url: https://gitlab-research.centralesupelec.fr/mics_biomathematics/biomaths/scyan
-repo_name: biomaths/scyan
+repo_url: https://github.com/MICS-Lab/scyan
+repo_name: MICS-Lab/scyan
 copyright: Copyright &copy; 2021 - 2022 Quentin Blampey
 theme:
   name: material
@@ -9,7 +9,12 @@ theme:
 nav:
   - Home: index.md
   - Getting Started: getting_started.md
-  - Tutorials: tutorials.md
+  - Tutorials:
+    - tutorials/preprocessing.ipynb
+    - tutorials/usage.ipynb
+    - tutorials/batch_effect_correction.ipynb
+    - tutorials/population_discovery.ipynb
+    - tutorials/debarcoding.ipynb
   - API: 
     - scyan.Scyan: api/model.md
     - Modules:
@@ -26,12 +31,23 @@ nav:
       - scyan.plot.kde_per_population: api/kde_per_population.md
     - Loading datasets: api/load.md
     - I/O:
-      - scyan.utils.read_fcs: api/read_fcs.md
-      - scyan.utils.write_fcs: api/write_fcs.md
+      - scyan.read_fcs: api/read_fcs.md
+      - scyan.write_fcs: api/write_fcs.md
+    - Preprocessing:
+      - scyan.preprocess.auto_logicle_transform: api/auto_logicle.md
+      - scyan.preprocess.asinh_transform: api/asinh.md
+      - scyan.preprocess.scale: api/scale.md
+      - scyan.preprocess.subcluster: api/subcluster.md
+      - scyan.preprocess.umap: api/umap.md
     - Misc:
-      - scyan.utils.subcluster: api/subcluster.md
+      - scyan.data.add: api/add.md
       - scyan.mmd.LossMMD: api/loss_mmd.md
-  - Parameters selection: parameters.md
+  - Advanced usage:
+    - Add your own dataset: advanced/data.md
+    - Advice to make the knowledge table: advanced/advice.md
+    - Selecting parameters: advanced/parameters.md
+    - Configuration and monitoring: advanced/hydra_wandb.md
+    - CLI / Running scripts: advanced/scripts.md
   - Cite us: cite.md
 plugins:
   - search

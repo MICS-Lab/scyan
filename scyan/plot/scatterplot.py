@@ -20,8 +20,8 @@ def scatter(
     s: float = 1.0,
     show: bool = True,
 ) -> None:
-    """Displays cells expressions on 2D scatter plots with colors per population.
-    One scatter plot is displayed for each pair of marker.
+    """Display marker expressions on 2D scatter plots with colors per population.
+    One scatter plot is displayed for each pair of markers.
 
     Args:
         model: Scyan model
