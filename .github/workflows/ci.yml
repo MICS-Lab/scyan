@@ -12,4 +12,5 @@ jobs:
         with:
           python-version: 3.9
       - run: pip install ".[docs,dev]"
+      - run: pytest
       - run: mkdocs gh-deploy --force

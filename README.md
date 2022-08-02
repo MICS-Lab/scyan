@@ -6,7 +6,7 @@ Scyan stands for **S**ingle-cell **Cy**tometry **A**nnotation **N**etwork. Based
 
 # Documentation
 
-The [complete documentation can be found here](https://mics_biomathematics.pages.centralesupelec.fr/biomaths/scyan/). It contains installation guidelines, tutorials, a description of the API, etc.
+The [complete documentation can be found here](https://mics-lab.github.io/scyan/). It contains installation guidelines, tutorials, a description of the API, etc.
 
 # Overview
 
@@ -65,7 +65,7 @@ model.predict()
 ```
 
 This code should run in approximately 40 seconds (once the dataset was loaded).
-For more usage demo, read the [tutorials](https://mics_biomathematics.pages.centralesupelec.fr/biomaths/scyan/tutorials/usage/) or the complete [documentation](https://mics_biomathematics.pages.centralesupelec.fr/biomaths/scyan/).
+For more usage demo, read the [tutorials](https://mics-lab.github.io/scyan/tutorials/usage/) or the complete [documentation](https://mics-lab.github.io/scyan/).
 
 # Technical description
 

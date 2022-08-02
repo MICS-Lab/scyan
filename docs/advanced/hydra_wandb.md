@@ -2,7 +2,7 @@
 
 If needed, you can use [Hydra](https://hydra.cc/docs/intro/) to manage your configuration. It allows to run the scripts or run hyperparameter optimization easily. You can also monitor your jobs with [Weight & Biases](https://wandb.ai/site)
 
-For that, clone the repository and make an editable install of the project (see [Getting Started](https://mics_biomathematics.pages.centralesupelec.fr/biomaths/scyan/getting_started/)). Then, you have to follow the step listed below.
+For that, clone the repository and make an editable install of the project (see [Getting Started](https://mics-lab.github.io/scyan/getting_started/)). Then, you have to follow the step listed below.
 
 ## Create a new project configuration
 

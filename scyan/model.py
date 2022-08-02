@@ -265,7 +265,7 @@ class Scyan(pl.LightningModule):
         missing_pops = self.n_pops - len(populations.cat.categories)
         if missing_pops:
             log.info(
-                f"{missing_pops} population(s) were not predicted. It may be due to:\n  - Errors in the knowledge table (see https://mics_biomathematics.pages.centralesupelec.fr/biomaths/scyan/advanced/advice/)\n  - The model hyperparameters choice (see https://mics_biomathematics.pages.centralesupelec.fr/biomaths/scyan/advanced/parameters/)\n  - Or maybe these populations are really absent from this dataset."
+                f"{missing_pops} population(s) were not predicted. It may be due to:\n  - Errors in the knowledge table (see https://mics-lab.github.io/scyan/advanced/advice/)\n  - The model hyperparameters choice (see https://mics-lab.github.io/scyan/advanced/parameters/)\n  - Or maybe these populations are really absent from this dataset."
             )
 
         return populations

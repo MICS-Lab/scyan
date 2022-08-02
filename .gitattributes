@@ -1,3 +1,2 @@
-# Ignoring scyan tutorials (notebooks) for language statistics on Github and Gitlab
-*.ipynb -linguist-detectable
+# Ignoring scyan tutorials (notebooks) for language statistics on Github
 .ipynb -linguist-detectable
