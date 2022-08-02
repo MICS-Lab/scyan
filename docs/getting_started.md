@@ -65,6 +65,8 @@ model.fit()
 model.predict()
 ```
 
+This code should run in approximately 40 seconds (once the dataset was loaded).
+
 ### Inputs details
 
 - `adata` is an [AnnData](https://anndata.readthedocs.io/en/latest/) object, whose variables (`adata.var`) corresponds to markers, and observations (`adata.obs`) to cells. `adata.X` is a matrix of size ($N$ cells, $M$ markers) representing cell-marker expressions after being **preprocessed** ([asinh](./api/asinh.md) or [logicle](./api/auto_logicle.md)) and [**standardized**](./api/scale.md).

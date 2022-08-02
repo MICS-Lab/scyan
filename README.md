@@ -62,7 +62,7 @@ model.fit()
 model.predict()
 ```
 
-The latter should run in approximately 40 seconds (once the dataset was loaded).
+This code should run in approximately 40 seconds (once the dataset was loaded).
 For more usage demo, read the [tutorials](https://mics_biomathematics.pages.centralesupelec.fr/biomaths/scyan/tutorials/usage/) or the complete [documentation](https://mics_biomathematics.pages.centralesupelec.fr/biomaths/scyan/).
 
 # Technical description
