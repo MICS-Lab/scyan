@@ -22,15 +22,15 @@ packages = [
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.11"
-FlowIO = "^1.0.1"
-matplotlib = "^3.5.2"
-scipy = "^1.7.3"
-scikit-learn = "^1.1.1"
-seaborn = "^0.11.2"
-llvmlite = "^0.38.1"
-scanpy = "^1.9.1"
 pytorch-lightning = "^1.6.4"
+scanpy = "^1.9.1"
+matplotlib = "^3.5.2"
+scikit-learn = "^1.1.1"
+scipy = "^1.7.3"
+seaborn = "^0.11.2"
 umap-learn = "^0.5.3"
+llvmlite = "^0.38.1"
+FlowIO = "^1.0.1"
 FlowUtils = "^1.0.0"
 wandb = {version = "^0.12.20", optional = true}
 hydra-core = {version = "^1.2.0", optional = true}
@@ -44,9 +44,9 @@ black = {version = "^22.6.0", optional = true}
 mkdocs-material = {version = "^8.3.9", optional = true}
 mkdocstrings = {version = "^0.19.0", optional = true}
 mkdocstrings-python = {version = "^0.7.1", optional = true}
+mkdocs-jupyter = {version = "^0.21.0", optional = true}
 imblearn = {version = "^0.0", optional = true}
 leidenalg = {version = "^0.8.10", optional = true}
-mkdocs-jupyter = {version = "^0.21.0", optional = true}
 
 [tool.poetry.extras]
 dev = ["wandb", "hydra-core", "hydra-colorlog", "hydra-optuna-sweeper", "pytest", "ipykernel", "ipywidgets", "isort", "black", "imblearn"]
