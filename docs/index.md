@@ -29,6 +29,7 @@ Scyan is a **Python** library based on:
 
 See [Scyan on Github](https://github.com/MICS-Lab/scyan)
 
+    .github/      # Github CI and templates
     config/       # Hydra configuration folder (optional use)
     data/         # Data folder containing adata files and csv tables
     docs/         # The folder used to build the documentation
@@ -51,7 +52,6 @@ See [Scyan on Github](https://github.com/MICS-Lab/scyan)
         utils.py              # Misc functions
     .gitattributes
     .gitignore
-    .gitlab-ci.yml    # CI that builds documentation
     CONTRIBUTING.md   # To read before contributing
     LICENSE
     mkdocs.yml        # The docs configuration file
