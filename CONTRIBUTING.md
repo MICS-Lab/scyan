@@ -16,11 +16,11 @@ Especially, if you have any questions about the usage of the library or difficul
 
 ## Contributing to the code
 
-1. Install the library in development mode (see the documentation) using `poetry` ideally.
-2. Create your personal branch.
+1. Install the library in editable mode (see [Getting Started](https://mics_biomathematics.pages.centralesupelec.fr/biomaths/scyan/getting_started/)). Using `poetry` is recommended.
+2. Create your personal branch from `dev`.
 3. Make sure you read the coding guidelines below.
-4. Run the tests via `poetry run pytest`.
-5. If needed, you can update the documentation. To do so, update the files in `./docs/` and run `poetry run mkdocs serve` to see your changes.
+4. Run the tests via `pytest` (or `poetry run pytest`).
+5. If needed, you can update the documentation. To do so, update the files in `./docs/` and run `mkdocs serve` (or `poetry run mkdocs serve`) to see your changes.
 6. Create a pull request and wait for discussion and validation.
 
 ## Coding guidelines
