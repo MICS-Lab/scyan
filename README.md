@@ -52,7 +52,7 @@ pip install -e '.[dev,docs,discovery]'  # pip installation in editable mode
 poetry install -E 'dev docs discovery'  # poetry installation in editable mode
 ```
 
-## Basic usage
+## Basic usage / Demo
 
 ```py
 import scyan
