@@ -35,14 +35,15 @@ See [Scyan on Github](https://github.com/MICS-Lab/scyan)
     scripts/      # Scripts to reproduce the results from the article
     tests/        # Folder containing tests
     scyan/                    # Library source code
+        data/                 # Folder with data-related functions and classes
+            datasets.py       # Load and save datasets
+            tensors.py        # Pytorch data related classes for training
         module/               # Folder containing neural network modules
             coupling_layer.py # Coupling layer
             distribution.py   # Prior distribution (called U in the article)
             real_nvp.py       # Normalizing Flow
             scyan_module      # Core module
         plot/                 # Plotting tools
-            ...
-        data/                 # Folder with data-related functions and classes
             ...
         mmd.py                # Maximum Mean Discrepancy implementation
         model.py              # Scyan model class
