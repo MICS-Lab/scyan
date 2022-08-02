@@ -22,11 +22,13 @@ Scyan can be installed on every OS with `pip` or [`poetry`](https://python-poetr
 
 On MacOS / Linux, `python>=3.8,<3.11` is required, while `python>=3.8,<3.10` is required on Windows. The preferred Python version is `3.9`.
 
-## Install with PyPI
+## Install with PyPI (recommended)
 
-Available after publication
+```bash
+pip install scyan
+```
 
-## Install locally
+## Install locally (if you want to contribute)
 
 > Advice (optional): We advise creating a new environment via a package manager (except if you use Poetry, which will automatically create the environment). For instance, you can create a new `conda` environment:
 >

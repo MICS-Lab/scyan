@@ -20,7 +20,6 @@ Choose one of the following, depending on your needs (it should take at most a f
 === "With PyPI"
 
     ``` bash
-    # Available after publication
     pip install scyan
     ```
 
