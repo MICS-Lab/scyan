@@ -19,6 +19,8 @@
   <img src="../../assets/example_scatterplot.png" alt="scatterplot" width="350px"/>
 </p>
 
+- We enable the usage of intermediate expressions such as "mid" and "low" in the table. Yet, we advise using it only to differentiate two similar populations. Overusing these intermediate expressions in the table makes its creation more difficult while not improving the results.
+
 ### What should I do if Scyan seems wrong?
 
 - First thing to do is to check your table again. You may have made a typo that could confuse the model. Typically, if you have written `Marker+` for a population that is `Marker-` (or the opposite), it can perturb the prediction toward this population **and** toward other populations.
@@ -31,4 +33,4 @@
 
 !!! note "If you still can't make it work"
 
-    You can create an issue or ask for help ([quentin.blampey@gmail.com](mailto:quentin.blampey@gmail.com))
+    You can create an issue on Github or ask for help ([quentin.blampey@gmail.com](mailto:quentin.blampey@gmail.com))
