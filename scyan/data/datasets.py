@@ -37,8 +37,8 @@ def get_local_file(
     filepath = dataset_path / filename
 
     if not filepath.is_file():
-        base_url = "https://gitlab-research.centralesupelec.fr/mics_biomathematics/biomaths/scyan_data"
-        url = f"{base_url}/-/raw/main/data/{dataset_name}/{filename}?inline=false"
+        base_url = "https://github.com/MICS-Lab/scyan_data"
+        url = f"{base_url}/raw/main/data/{dataset_name}/{filename}"
 
         try:
             log.info(
@@ -47,7 +47,7 @@ def get_local_file(
             request.urlretrieve(url, filepath)
             log.info(f"Successfully downloaded and saved locally at {filepath}")
         except urllib.error.HTTPError as e:
-            if e.code == "404":
+            if e.code == 404:
                 raise FileNotFoundError(
                     f"File data/{dataset_name}/{filename} not existing on the repository {base_url}"
                 )
