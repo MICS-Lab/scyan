@@ -4,7 +4,7 @@
   <img src="./assets/logo.png" alt="scyan_logo" width="500px"/>
 </p>
 
-Scyan stands for **S**ingle-cell **Cy**tometry **A**nnotation **N**etwork. Based on biological knowledge prior, it provides a fast cell population annotation without requiring any training label. Scyan is an interpretable model that also corrects batch-effect and can be used for debarcoding / cell sampling / population discovery.
+Scyan stands for **S**ingle-cell **Cy**tometry **A**nnotation **N**etwork. Based on biological knowledge prior, it provides a fast cell population annotation without requiring any training label. Scyan is an interpretable model that also corrects batch-effect and can be used for debarcoding, cell sampling, and population discovery.
 
 ## Overview
 
@@ -38,7 +38,7 @@ See [Scyan on Github](https://github.com/MICS-Lab/scyan)
     scyan/                    # Library source code
         data/                 # Folder with data-related functions and classes
             datasets.py       # Load and save datasets
-            tensors.py        # Pytorch data related classes for training
+            tensors.py        # Pytorch data-related classes for training
         module/               # Folder containing neural network modules
             coupling_layer.py # Coupling layer
             distribution.py   # Prior distribution (called U in the article)

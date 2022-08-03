@@ -2,7 +2,7 @@
   <img src="https://github.com/MICS-Lab/scyan/raw/master/docs/assets/logo.png" alt="scyan_logo" width="500"/>
 </p>
 
-Scyan stands for **S**ingle-cell **Cy**tometry **A**nnotation **N**etwork. Based on biological knowledge prior, it provides a fast cell population annotation without requiring any training label. Scyan is an interpretable model that also corrects batch-effect and can be used for debarcoding / cell sampling / population discovery.
+Scyan stands for **S**ingle-cell **Cy**tometry **A**nnotation **N**etwork. Based on biological knowledge prior, it provides a fast cell population annotation without requiring any training label. Scyan is an interpretable model that also corrects batch-effect and can be used for debarcoding, cell sampling, and population discovery.
 
 # Documentation
 
@@ -20,7 +20,7 @@ Scyan is a Bayesian probabilistic model composed of a deep invertible neural net
 
 Scyan can be installed on every OS with `pip` or [`poetry`](https://python-poetry.org/docs/).
 
-On MacOS / Linux, `python>=3.8,<3.11` is required, while `python>=3.8,<3.10` is required on Windows. The preferred Python version is `3.9`.
+On macOS / Linux, `python>=3.8,<3.11` is required, while `python>=3.8,<3.10` is required on Windows. The preferred Python version is `3.9`.
 
 ## Install with PyPI (recommended)
 
@@ -64,7 +64,7 @@ model.fit()
 model.predict()
 ```
 
-This code should run in approximately 40 seconds (once the dataset was loaded).
+This code should run in approximately 40 seconds (once the dataset is loaded).
 For more usage demo, read the [tutorials](https://mics-lab.github.io/scyan/tutorials/usage/) or the complete [documentation](https://mics-lab.github.io/scyan/).
 
 # Technical description
@@ -88,7 +88,7 @@ Scyan is a **Python** library based on:
     scyan/                    # Library source code
         data/                 # Folder with data-related functions and classes
             datasets.py       # Load and save datasets
-            tensors.py        # Pytorch data related classes for training
+            tensors.py        # Pytorch data-related classes for training
         module/               # Folder containing neural network modules
             coupling_layer.py # Coupling layer
             distribution.py   # Prior distribution (called U in the article)

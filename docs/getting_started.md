@@ -2,7 +2,7 @@
 
 Scyan can be installed on every OS with `pip` or [`poetry`](https://python-poetry.org/docs/).
 
-On MacOS / Linux, `python>=3.8,<3.11` is required, while `python>=3.8,<3.10` is required on Windows. The preferred Python version is `3.9`.
+On macOS / Linux, `python>=3.8,<3.11` is required, while `python>=3.8,<3.10` is required on Windows. The preferred Python version is `3.9`.
 
 !!! note "Advice (optional)"
 
@@ -64,7 +64,7 @@ model.fit()
 model.predict()
 ```
 
-This code should run in approximately 40 seconds (once the dataset was loaded).
+This code should run in approximately 40 seconds (once the dataset is loaded).
 
 ### Inputs details
 
@@ -73,7 +73,7 @@ This code should run in approximately 40 seconds (once the dataset was loaded).
 
 !!! note "Help to create the `adata` object and the `marker_pop_matrix`"
 
-    Read the [preprocessing tutorial](./tutorials/preprocessing.ipynb) if you have a FCS file and want explanations to initialize `Scyan`.
+    Read the [preprocessing tutorial](./tutorials/preprocessing.ipynb) if you have an FCS file and want explanations to initialize `Scyan`.
 
 !!! check
 

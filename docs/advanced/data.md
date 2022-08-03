@@ -10,7 +10,7 @@ You must prepare your cytometry data and create your knowledge table as describe
 
 !!! info
 
-    If needed, you have an example of an `adata` object and a knowledge-table if you run:
+    If needed, you have an example of an `adata` object and a knowledge table if you run:
 
     ```python
     adata, marker_pop_matrix = scyan.data.load("aml")
