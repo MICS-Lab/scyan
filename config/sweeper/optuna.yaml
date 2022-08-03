@@ -41,8 +41,8 @@ hydra:
       #   choices: [512, 1024, 2048]
       # model.alpha_batch_effect:
       #   type: float
-      #   low: 100
-      #   high: 2000
+      #   low: 10
+      #   high: 200
       #   log: true
       model.hidden_size:
         type: categorical
@@ -64,9 +64,9 @@ hydra:
         low: 0.0001
         high: 0.002
         log: true
-      model.batch_size:
-        type: categorical
-        choices: [8192, 16384]
+      # model.batch_size:
+      #   type: categorical
+      #   choices: [8192, 16384]
       callbacks.early_stopping.patience:
         type: int
         low: 2

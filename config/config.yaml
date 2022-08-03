@@ -20,9 +20,9 @@ model:
   hidden_size: 16
   n_layers: 7
   n_hidden_layers: 7
+  prior_std: 0.3
   lr: 0.001
   batch_size: 16384
-  prior_std: 0.3
   alpha_batch_effect: 50
   temperature: 1
   mmd_max_samples: 2048
