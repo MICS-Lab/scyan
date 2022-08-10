@@ -88,4 +88,4 @@ def _prepare_data(
 
         return x, covariates, batches, other_batches, batch_to_id
 
-    return x, covariates, torch.empty(adata.n_obs), [], {}
+    return x, covariates, torch.empty((adata.n_obs,)), [], {}

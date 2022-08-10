@@ -245,25 +245,34 @@ class Scyan(pl.LightningModule):
 
         return loss
 
+    def predict_step(self, data, _) -> Tensor:
+        """Compute log probabilities for each population and for each cell.
+
+        Args:
+            data: One mini-batch of data representing $B$ cells.
+
+        Returns:
+            Log probabilities as a tensor of shape $(B, P)$.
+        """
+        x, cov, _ = data
+        log_probs, *_ = self.module.compute_probabilities(x, cov)
+        return log_probs
+
     @_requires_fit
     @torch.no_grad()
     def predict(
         self,
-        x: Optional[Tensor] = None,
-        covariates: Optional[Tensor] = None,
         key_added: Optional[str] = "scyan_pop",
     ) -> pd.Series:
         """Model population predictions, i.e. one population is assigned for each cell. Predictions are saved in `adata.obs.scyan_pop` by default.
 
         Args:
-            x: Model inputs.
-            covariates: Model covariates.
             key_added: Key added to `model.adata.obs` to save the predictions. If `None`, then the predictions will not be saved.
 
         Returns:
             Population predictions (pandas `Series` of length $N$).
         """
-        df = self.predict_proba(x, covariates)
+        df = self.predict_proba()
         populations = df.idxmax(axis=1).astype("category")
 
         if key_added is not None:
@@ -279,23 +288,15 @@ class Scyan(pl.LightningModule):
 
     @_requires_fit
     @torch.no_grad()
-    def predict_proba(
-        self, x: Optional[Tensor] = None, covariates: Optional[Tensor] = None
-    ) -> pd.DataFrame:
+    def predict_proba(self) -> pd.DataFrame:
         """Soft predictions (i.e. an array of probability per population) for each cell.
-
-        Args:
-            x: Model inputs. If `None`, use every cell.
-            covariates: Model covariates. If `None`, use every cell.
 
         Returns:
             Dataframe of shape `(N, P)` with probabilities for each population.
         """
-        log_probs, *_ = self.module.compute_probabilities(
-            self.x if x is None else x,
-            self.covariates if covariates is None else covariates,
+        probs = torch.softmax(
+            torch.cat(self.trainer.predict(self, self.predict_dataloader()), dim=0), dim=1
         )
-        probs = torch.softmax(log_probs, dim=1)
 
         return pd.DataFrame(probs.cpu().numpy(), columns=self.pop_names)
 
@@ -312,6 +313,14 @@ class Scyan(pl.LightningModule):
             self.dataset,
             batch_size=self.hparams.batch_size,
             sampler=sampler,
+            num_workers=self._num_workers,
+        )
+
+    def predict_dataloader(self):
+        """PyTorch lightning `predict_dataloader` implementation"""
+        return DataLoader(
+            self.dataset,
+            batch_size=self.hparams.batch_size,
             num_workers=self._num_workers,
         )
 
@@ -353,7 +362,8 @@ class Scyan(pl.LightningModule):
                 max_epochs=max_epochs, callbacks=_callbacks, log_every_n_steps=10
             )
 
-        trainer.fit(self)
+        self.trainer = trainer
+        self.trainer.fit(self)
 
         self._is_fitted = True
         log.info("Successfully ended traning.")
