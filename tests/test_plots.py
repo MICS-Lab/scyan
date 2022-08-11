@@ -18,7 +18,7 @@ def ref() -> str:
 def model() -> Scyan:
     adata, marker_pop_matrix = scyan.data.load("aml", size="short")
     model = Scyan(adata, marker_pop_matrix)
-    model._is_fitted = True
+    model.fit(max_epochs=1)
     model.predict()
     return model
 
