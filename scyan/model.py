@@ -245,8 +245,8 @@ class Scyan(pl.LightningModule):
 
         return loss
 
-    def predict_step(self, data, _) -> Tensor:
-        """Compute log probabilities for each population and for each cell.
+    def predict_step(self, data: Tuple[Tensor], _) -> Tensor:
+        """Compute log probabilities for each population and for each cell. Do not use directly, prefer `predict` or `predict_proba` instead.
 
         Args:
             data: One mini-batch of data representing $B$ cells.

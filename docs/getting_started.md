@@ -17,13 +17,13 @@ On macOS / Linux, `python>=3.8,<3.11` is required, while `python>=3.8,<3.10` is 
 
 Choose one of the following, depending on your needs (it should take at most a few minutes):
 
-=== "With PyPI"
+=== "From PyPI"
 
     ``` bash
     pip install scyan
     ```
 
-=== "Local install (pip, library only)"
+=== "Local install (pip)"
 
     ``` bash
     git clone https://github.com/MICS-Lab/scyan.git

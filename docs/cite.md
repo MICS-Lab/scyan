@@ -3,4 +3,4 @@ This library has been developed by Quentin Blampey, PhD student in Biomathematic
 - Lab of Mathematics and Computer Science (MICS), **CentraleSupélec** (Engineering School, Paris-Saclay University).
 - PRISM center, **Gustave Roussy Institute** (Cancer campus, Paris-Saclay University).
 
-It has **not** been published yet. The article was submitted to _Nature Methods_ for review.
+Our article has **not** been published **yet**. Meanwhile, you can check our preprint on [arXiv](https://arxiv.org/abs/2208.05745).
