@@ -187,11 +187,11 @@ def _validate_inputs(adata: AnnData, df: pd.DataFrame):
 
     assert (
         np.abs(X).max() < 1e3
-    ), "The provided values are very high: have you run preprocessing first? E.g., consider 'scyan.preprocess.asinh_transform' or 'scyan.preprocess.auto_logicle_transform'"
+    ), "The provided values are very high: have you run preprocessing first? E.g., consider 'scyan.tools.asinh_transform' or 'scyan.tools.auto_logicle_transform'"
 
     if np.abs(X.mean(axis=0)).max() > 0.2 or np.abs(X.std(axis=0) - 1).max() > 0.2:
         log.warn(
-            "It seems that the data is not standardised. We advise using scaling (scyan.preprocess.scale) before initializing the model."
+            "It seems that the data is not standardised. We advise using scaling (scyan.tools.scale) before initializing the model."
         )
 
     duplicates = df.duplicated()

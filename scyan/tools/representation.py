@@ -1,11 +1,9 @@
 import logging
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, List, Optional, Tuple
 
-import flowutils
 import numpy as np
 import pandas as pd
 import scanpy as sc
-import scipy
 from anndata import AnnData
 from umap import UMAP
 
@@ -13,65 +11,6 @@ if TYPE_CHECKING:
     from . import Scyan
 
 log = logging.getLogger(__name__)
-
-
-def auto_logicle_transform(adata: AnnData, q: float = 0.05, m: float = 4.5) -> None:
-    """[Logicle transformation](https://pubmed.ncbi.nlm.nih.gov/16604519/), implementation from Charles-Antoine Dutertre.
-    We recommend it for flow cytometry or spectral flow cytometry data.
-
-    Args:
-        adata: An `anndata` object.
-        q: See logicle article. Defaults to 0.05.
-        m: See logicle article. Defaults to 4.5.
-    """
-    for marker in adata.var_names:
-        column = adata[:, marker].X.toarray().flatten()
-
-        w = 0
-        t = column.max()
-        negative_values = column[column < 0]
-
-        if negative_values.size:
-            threshold = np.quantile(negative_values, 0.25) - 1.5 * scipy.stats.iqr(
-                negative_values
-            )
-            negative_values = negative_values[negative_values >= threshold]
-
-            if negative_values.size:
-                r = 1e-8 + np.quantile(negative_values, q)
-                if 10**m * abs(r) > t:
-                    w = (m - np.log10(t / abs(r))) / 2
-
-        if not w or w > 2:
-            log.warning(
-                f"Auto logicle transformation failed for {marker}. Using default logicle."
-            )
-            w, t = 1, 5e5
-
-        column = flowutils.transforms.logicle(column, None, t=t, m=m, w=w)
-        adata[:, marker] = column.clip(np.quantile(column, 1e-5))
-
-
-def asinh_transform(adata: AnnData, translation: float = 1, cofactor: float = 5):
-    """Asinh transformation for cell-expressions: $asinh((x - translation)/cofactor)$.
-
-    Args:
-        adata: An `anndata` object.
-        translation: Constant substracted to the marker expression before division by the cofactor.
-        cofactor: Scaling factor before computing the asinh.
-    """
-    adata.X = np.arcsinh((adata.X - translation) / cofactor)
-
-
-def scale(adata: AnnData, max_value: float = 10, **kwargs: int):
-    """Standardise data using scanpy.
-
-    Args:
-        adata: An `anndata` object.
-        max_value: Clip to this value after scaling. Defaults to 10.
-        **kwargs: Optional `sc.pp.scale` kwargs.
-    """
-    sc.pp.scale(adata, max_value=max_value, **kwargs)
 
 
 def subcluster(
@@ -145,9 +84,11 @@ def subcluster(
 
 def umap(
     adata: AnnData,
-    markers: Optional[List[str]],
-    obsm_key: str = "X_umap",
+    markers: Optional[List[str]] = None,
+    n_cells: Optional[int] = None,
     min_dist: float = 0.5,
+    obsm_key: str = "X_umap",
+    filter: Optional[Tuple] = None,
     **umap_kwargs: int,
 ) -> UMAP:
     """Run a [UMAP](https://umap-learn.readthedocs.io/en/latest/) on a specific set of markers (or all markers by default). It can be useful to show differences that are due to some markers of interest, instead of using the whole panel.
@@ -158,13 +99,15 @@ def umap(
 
     !!! note
 
-        To actually plot the UMAP, use [`sc.pl.umap`](https://scanpy.readthedocs.io/en/stable/generated/scanpy.pl.umap.html).
+        To actually plot the UMAP, use [scyan.plot.umap](../plot_umap).
 
     Args:
         adata: An `anndata` object.
-        markers: List marker names. By default, use all the panel markers.
-        obsm_key: Key for `adata.obsm` to add the embedding. Defaults to "X_umap", i.e. you will be able to display the UMAP with `scanpy`.
-        min_dist: Min dist UMAP parameter. Defaults to 0.5.
+        markers: List marker names. By default, use all the panel markers, i.e., `adata.var_names`.
+        n_cells: Number of cells to be considered for the UMAP (to accelerate it when $N$ is very high).
+        min_dist: Min dist UMAP parameter.
+        obsm_key: Key for `adata.obsm` to add the embedding.
+        filter: Optional tuple `(obs_key, value)` used to train the UMAP on a set of cells that satisfies a constraint. `obs_key` is the key of `adata.obs` to consider, and `value` the value the cells need to have.
         **umap_kwargs: Optional kwargs to provide to the `UMAP` initialization.
 
     Returns:
@@ -175,7 +118,25 @@ def umap(
     if markers is None:
         markers = adata.var_names
 
-    embedding = reducer.fit_transform(adata[:, markers].X)
-    adata.obsm[obsm_key] = embedding
+    X = adata[:, markers].X
+
+    if n_cells is not None:
+        adata.obsm[obsm_key] = np.zeros((adata.n_obs, 2))
+        indices = np.random.choice(adata.n_obs, size=n_cells, replace=False)
+        X = X[indices]
+        adata.obs["has_umap"] = np.in1d(np.arange(adata.n_obs), indices)
+    else:
+        indices = np.arange(adata.n_obs)
+
+    log.info("Fitting UMAP...")
+    if filter is None:
+        embedding = reducer.fit_transform(X)
+    else:
+        obs_key, value = filter
+        reducer.fit(X[adata[indices].obs[obs_key] == value])
+        log.info("Transforming...")
+        embedding = reducer.transform(X)
+
+    adata.obsm[obsm_key][indices] = embedding
 
     return reducer

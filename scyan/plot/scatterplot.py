@@ -1,7 +1,9 @@
 from typing import List, Optional, Union
 
 import numpy as np
+import scanpy as sc
 import seaborn as sns
+from anndata import AnnData
 
 from .. import Scyan
 from ..utils import _subset
@@ -52,3 +54,20 @@ def scatter(
     g.map_offdiag(sns.scatterplot, s=s, palette=palette, hue_order=pops)
     g.map_diag(sns.histplot, palette=palette)
     g.add_legend()
+
+
+def umap(adata: AnnData, color: Union[str, List[str]], **scanpy_kwargs: int):
+    """Plot a UMAP using scanpy.
+
+    !!! note
+        If you trained your UMAP with [scyan.tools.umap](../umap) on a subset of cells, it will only display the desired subset of cells.
+
+    Args:
+        adata: An `anndata` object.
+        colors: Marker or `obs` name to color.
+        **scanpy_kwargs: Optional kwargs provided to `scanpy.pl.umap`.
+    """
+    if "has_umap" in adata.obs:
+        adata = adata[adata.obs.has_umap]
+
+    sc.pl.umap(adata, color=color, **scanpy_kwargs)

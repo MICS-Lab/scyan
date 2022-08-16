@@ -88,18 +88,18 @@ def subclusters(
 ):
     """Display Scyan latent space for each population sub-clusters.
     !!! warning
-        To run this plot function, you have to run [scyan.preprocess.subcluster][scyan.preprocess.subcluster] first.
+        To run this plot function, you have to run [scyan.tools.subcluster][scyan.tools.subcluster] first.
 
     Args:
         model: Scyan model.
         obs_key: Key to look for populations in `adata.obs`. By default, uses the model predictions.
-        subcluster_key: Key created by `scyan.preprocess.subcluster`.
+        subcluster_key: Key created by `scyan.tools.subcluster`.
         figsize: Matplotlib figure size. Increase it if you have display issues.
         show: Whether or not to display the plot.
     """
     assert (
         subcluster_key in model.adata.obs.columns
-    ), "Subcluster key '{subcluster_key}' was not found in adata.obs - have you run scyan.preprocess.subcluster before?"
+    ), "Subcluster key '{subcluster_key}' was not found in adata.obs - have you run scyan.tools.subcluster before?"
 
     plt.figure(figsize=figsize)
 

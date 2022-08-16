@@ -8,7 +8,7 @@ __version__ = importlib.metadata.version("scyan")
 logging.basicConfig(level=logging.INFO)
 
 from .model import Scyan
-from . import data, plot, utils, preprocess
+from . import data, plot, tools, utils
 from .utils import read_fcs, write_fcs
 
 pl.seed_everything(0)

@@ -4,9 +4,9 @@ from pathlib import Path
 from typing import List, Optional, Tuple, Union
 from urllib import request
 
+import anndata
 import joblib
 import pandas as pd
-import scanpy as sc
 import umap
 from anndata import AnnData
 
@@ -56,7 +56,7 @@ def get_local_file(
     if kind == "csv":
         return pd.read_csv(filepath, index_col=0)
     if kind == "h5ad":
-        return sc.read_h5ad(filepath)
+        return anndata.read_h5ad(filepath)
     return joblib.load(filepath)
 
 

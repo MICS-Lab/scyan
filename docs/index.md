@@ -46,9 +46,10 @@ See [Scyan on Github](https://github.com/MICS-Lab/scyan)
             scyan_module      # Core module
         plot/                 # Plotting tools
             ...
+        tools/
+            ...               # Preprocessing tools and more
         mmd.py                # Maximum Mean Discrepancy implementation
         model.py              # Scyan model class
-        preprocess.py         # Preprocessing functions
         utils.py              # Misc functions
     .gitattributes
     .gitignore

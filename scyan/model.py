@@ -111,7 +111,7 @@ class Scyan(pl.LightningModule):
             cov_repr = "No covariate provided."
         else:
             cov_repr = f"Covariates: {', '.join(self.continuous_covariate_keys + self.categorical_covariate_keys)}"
-        return f"Scyan model with N={self.adata.n_obs} cells, P={self.n_pops} populations and M={self.adata.n_vars} markers. {cov_repr}"
+        return f"Scyan model with N={self.adata.n_obs} cells, P={self.n_pops} populations and M={len(self.var_names)} markers. {cov_repr}"
 
     @property
     def pop_names(self) -> pd.Index:

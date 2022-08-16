@@ -1,1 +1,1 @@
-::: scyan.preprocess.umap
+::: scyan.tools.umap

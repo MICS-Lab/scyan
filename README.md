@@ -96,9 +96,10 @@ Scyan is a **Python** library based on:
             scyan_module      # Core module
         plot/                 # Plotting tools
             ...
+        tools/
+            ...               # Preprocessing tools and more
         mmd.py                # Maximum Mean Discrepancy implementation
         model.py              # Scyan model class
-        preprocess.py         # Preprocessing functions
         utils.py              # Misc functions
     .gitattributes
     .gitignore
