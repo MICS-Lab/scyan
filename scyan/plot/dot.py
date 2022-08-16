@@ -1,6 +1,7 @@
 from typing import List, Optional, Union
 
 import numpy as np
+import pandas as pd
 import scanpy as sc
 import seaborn as sns
 from anndata import AnnData
@@ -56,7 +57,13 @@ def scatter(
     g.add_legend()
 
 
-def umap(adata: AnnData, color: Union[str, List[str]], **scanpy_kwargs: int):
+def umap(
+    adata: AnnData,
+    color: Union[str, List[str]],
+    vmax: Union[str, float] = "p95",
+    vmin: Union[str, float] = "p05",
+    **scanpy_kwargs: int,
+):
     """Plot a UMAP using scanpy.
 
     !!! note
@@ -64,10 +71,68 @@ def umap(adata: AnnData, color: Union[str, List[str]], **scanpy_kwargs: int):
 
     Args:
         adata: An `anndata` object.
-        colors: Marker or `obs` name to color.
+        color: Marker or `obs` name to color.
+        vmax: `scanpy.pl.umap` vmax argument.
+        vmin: `scanpy.pl.umap` vmin argument.
         **scanpy_kwargs: Optional kwargs provided to `scanpy.pl.umap`.
     """
     if "has_umap" in adata.obs:
         adata = adata[adata.obs.has_umap]
 
-    sc.pl.umap(adata, color=color, **scanpy_kwargs)
+    sc.pl.umap(adata, color=color, vmax=vmax, vmin=vmin, **scanpy_kwargs)
+
+
+def _get_pop_to_group(model: Scyan) -> dict:
+    df = model.marker_pop_matrix
+
+    assert isinstance(
+        df.index, pd.MultiIndex
+    ), "To plot main populations, you need to provide a 'Group name' to your CSV file (the second column)."
+
+    return {pop: group for pop, group in df.index}
+
+
+def all_groups(model: Scyan, obs_key: str = "scyan_pop", **scanpy_kwargs: int) -> None:
+    """Plot all main groups on a UMAP (according to the populations groups provided in the knowledge table).
+
+    Args:
+        model: Scyan model.
+        obs_key: Key of `adata.obs` to access the model predictions.
+    """
+    adata = model.adata
+
+    assert (
+        "scyan_pop" in adata.obs
+    ), "Found no model predictions. Have you run 'model.predict()' first?"
+
+    pop_to_group = _get_pop_to_group(model)
+
+    adata.obs["scyan_group"] = pd.Categorical(
+        [pop_to_group[pop] for pop in adata.obs[obs_key]]
+    )
+
+    umap(adata, color="scyan_group", **scanpy_kwargs)
+
+
+def one_group(
+    model: Scyan, group_name: str, obs_key: str = "scyan_pop", **scanpy_kwargs: int
+) -> None:
+    """Plot all subpopulations of a group on a UMAP (according to the populations groups provided in the knowledge table).
+
+    Args:
+        model: Scyan model.
+        group_name: The group to look at.
+        obs_key: Key of `adata.obs` to access the model predictions.
+    """
+    adata = model.adata
+
+    pop_to_group = _get_pop_to_group(model)
+
+    adata.obs["scyan_one_group"] = pd.Categorical(
+        [
+            pop if pop_to_group[pop] == group_name else "Others"
+            for pop in adata.obs[obs_key]
+        ]
+    )
+    palette = get_palette_others(adata.obs, "scyan_one_group")
+    umap(adata, color="scyan_one_group", palette=palette, title=f"Among {group_name}")

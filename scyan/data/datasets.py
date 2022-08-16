@@ -54,9 +54,14 @@ def get_local_file(
             raise e
 
     if kind == "csv":
-        return pd.read_csv(filepath, index_col=0)
+        df = pd.read_csv(filepath, index_col=0)
+        if df.columns[0] == "Group name":
+            return pd.read_csv(filepath, index_col=[0, 1])
+        return df
+
     if kind == "h5ad":
         return anndata.read_h5ad(filepath)
+
     return joblib.load(filepath)
 
 

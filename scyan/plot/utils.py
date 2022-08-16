@@ -4,6 +4,7 @@ from typing import Callable, List, Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
 from scipy import stats
 
@@ -59,9 +60,17 @@ def check_population(return_list: bool = False):
     return decorator
 
 
-def get_palette_others(data, key, default="Set1", others="Others", value=0.5):
+def get_palette_others(
+    data: pd.DataFrame,
+    key: str,
+    palette: str = None,
+    others: str = "Others",
+    value: float = 0.5,
+):
+    if palette is None:
+        palette = "Set1"
     pops = data[key].unique()
-    colors = sns.color_palette(default, len(pops))
+    colors = sns.color_palette(palette, len(pops))
     colors = dict(zip(pops, colors))
     colors[others] = (value, value, value)
     return colors

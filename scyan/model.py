@@ -116,12 +116,18 @@ class Scyan(pl.LightningModule):
     @property
     def pop_names(self) -> pd.Index:
         """Name of the populations considered in the knowledge table"""
-        return self.marker_pop_matrix.index
+        return self.marker_pop_matrix.index.get_level_values(0)
 
     @property
     def var_names(self) -> pd.Index:
         """Name of the markers considered in the knowledge table"""
         return self.marker_pop_matrix.columns
+
+    @property
+    def group_names(self) -> set:
+        """Set of all group names if provided in the knowledge table (else `None`)"""
+        if isinstance(self.marker_pop_matrix.index, pd.MultiIndex):
+            return set(self.marker_pop_matrix.index.get_level_values(1))
 
     def _prepare_data(self) -> None:
         """Initialize the data and the covariates"""
