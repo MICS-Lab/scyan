@@ -10,6 +10,8 @@ from umap import UMAP
 if TYPE_CHECKING:
     from . import Scyan
 
+from ..utils import _get_subset_indices
+
 log = logging.getLogger(__name__)
 
 
@@ -85,7 +87,7 @@ def subcluster(
 def umap(
     adata: AnnData,
     markers: Optional[List[str]] = None,
-    n_cells: Optional[int] = None,
+    n_cells: Optional[int] = 500000,
     min_dist: float = 0.5,
     obsm_key: str = "X_umap",
     filter: Optional[Tuple] = None,
@@ -104,7 +106,7 @@ def umap(
     Args:
         adata: An `anndata` object.
         markers: List marker names. By default, use all the panel markers, i.e., `adata.var_names`.
-        n_cells: Number of cells to be considered for the UMAP (to accelerate it when $N$ is very high).
+        n_cells: Number of cells to be considered for the UMAP (to accelerate it when $N$ is very high). If `None`, consider all cells.
         min_dist: Min dist UMAP parameter.
         obsm_key: Key for `adata.obsm` to add the embedding.
         filter: Optional tuple `(obs_key, value)` used to train the UMAP on a set of cells that satisfies a constraint. `obs_key` is the key of `adata.obs` to consider, and `value` the value the cells need to have.
@@ -118,15 +120,12 @@ def umap(
     if markers is None:
         markers = adata.var_names
 
-    X = adata[:, markers].X
+    indices = _get_subset_indices(adata, n_cells)
+    X = adata[indices, markers].X
 
     if n_cells is not None:
         adata.obsm[obsm_key] = np.zeros((adata.n_obs, 2))
-        indices = np.random.choice(adata.n_obs, size=n_cells, replace=False)
-        X = X[indices]
         adata.obs["has_umap"] = np.in1d(np.arange(adata.n_obs), indices)
-    else:
-        indices = np.arange(adata.n_obs)
 
     log.info("Fitting UMAP...")
     if filter is None:

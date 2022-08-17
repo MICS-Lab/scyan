@@ -102,7 +102,7 @@ def all_groups(model: Scyan, obs_key: str = "scyan_pop", **scanpy_kwargs: int) -
     adata = model.adata
 
     assert (
-        "scyan_pop" in adata.obs
+        "scyan_pop" in adata.obs.columns
     ), "Found no model predictions. Have you run 'model.predict()' first?"
 
     pop_to_group = _get_pop_to_group(model)
@@ -128,6 +128,10 @@ def one_group(
 
     pop_to_group = _get_pop_to_group(model)
 
+    assert (
+        group_name in pop_to_group.values()
+    ), f"Invalid group name '{group_name}'. It has to be one of: {', '.join(pop_to_group.values())}."
+
     adata.obs["scyan_one_group"] = pd.Categorical(
         [
             pop if pop_to_group[pop] == group_name else "Others"
@@ -135,4 +139,10 @@ def one_group(
         ]
     )
     palette = get_palette_others(adata.obs, "scyan_one_group")
-    umap(adata, color="scyan_one_group", palette=palette, title=f"Among {group_name}")
+    umap(
+        adata,
+        color="scyan_one_group",
+        palette=palette,
+        title=f"Among {group_name}",
+        **scanpy_kwargs,
+    )

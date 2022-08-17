@@ -2,6 +2,7 @@ import logging
 import random
 from typing import List, Optional, Tuple, Union
 
+import numpy as np
 import pandas as pd
 import pytorch_lightning as pl
 import torch
@@ -165,13 +166,25 @@ class Scyan(pl.LightningModule):
     def batch_ref_id(self):
         return self.batch_to_id.get(self.hparams.batch_ref)
 
-    def forward(self) -> Tensor:
-        """Model forward function (not used during training). The core logic and the functions used for training are implemented in [ScyanModule][scyan.module.ScyanModule] (or see [scyan.Scyan.training_step][scyan.Scyan.training_step]).
+    def forward(self, indices: Optional[np.ndarray] = None) -> Tensor:
+        """Model forward function (not used during training).
+
+        !!! note
+            The core logic and the functions used for training are implemented in [ScyanModule][scyan.module.ScyanModule] (or see [scyan.Scyan.training_step][scyan.Scyan.training_step]).
+
+        Args:
+            indices: Indices of the cells to forward. By default, use all cells.
 
         Returns:
-            Full dataset latent representation.
+            Latent representation of the considered cells.
         """
-        return self.module(self.x, self.covariates)[0]
+        if indices is None:
+            indices = np.arange(self.adata.n_obs)
+
+        x = self.x[indices]
+        cov = self.covariates[indices]
+
+        return self.module(x, cov)[0]  # TODO: do it per batch with a progress bar
 
     def _repeat_ref_covariates(self, k: Optional[int] = None) -> Tensor:
         """Repeat the covariates from the reference batch along axis 0.
@@ -225,8 +238,11 @@ class Scyan(pl.LightningModule):
     def batch_effect_correction(self) -> Tensor:
         """Correct batch effect by going into the latent space, setting the reference covariate to all cells, and then reversing the flow.
 
+        !!! warning
+            As we standardised data for training, the resulting tensor is standardised too. You can save the tensor as a numpy layer of `adata` and use [scyan.tools.unscale](../unscale) to unscale it.
+
         Returns:
-            The corrected marker expressions on the original space. **Warning**, as we standardised data for training, this result is standardised too.
+            The corrected marker expressions on the original space.
         """
         assert (
             self.hparams.batch_key is not None

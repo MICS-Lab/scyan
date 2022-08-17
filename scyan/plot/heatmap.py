@@ -1,5 +1,5 @@
 from itertools import groupby
-from typing import Tuple
+from typing import Optional, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -8,7 +8,7 @@ import seaborn as sns
 import torch
 
 from .. import Scyan
-from ..utils import _requires_fit
+from ..utils import _get_subset_indices, _requires_fit
 from .utils import check_population, optional_show
 
 
@@ -34,8 +34,7 @@ def probs_per_marker(
         vmin_threshold: Minimum threshold for the heatmap colorbar.
         show: Whether or not to display the plot.
     """
-    where = model.adata.obs[obs_key] == population
-    u = model.module(model.x[where], model.covariates[where])[0]
+    u = model(model.adata.obs[obs_key] == population)
 
     log_probs = model.module.prior.log_prob_per_marker(u)
     mean_log_probs = log_probs.mean(dim=0).cpu().numpy()
@@ -60,18 +59,25 @@ def probs_per_marker(
 @torch.no_grad()
 @_requires_fit
 @optional_show
-def latent_heatmap(model: Scyan, obs_key: str = "scyan_pop", show: bool = True):
+def latent_heatmap(
+    model: Scyan,
+    obs_key: str = "scyan_pop",
+    n_cells: Optional[int] = 200000,
+    show: bool = True,
+):
     """Show Scyan latent space for each population.
 
     Args:
         model: Scyan model.
         obs_key: Key to look for populations in `adata.obs`. By default, uses the model predictions.
+        n_cells: Number of cells to be considered for the heatmap (to accelerate it when $N$ is very high). If `None`, consider all cells.
         show: Whether or not to display the plot.
     """
-    u = model()
+    indices = _get_subset_indices(model.adata, n_cells)
+    u = model(indices)
 
     df = pd.DataFrame(u.cpu().numpy(), columns=model.var_names)
-    df["Population"] = model.adata.obs[obs_key].values
+    df["Population"] = model.adata[indices].obs[obs_key].values
 
     sns.heatmap(df.groupby("Population").mean(), vmax=1.2, vmin=-1.2, cmap="coolwarm")
 
