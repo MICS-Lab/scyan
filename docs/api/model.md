@@ -14,3 +14,14 @@ model.predict()
     $N$ denotes the number of cells, $P$ the number of populations, $M$ the number of markers, and $B$ the size of a mini-batch (not the number of biological batches). You can find other definitions in the article.
 
 ::: scyan.Scyan
+    options:
+      members:
+        - __init__
+        - fit
+        - predict
+        - predict_proba
+        - batch_effect_correction
+        - sample
+        - pop_names
+        - var_names
+        - group_names
