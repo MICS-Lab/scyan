@@ -2,6 +2,15 @@
   <img src="https://github.com/MICS-Lab/scyan/raw/master/docs/assets/logo.png" alt="scyan_logo" width="500"/>
 </p>
 
+[![PyPI](https://img.shields.io/pypi/v/scyan.svg)](https://pypi.org/project/scyan)
+[![Docs](https://img.shields.io/badge/docs-mkdocs-blue)](https://mics-lab.github.io/scyan/)
+![Build](https://github.com/MICS-Lab/scyan/workflows/ci/badge.svg)
+[![Code Style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/python/black)
+[![Downloads](https://pepy.tech/badge/scyan)](https://pepy.tech/project/scyan)
+[![License](https://img.shields.io/pypi/l/scyan.svg)](https://github.com/MICS-Lab/scyan/blob/master/LICENSE)
+[![Imports: isort](https://img.shields.io/badge/imports-isort-blueviolet)](https://pycqa.github.io/isort/)
+[![DOI](https://zenodo.org/badge/516048412.svg)](https://zenodo.org/badge/latestdoi/516048412)
+
 Scyan stands for **S**ingle-cell **Cy**tometry **A**nnotation **N**etwork. Based on biological knowledge prior, it provides a fast cell population annotation without requiring any training label. Scyan is an interpretable model that also corrects batch-effect and can be used for debarcoding, cell sampling, and population discovery.
 
 # Documentation
