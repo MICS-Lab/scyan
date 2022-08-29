@@ -71,7 +71,7 @@ def umap(
 
     Args:
         adata: An `anndata` object.
-        color: Marker or `obs` name to color.
+        color: Marker(s) or `obs` name(s) to color. It can be either just one string, or a list (it will plot one UMAP per element in the list).
         vmax: `scanpy.pl.umap` vmax argument.
         vmin: `scanpy.pl.umap` vmin argument.
         **scanpy_kwargs: Optional kwargs provided to `scanpy.pl.umap`.

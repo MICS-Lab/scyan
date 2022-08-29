@@ -119,3 +119,7 @@ Scyan is a **Python** library based on:
     pyproject.toml    # Dependencies, project metadata, and more
     README.md
     setup.py          # Setup file, see `pyproject.toml`
+
+# Cite us
+
+Our paper is not published yet. Meanwhile, you can [read our preprint or arXiv](https://arxiv.org/abs/2208.05745).
