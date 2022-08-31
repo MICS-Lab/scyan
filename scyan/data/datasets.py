@@ -83,7 +83,7 @@ def add(
     """Add an object to a dataset (or create it if not existing). Objects can be `AnnData` objects, a knowledge-table (i.e. a `pd.DataFrame`), or a `UMAP` reducer.
 
     !!! note
-        You will be able to load this dataset with [scyan.data.load](./load.md) as long as you added at least a knowledge-table and a `adata` object.
+        You will be able to load this dataset with [scyan.data.load][] as long as you added at least a knowledge-table and a `adata` object.
 
     Args:
         dataset_name: Name of the dataset in which the object will be saved.
@@ -130,7 +130,7 @@ def load(
     """Load a dataset, i.e. its `AnnData` object and its knowledge table.
     If the dataset was not loaded yet, it is automatically downloaded (requires internet connection).
     !!! note
-        If you want to load your own dataset, you first have to [create it](../../advanced/data).
+        If you want to load your own dataset, you first have to [create it](/advanced/data).
     !!! note
         If `scyan` repository was cloned, then the data will be saved in the `data` folder of the repository, else at `<home_path>/.scyan_data`
 

@@ -94,7 +94,7 @@ def subclusters(
 ):
     """Display Scyan latent space for each population sub-clusters.
     !!! warning
-        To run this plot function, you have to run [scyan.tools.subcluster][scyan.tools.subcluster] first.
+        To run this plot function, you have to run [scyan.tools.subcluster][] first.
 
     Args:
         model: Scyan model.

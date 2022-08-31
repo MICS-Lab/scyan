@@ -74,7 +74,7 @@ def scale(adata: AnnData, max_value: float = 10) -> None:
 
 
 def unscale(adata: AnnData, layer: Optional[str] = None) -> np.ndarray:
-    """Reverse standardisation. It requires to have run [scyan.tools.scale](../scale) before.
+    """Reverse standardisation. It requires to have run [scyan.tools.scale][] before.
 
     Args:
         adata: An `anndata` object.

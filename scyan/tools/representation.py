@@ -97,11 +97,11 @@ def umap(
 
     !!! info
 
-        This function returns a UMAP reducer. You can reuse it with `reducer.transform(...)` or save it with [`scyan.data.add`](../add).
+        This function returns a UMAP reducer. You can reuse it with `reducer.transform(...)` or save it with [scyan.data.add][].
 
     !!! note
 
-        To actually plot the UMAP, use [scyan.plot.umap](../plot_umap).
+        To actually plot the UMAP, use [scyan.plot.umap][].
 
     Args:
         adata: An `anndata` object.
@@ -120,11 +120,11 @@ def umap(
     if markers is None:
         markers = adata.var_names
 
+    adata.obsm[obsm_key] = np.zeros((adata.n_obs, 2))
     indices = _get_subset_indices(adata, n_cells)
     X = adata[indices, markers].X
 
     if n_cells is not None:
-        adata.obsm[obsm_key] = np.zeros((adata.n_obs, 2))
         adata.obs["has_umap"] = np.in1d(np.arange(adata.n_obs), indices)
 
     log.info("Fitting UMAP...")

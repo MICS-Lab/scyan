@@ -67,7 +67,7 @@ def umap(
     """Plot a UMAP using scanpy.
 
     !!! note
-        If you trained your UMAP with [scyan.tools.umap](../umap) on a subset of cells, it will only display the desired subset of cells.
+        If you trained your UMAP with [scyan.tools.umap][] on a subset of cells, it will only display the desired subset of cells.
 
     Args:
         adata: An `anndata` object.

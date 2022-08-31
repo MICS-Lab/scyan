@@ -101,13 +101,13 @@ Scyan is a **Python** library based on:
         module/               # Folder containing neural network modules
             coupling_layer.py # Coupling layer
             distribution.py   # Prior distribution (called U in the article)
+            mmd.py            # Maximum Mean Discrepancy implementation
             real_nvp.py       # Normalizing Flow
             scyan_module      # Core module
         plot/                 # Plotting tools
             ...
         tools/
             ...               # Preprocessing tools and more
-        mmd.py                # Maximum Mean Discrepancy implementation
         model.py              # Scyan model class
         utils.py              # Misc functions
     .gitattributes

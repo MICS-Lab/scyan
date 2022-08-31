@@ -22,34 +22,20 @@ nav:
       - scyan.module.PriorDistribution: api/prior.md
       - scyan.module.RealNVP: api/real_nvp.md
       - scyan.module.CouplingLayer: api/coupling_layer.md
-    - Plots:
-      - scyan.plot.scatter: api/scatter.md
-      - scyan.plot.umap: api/plot_umap.md
-      - scyan.plot.probs_per_marker: api/probs_per_marker.md
-      - scyan.plot.latent_heatmap: api/latent_heatmap.md
-      - scyan.plot.subclusters: api/subclusters.md
-      - scyan.plot.latent_expressions: api/latent_expressions.md
-      - scyan.plot.kde_per_population: api/kde_per_population.md
-    - Loading datasets: api/load.md
-    - I/O:
-      - scyan.read_fcs: api/read_fcs.md
-      - scyan.write_fcs: api/write_fcs.md
+      - scyan.module.LossMMD: api/loss_mmd.md
+    - Plots: api/plots.md
     - Tools:
-      - scyan.tools.auto_logicle_transform: api/auto_logicle.md
-      - scyan.tools.asinh_transform: api/asinh.md
-      - scyan.tools.scale: api/scale.md
-      - scyan.tools.unscale: api/unscale.md
-      - scyan.tools.subcluster: api/subcluster.md
-      - scyan.tools.umap: api/umap.md
-    - Misc:
-      - scyan.data.add: api/add.md
-      - scyan.mmd.LossMMD: api/loss_mmd.md
+      - Preprocessing: api/preprocessing.md
+      - Representation: api/representation.md
+      - Results analysis: api/analysis.md
+    - Loading/adding datasets: api/datasets.md
+    - Read/write FCS: api/io.md
   - Advanced usage:
     - Add your own dataset: advanced/data.md
     - Advice to make the knowledge table: advanced/advice.md
     - Selecting parameters: advanced/parameters.md
     - Configuration and monitoring: advanced/hydra_wandb.md
-    - CLI / Running scripts: advanced/scripts.md
+    - CLI/Running scripts: advanced/scripts.md
   - Cite us: cite.md
 plugins:
   - search

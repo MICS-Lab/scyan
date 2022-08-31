@@ -170,7 +170,7 @@ class Scyan(pl.LightningModule):
         """Model forward function (not used during training).
 
         !!! note
-            The core logic and the functions used for training are implemented in [ScyanModule][scyan.module.ScyanModule] (or see [scyan.Scyan.training_step][scyan.Scyan.training_step]).
+            The core logic and the functions used for training are implemented in [ScyanModule][scyan.module.ScyanModule] (or see [scyan.Scyan.training_step][]).
 
         Args:
             indices: Indices of the cells to forward. By default, use all cells.
@@ -239,7 +239,7 @@ class Scyan(pl.LightningModule):
         """Correct batch effect by going into the latent space, setting the reference covariate to all cells, and then reversing the flow.
 
         !!! warning
-            As we standardised data for training, the resulting tensor is standardised too. You can save the tensor as a numpy layer of `adata` and use [scyan.tools.unscale](../unscale) to unscale it.
+            As we standardised data for training, the resulting tensor is standardised too. You can save the tensor as a numpy layer of `adata` and use [scyan.tools.unscale][] to unscale it.
 
         Returns:
             The corrected marker expressions on the original space.

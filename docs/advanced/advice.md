@@ -24,7 +24,7 @@
 ### What should I do if Scyan seems wrong?
 
 - First thing to do is to check your table again. You may have made a typo that could confuse the model. Typically, if you have written `Marker+` for a population that is `Marker-` (or the opposite), it can perturb the prediction toward this population **and** toward other populations.
-- Try using [`scyan.plot.probs_per_marker`](../api/probs_per_marker.md). Many markers may show up dark on the heatmap at places they shouldn't, but the errors may be due to only one marker. You can find which marker it is by checking actual marker expressions on [a UMAP plot](../api/plot_umap.md), or with a [scatter plot](../api/scatter.md), and then update your table or read some literature again.
+- Try using [scyan.plot.probs_per_marker](/api/plots/#scyan.plot.probs_per_marker). Many markers may show up dark on the heatmap at places they shouldn't, but the errors may be due to only one marker. You can find which marker it is by checking actual marker expressions on [a UMAP plot](/api/plots/#scyan.plot.umap), or with a [scatter plot](/api/plots/#scyan.plot.scatter), and then update your table or read some literature again.
 - One reason for not predicting a population may be an unbalanced knowledge quantity between two related populations. For instance, having 10 values inside the table for `CD4 T CM` cells versus 5 values for `CD4 T EM` cells will probably make the model predict very few `CD4 T CM` cells. Indeed, `CD4 T CM` has many constraints compared to `CD4 T EM`, which becomes the "easy prediction" (indeed, very few constraints are applied to this population). In that case, read the advice related to the scatter plot above again.
 
 !!! info "Example about how Scyan handles NA"

@@ -5,8 +5,7 @@ import pytorch_lightning as pl
 import torch
 from torch import Tensor, distributions, nn
 
-from ..mmd import LossMMD
-from . import PriorDistribution, RealNVP
+from . import LossMMD, PriorDistribution, RealNVP
 
 log = logging.getLogger(__name__)
 
@@ -17,7 +16,7 @@ class ScyanModule(pl.LightningModule):
     Attributes:
         real_nvp (RealNVP): The Normalizing Flow (a [RealNVP][scyan.module.RealNVP] object)
         prior (PriorDistribution): The prior $U$ (a [PriorDistribution][scyan.module.PriorDistribution] object)
-        loss_mmd (LossMMD): The MMD loss (a [LossMMD][scyan.mmd.LossMMD] object)
+        loss_mmd (LossMMD): The MMD loss (a [LossMMD][scyan.module.LossMMD] object)
         pi_logit (Tensor): Logits used to learn the population weights
     """
 
