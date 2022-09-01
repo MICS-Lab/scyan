@@ -11,7 +11,7 @@ def assert_is_zero(a: np.ndarray, atol=1e-5) -> bool:
 
 @pytest.fixture
 def raw_adata() -> AnnData:
-    adata, _ = scyan.data.load("aml", size="short")
+    adata, _ = scyan.data.load("aml", version="short")
     adata = adata.raw.to_adata()
     adata.raw = adata
     return adata

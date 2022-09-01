@@ -80,7 +80,7 @@ def add(
     *objects: List[Union[AnnData, pd.DataFrame, umap.UMAP]],
     filenames: Union[str, List[str]] = "default",
 ) -> None:
-    """Add an object to a dataset (or create it if not existing). Objects can be `AnnData` objects, a knowledge-table (i.e. a `pd.DataFrame`), or a `UMAP` reducer.
+    """Add an object to a dataset (or create it if not existing). Objects can be `AnnData` objects, a knowledge-table (i.e. a `pd.DataFrame`), or a `UMAP` reducer. The provided filenames are the one you use when loading data with [scyan.data.load][].
 
     !!! note
         You will be able to load this dataset with [scyan.data.load][] as long as you added at least a knowledge-table and a `adata` object.
@@ -88,7 +88,7 @@ def add(
     Args:
         dataset_name: Name of the dataset in which the object will be saved.
         *objects: Object(s) to save.
-        filenames: Name of the file(s) created. The default value (`"default"`) is the filename loaded by default with `scyan.data.load`. If a list is provided, it should have the length of the number of objects provided.
+        filenames: Name of the file(s) created. The default value (`"default"`) is the filename loaded by default with `scyan.data.load`. If a list is provided, it should have the length of the number of objects provided and should have the same order. If a string, then use the same name for all objects (but different extensions).
 
     Raises:
         ValueError: If the object type is not one of the three required.
@@ -121,24 +121,90 @@ def add(
         log.info(f"Created file {path}")
 
 
+def add_remote_names(filenames: dict, *names: str) -> None:
+    for name in names:
+        stem, suffix = name.split(".")
+        filenames[f".{suffix}"].add(stem)
+
+
+def list_path(dataset_path: Path) -> None:
+    dataset_name = dataset_path.stem
+    print(f"\nDataset name: {dataset_name}")
+
+    names = {".h5ad": set(), ".csv": set(), ".umap": set()}
+
+    for file_path in dataset_path.iterdir():
+        if file_path.suffix in names.keys():
+            names[file_path.suffix].add(file_path.stem)
+
+    if dataset_name == "aml":
+        add_remote_names(
+            names,
+            "default.csv",
+            "default.h5ad",
+            "default.umap",
+            "groups_demo.csv",
+            "short.h5ad",
+        )
+    elif dataset_name == "bmmc":
+        add_remote_names(names, "default.csv", "default.h5ad", "discovery.csv")
+    elif dataset_name == "debarcoding":
+        add_remote_names(
+            names,
+            "default.csv",
+            "default.h5ad",
+        )
+
+    for kind, values in zip(["Data versions", "Tables", "UMAP reducers"], names.values()):
+        values = ["None"] if not values else values
+        print(f"    {kind}: {', '.join(list(values))}")
+
+
+def _list(dataset_name: Optional[str] = None) -> None:
+    """Show existing datasets and their different versions/table names.
+
+    Args:
+        dataset_name: Optional dataset name. If provided, only display the version names of the provided `dataset_name`, otherwise list all existing datasets.
+    """
+    data_path = get_data_path()
+
+    if dataset_name is not None:
+        dataset_path = data_path / dataset_name
+        print(f"Listing versions inside {dataset_path}:")
+        list_path(dataset_path)
+        return
+
+    print(f"List of existing datasets inside {data_path}:")
+    dataset_paths = set(data_path.iterdir())
+
+    for public_dataset in ["aml", "bmmc", "debarcoding"]:
+        dataset_path = Path(data_path / public_dataset)
+        dataset_path.mkdir(parents=True, exist_ok=True)
+        dataset_paths.add(dataset_path)
+
+    for dataset_path in dataset_paths:
+        if dataset_path.is_dir():
+            list_path(dataset_path)
+
+
 def load(
     dataset_name: str,
-    size: str = "default",
+    version: str = "default",
     table: str = "default",
     reducer: Optional[str] = None,
 ) -> Tuple[AnnData, pd.DataFrame]:
-    """Load a dataset, i.e. its `AnnData` object and its knowledge table.
-    If the dataset was not loaded yet, it is automatically downloaded (requires internet connection).
+    """Load a dataset, i.e. its `AnnData` object and its knowledge table. Public datasets available are `"aml"`, `"bmmc"`, and `"debarcoding"`; note that, if the dataset was not loaded yet, it is automatically downloaded (requires internet connection). Existing dataset names and versions/tables can be listed using [scyan.data.list][].
+
     !!! note
         If you want to load your own dataset, you first have to [create it](/advanced/data).
     !!! note
         If `scyan` repository was cloned, then the data will be saved in the `data` folder of the repository, else at `<home_path>/.scyan_data`
 
     Args:
-        dataset_name: Name of the dataset. Datasets available are: `"aml"`, `"bmmc"`, `"debarcoding"`.
-        size: Size of the `anndata` object that should be loaded. By default only one size is available, but you can add some.
-        table: Name of the knowledge table that should be loaded. By default only one table is available, but you can add some.
-        reducer: Optional: name of the umap reducer that should be loaded.
+        dataset_name: Name of the dataset. Either one of your dataset, or one public dataset among `"aml"`, `"bmmc"`, and `"debarcoding"`.
+        version: Name of the `anndata` file (.h5ad) that should be loaded (the name was given when using [scyan.data.add][]).
+        table: Name of the knowledge table that should be loaded (the name was given when using [scyan.data.add][]).
+        reducer: Optional: name of the umap reducer that should be loaded (the name was given when using [scyan.data.add][]).
 
     Returns:
         `AnnData` instance and the knowledge table. If `reducer` is not None, also return a `UMAP` object.
@@ -148,7 +214,7 @@ def load(
     dataset_path = data_path / dataset_name
     dataset_path.mkdir(parents=True, exist_ok=True)
 
-    adata = get_local_file(dataset_path, dataset_name, size, "h5ad")
+    adata = get_local_file(dataset_path, dataset_name, version, "h5ad")
     marker_pop_matrix = get_local_file(dataset_path, dataset_name, table, "csv")
 
     if reducer is not None:

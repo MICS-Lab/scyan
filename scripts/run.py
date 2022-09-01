@@ -27,7 +27,7 @@ def main(config: DictConfig) -> float:
     """
     adata, marker_pop_matrix = scyan.data.load(
         config.project.name,
-        size=config.project.get("size", "default"),
+        version=config.project.get("version", "default"),
         table=config.project.get("table", "default"),
     )
 

@@ -1,4 +1,4 @@
 name: infinity_flow
 wandb_project_name: inf-flow
 label: cell_type
-size: full
+version: full

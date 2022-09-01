@@ -11,7 +11,7 @@ In this file, add `name: <your-project-name>`.
 
 Add optionally:
 
-- `size` or `table` if you don't want to use your dataset's default table or anndata files.
+- `version` or `table` if you don't want to use your dataset's default table or anndata files.
 - `batch_key` (and eventually `batch_ref`) if you want to correct the batch effect.
 - You can add some `continuous_covariate_keys` and `categorical_covariate_keys` (as a list of items).
 - `wandb_project_name`, the name of your Weight and Biases project for model monitoring. It will log all the metrics over the epochs and save different figures online.

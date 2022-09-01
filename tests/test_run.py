@@ -7,7 +7,7 @@ from scyan import Scyan
 
 @pytest.fixture
 def init_data():
-    return scyan.data.load("aml", size="short")
+    return scyan.data.load("aml", version="short")
 
 
 @pytest.fixture
