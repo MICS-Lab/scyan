@@ -15,7 +15,7 @@ from .utils import check_population, optional_show
 @torch.no_grad()
 @_requires_fit
 @optional_show
-@check_population()
+@check_population(one=True)
 def probs_per_marker(
     model: Scyan,
     population: str,
@@ -87,6 +87,7 @@ def latent_heatmap(
 @optional_show
 def subclusters(
     model: Scyan,
+    n_cells: Optional[int] = 200000,
     obs_key: str = "scyan_pop",
     subcluster_key: str = "subcluster_index",
     figsize: Tuple[int, int] = (10, 5),
@@ -98,6 +99,7 @@ def subclusters(
 
     Args:
         model: Scyan model.
+        n_cells: Number of cells to be considered for the heatmap (to accelerate it when $N$ is very high). If `None`, consider all cells.
         obs_key: Key to look for populations in `adata.obs`. By default, uses the model predictions.
         subcluster_key: Key created by `scyan.tools.subcluster`.
         figsize: Matplotlib figure size. Increase it if you have display issues.
@@ -109,11 +111,13 @@ def subclusters(
 
     plt.figure(figsize=figsize)
 
-    u = model()
+    indices = _get_subset_indices(model.adata, n_cells)
+    u = model(indices)
+    adata = model.adata[indices]
 
     df = pd.DataFrame(u.cpu().numpy(), columns=model.var_names)
-    df[obs_key] = model.adata.obs[obs_key].values
-    df[subcluster_key] = model.adata.obs[subcluster_key].values
+    df[obs_key] = adata.obs[obs_key].values
+    df[subcluster_key] = adata.obs[subcluster_key].values
 
     df = df.groupby([obs_key, subcluster_key]).mean().dropna()
     pops = df.index.get_level_values(obs_key)
