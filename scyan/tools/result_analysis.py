@@ -27,6 +27,8 @@ def mean_intensities(
     adata: AnnData,
     groupby: Union[str, List[str]] = "scyan_pop",
     layer: Optional[str] = None,
+    obsm: Optional[str] = None,
+    obsm_names: Optional[List[str]] = None,
 ) -> pd.DataFrame:
     """Compute the Mean Metal Intensity (MMI) or Mean Fluorescence Intensity (MFI) per population.
 
@@ -34,6 +36,8 @@ def mean_intensities(
         adata: An `AnnData` object.
         groupby: Key(s) of `adata.obs` used to create groups. E.g., `scyan_pop` creates group of populations. It can be one string, or a list of strings: for instance, use `["id", "scyan_pop"]` computes MMI per population for each ID.
         layer: In which `adata.layers` we get fluorescence intensities. By default, it uses `adata.X`.
+        obsm: In which `adata.obsm` we get fluorescence intensities. By default, it uses `adata.X`. If not `None` then `obsm_names` is required too.
+        obsm_names: Ordered list of names in `adata.obsm[obsm]` if `obsm` was provided.
 
     Returns:
         A DataFrame of MFI. If `groupby` was a list, it is a multi-index dataframe.
@@ -41,7 +45,14 @@ def mean_intensities(
     if isinstance(groupby, str):
         groupby = [groupby]
 
-    df = adata.to_df(layer)
+    if obsm is not None:
+        assert (
+            layer is None
+        ), "You must choose between 'obsm' and 'layer', do not use both."
+
+        df = pd.DataFrame(data=adata.obsm[obsm], columns=obsm_names)
+    else:
+        df = adata.to_df(layer)
 
     for group in groupby:
         df[group] = adata.obs[group].values
