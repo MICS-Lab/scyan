@@ -1,6 +1,6 @@
 name: aml
 wandb_project_name: aml
 label: cell_type
-size: default
+version: default
 # batch_key: subject
 # batch_ref: H1

@@ -1,6 +1,7 @@
+import importlib
 import logging
 import random
-from typing import List, Optional, Tuple, Union
+from typing import Callable, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -9,7 +10,7 @@ import torch
 from anndata import AnnData
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from torch import Tensor
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, TensorDataset
 
 from .data import AdataDataset, RandomSampler, _prepare_data
 from .module import ScyanModule
@@ -170,7 +171,7 @@ class Scyan(pl.LightningModule):
         """Model forward function (not used during training).
 
         !!! note
-            The core logic and the functions used for training are implemented in [ScyanModule][scyan.module.ScyanModule] (or see [scyan.Scyan.training_step][scyan.Scyan.training_step]).
+            The core logic and the functions used for training are implemented in [ScyanModule][scyan.module.ScyanModule] (or see [scyan.Scyan.training_step][]).
 
         Args:
             indices: Indices of the cells to forward. By default, use all cells.
@@ -184,7 +185,7 @@ class Scyan(pl.LightningModule):
         x = self.x[indices]
         cov = self.covariates[indices]
 
-        return self.module(x, cov)[0]  # TODO: do it per batch with a progress bar
+        return self.dataset_apply(lambda *batch: self.module(*batch)[0], (x, cov))
 
     def _repeat_ref_covariates(self, k: Optional[int] = None) -> Tensor:
         """Repeat the covariates from the reference batch along axis 0.
@@ -239,7 +240,7 @@ class Scyan(pl.LightningModule):
         """Correct batch effect by going into the latent space, setting the reference covariate to all cells, and then reversing the flow.
 
         !!! warning
-            As we standardised data for training, the resulting tensor is standardised too. You can save the tensor as a numpy layer of `adata` and use [scyan.tools.unscale](../unscale) to unscale it.
+            As we standardised data for training, the resulting tensor is standardised too. You can save the tensor as a numpy layer of `adata` and use [scyan.tools.unscale][] to unscale it.
 
         Returns:
             The corrected marker expressions on the original space.
@@ -251,7 +252,7 @@ class Scyan(pl.LightningModule):
         u = self()
         ref_covariates = self._repeat_ref_covariates()
 
-        return self.module.inverse(u, ref_covariates)
+        return self.dataset_apply(self.module.inverse, (u, ref_covariates))
 
     def training_step(self, data, _):
         """PyTorch lightning `training_step` implementation (i.e. returning the loss). See [ScyanModule][scyan.module.ScyanModule] for more details."""
@@ -346,6 +347,34 @@ class Scyan(pl.LightningModule):
             num_workers=self._num_workers,
         )
 
+    def dataset_apply(self, func: Callable, data: Tuple[Tensor] = None) -> Tensor:
+        """Apply a function on a dataset using a PyTorch DataLoader and with a progress bar display. It concatenates the results along the first axis.
+
+        Args:
+            func: Function to be applied. It takes a batch, and returns a Tensor.
+            data: Optional tuple of tensors to load from (we create a TensorDataset). By default, uses the main dataset.
+
+        Returns:
+            Tensor of concatenated results.
+        """
+        if importlib.util.find_spec("ipywidgets") is not None:
+            from tqdm.auto import tqdm as _tqdm
+        else:
+            from tqdm import tqdm as _tqdm
+
+        if not data:
+            loader = self.predict_dataloader()
+        else:
+            loader = DataLoader(
+                TensorDataset(*data),
+                batch_size=self.hparams.batch_size,
+                num_workers=self._num_workers,
+            )
+
+        return torch.cat(
+            [func(*batch) for batch in _tqdm(loader, desc="DataLoader")], dim=0
+        )
+
     def fit(
         self,
         max_epochs: int = 100,
@@ -357,10 +386,14 @@ class Scyan(pl.LightningModule):
     ) -> "Scyan":
         """Train the `Scyan` model. On interactive Python (e.g., Jupyter Notebooks), training can be interrupted at any time without crashing.
 
+        !!! note
+            Depending on your machine, you may have a warning about some performance issues. You can simply set `num_workers` to the number indicated by the warning.
+
         Args:
             max_epochs: Maximum number of epochs.
             min_delta: min_delta parameters used for `EarlyStopping`. See Pytorch Lightning docs.
             patience: Number of epochs with no loss improvement before stopping training.
+            num_workers: Pytorch DataLoader `num_workers` argument, i.e. how many subprocesses to use for data loading. 0 means that the data will be loaded in the main process.
             callbacks: Additional Pytorch Lightning callbacks.
             trainer: Optional Pytorch Lightning Trainer. **Warning**: it will replace the default Trainer, and every other argument will be unused.
 

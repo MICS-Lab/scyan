@@ -43,7 +43,7 @@ def scatter(
     keys = adata.obs[obs_key].astype(str)
     data["Population"] = np.where(~np.isin(keys, populations), "Others", keys)
 
-    pops = populations + ["Others"]
+    pops = list(populations) + ["Others"]
     if max_obs is not None:
         groups = data.groupby("Population").groups
         data = data.loc[[i for pop in pops[::-1] for i in _subset(groups[pop], max_obs)]]
@@ -67,7 +67,7 @@ def umap(
     """Plot a UMAP using scanpy.
 
     !!! note
-        If you trained your UMAP with [scyan.tools.umap](../umap) on a subset of cells, it will only display the desired subset of cells.
+        If you trained your UMAP with [scyan.tools.umap][] on a subset of cells, it will only display the desired subset of cells.
 
     Args:
         adata: An `anndata` object.

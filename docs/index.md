@@ -11,7 +11,7 @@ Scyan stands for **S**ingle-cell **Cy**tometry **A**nnotation **N**etwork. Based
 Scyan is a Bayesian probabilistic model composed of a deep invertible neural network called a normalizing flow (the function $f_{\phi}$). It maps a latent distribution of cell expressions into the empirical distribution of cell expressions. This cell distribution is a mixture of gaussian-like distributions representing the sum of a cell-specific and a population-specific term. Also, interpretability and batch effect correction are based on the model latent space — more details in the article's Methods section.
 
 <figure markdown>
-  ![Image title](./assets/overview.png)
+  ![Image title](/assets/overview.png)
   <figcaption>a) Overview of the tasks that Scyan can perform. b) Overview of the model architecture. c) One coupling layer, i.e., the elementary unit that composes the Normalizing Flow.</figcaption>
 </figure>
 
@@ -42,13 +42,13 @@ See [Scyan on Github](https://github.com/MICS-Lab/scyan)
         module/               # Folder containing neural network modules
             coupling_layer.py # Coupling layer
             distribution.py   # Prior distribution (called U in the article)
+            mmd.py            # Maximum Mean Discrepancy implementation
             real_nvp.py       # Normalizing Flow
             scyan_module      # Core module
         plot/                 # Plotting tools
             ...
         tools/
             ...               # Preprocessing tools and more
-        mmd.py                # Maximum Mean Discrepancy implementation
         model.py              # Scyan model class
         utils.py              # Misc functions
     .gitattributes

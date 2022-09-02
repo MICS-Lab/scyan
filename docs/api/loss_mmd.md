@@ -1,1 +1,1 @@
-::: scyan.mmd.LossMMD
+::: scyan.module.LossMMD

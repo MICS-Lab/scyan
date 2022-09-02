@@ -9,6 +9,7 @@ import seaborn as sns
 from scipy import stats
 
 from .. import Scyan
+from ..utils import _get_subset_indices
 
 
 def optional_show(f: Callable) -> Callable:
@@ -24,7 +25,7 @@ def optional_show(f: Callable) -> Callable:
     return wrapper
 
 
-def check_population(return_list: bool = False):
+def check_population(return_list: bool = False, one: bool = False):
     """Decorator that checks if the provided population (or populations) exists"""
 
     def decorator(f: Callable) -> Callable:
@@ -40,19 +41,23 @@ def check_population(return_list: bool = False):
                 populations = model.adata.obs[obs_key].cat.categories.values
             else:
                 populations = set(model.adata.obs[obs_key].values)
-            if isinstance(population, (list, tuple, np.ndarray)):
+            if isinstance(population, str):
+                if population not in populations:
+                    raise NameError(
+                        f"Invalid input population. '{population}' has to be one of {populations}."
+                    )
+                if return_list:
+                    population = [population]
+            else:
+                if one:
+                    raise ValueError(
+                        f"Argument 'population' has to be a string. Found {population}."
+                    )
                 not_found_names = [p for p in population if p not in populations]
                 if not_found_names:
                     raise NameError(
                         f"Invalid input population list. {not_found_names} has to be inside {populations}."
                     )
-            else:
-                if population not in populations:
-                    raise NameError(
-                        f"Invalid input population. {population} has to be one of {populations}."
-                    )
-                if return_list:
-                    population = [population]
             return f(model, population, *args, obs_key=obs_key, **kwargs)
 
         return wrapper
@@ -76,7 +81,9 @@ def get_palette_others(
     return colors
 
 
-def ks_statistics(model: Scyan, obs_key: str, populations: List[str]):
+def ks_statistics(
+    model: Scyan, obs_key: str, populations: List[str], max_obs: int = 5000
+):
     adata = model.adata
     statistics = defaultdict(float)
 
@@ -88,6 +95,9 @@ def ks_statistics(model: Scyan, obs_key: str, populations: List[str]):
             adata2 = adata[np.isin(adata.obs[obs_key], other_pops)]
         else:
             adata2 = adata[adata.obs[obs_key] != pop]
+
+        adata1 = adata1[_get_subset_indices(adata1, max_obs)]
+        adata2 = adata2[_get_subset_indices(adata2, max_obs)]
 
         for marker in model.var_names:
             statistics[marker] += stats.kstest(
