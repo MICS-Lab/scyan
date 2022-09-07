@@ -47,7 +47,7 @@ def auto_logicle_transform(
             w, t = 1, 5e5
 
         column = flowutils.transforms.logicle(column, None, t=t, m=m, w=w)
-        adata.uns["scyan_logicle"][marker] = (t, m, w)
+        adata.uns["scyan_logicle"][marker] = [t, m, w]
 
         if quantile_clip is None:
             adata[:, marker] = column
