@@ -115,7 +115,7 @@ def write_fcs(adata: AnnData, path: str) -> None:
     log.info(f"Found {len(channel_names)} channels: {', '.join(channel_names)}")
 
     with open(path, "wb") as f:
-        flowio.create_fcs(X.flatten(), channel_names, f)
+        flowio.create_fcs(f, X.flatten(), channel_names)
 
 
 def _subset(indices: List[str], max_obs: int):
