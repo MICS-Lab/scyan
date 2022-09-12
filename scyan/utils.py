@@ -168,6 +168,18 @@ def _requires_fit(f: Callable) -> Callable:
     return wrapper
 
 
+def _add_level_predictions(model, obs_key: str) -> None:
+    mpm: pd.DataFrame = model.marker_pop_matrix
+    adata: AnnData = model.adata
+
+    level_names = mpm.index.names[1:]
+    obs_keys = [f"{obs_key}_{name}" for name in level_names]
+
+    pop_dict = {pop: levels_pops for pop, *levels_pops in mpm.index}
+    preds = np.vstack(adata.obs[obs_key].astype(str).apply(pop_dict.get))
+    adata.obs[obs_keys] = pd.DataFrame(preds, dtype="category", index=adata.obs.index)
+
+
 def _validate_inputs(adata: AnnData, df: pd.DataFrame):
     assert isinstance(
         adata, AnnData

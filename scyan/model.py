@@ -14,7 +14,12 @@ from torch.utils.data import DataLoader, TensorDataset
 
 from .data import AdataDataset, RandomSampler, _prepare_data
 from .module import ScyanModule
-from .utils import _process_pop_sample, _requires_fit, _validate_inputs
+from .utils import (
+    _add_level_predictions,
+    _process_pop_sample,
+    _requires_fit,
+    _validate_inputs,
+)
 
 log = logging.getLogger(__name__)
 
@@ -286,11 +291,13 @@ class Scyan(pl.LightningModule):
     def predict(
         self,
         key_added: Optional[str] = "scyan_pop",
+        add_levels: bool = True,
     ) -> pd.Series:
         """Model population predictions, i.e. one population is assigned for each cell. Predictions are saved in `adata.obs.scyan_pop` by default.
 
         Args:
             key_added: Key added to `model.adata.obs` to save the predictions. If `None`, then the predictions will not be saved.
+            add_levels: If `True`, and if [hierarchical population names](/tutorials/advanced/#hierarchical-population-display) were provided, then it also saves the prediction for every population level.
 
         Returns:
             Population predictions (pandas `Series` of length $N$).
@@ -299,7 +306,9 @@ class Scyan(pl.LightningModule):
         populations = df.idxmax(axis=1).astype("category")
 
         if key_added is not None:
-            self.adata.obs[key_added] = pd.Categorical(populations.values)
+            self.adata.obs[key_added] = pd.Categorical(populations)
+            if add_levels and isinstance(self.marker_pop_matrix.index, pd.MultiIndex):
+                _add_level_predictions(self, key_added)
 
         missing_pops = self.n_pops - len(populations.cat.categories)
         if missing_pops:

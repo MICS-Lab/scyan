@@ -32,7 +32,7 @@ def probs_per_marker(
         obs_key: Key to look for population in `adata.obs`. By default, uses the model predictions.
         prob_name: Name to display on the plot.
         vmin_threshold: Minimum threshold for the heatmap colorbar.
-        show: Whether or not to display the plot.
+        show: Whether or not to display the figure.
     """
     u = model(model.adata.obs[obs_key] == population)
 
@@ -71,7 +71,7 @@ def latent_heatmap(
         model: Scyan model.
         obs_key: Key to look for populations in `adata.obs`. By default, uses the model predictions.
         n_cells: Number of cells to be considered for the heatmap (to accelerate it when $N$ is very high). If `None`, consider all cells.
-        show: Whether or not to display the plot.
+        show: Whether or not to display the figure.
     """
     indices = _get_subset_indices(model.adata, n_cells)
     u = model(indices)
@@ -103,7 +103,7 @@ def subclusters(
         obs_key: Key to look for populations in `adata.obs`. By default, uses the model predictions.
         subcluster_key: Key created by `scyan.tools.subcluster`.
         figsize: Matplotlib figure size. Increase it if you have display issues.
-        show: Whether or not to display the plot.
+        show: Whether or not to display the figure.
     """
     assert (
         subcluster_key in model.adata.obs.columns

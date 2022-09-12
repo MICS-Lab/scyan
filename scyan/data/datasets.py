@@ -6,6 +6,7 @@ from urllib import request
 
 import anndata
 import joblib
+import numpy as np
 import pandas as pd
 import umap
 from anndata import AnnData
@@ -55,8 +56,9 @@ def get_local_file(
 
     if kind == "csv":
         df = pd.read_csv(filepath, index_col=0)
-        if df.columns[0] == "Group name":
-            return pd.read_csv(filepath, index_col=[0, 1])
+        level_indices = np.where(df.columns.str.contains("level"))[0]
+        if level_indices.size:
+            return pd.read_csv(filepath, index_col=[0] + list(1 + level_indices))
         return df
 
     if kind == "h5ad":

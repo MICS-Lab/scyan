@@ -26,10 +26,10 @@
     options:
       show_root_heading: true
 
-::: scyan.plot.all_groups
+::: scyan.plot.pop_level
     options:
       show_root_heading: true
 
-::: scyan.plot.one_group
+::: scyan.plot.pops_hierarchy
     options:
       show_root_heading: true
