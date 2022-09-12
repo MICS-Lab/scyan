@@ -68,7 +68,7 @@ def kde_per_population(
         common_norm=False,
         facet_kws=dict(sharey=False),
         palette=get_palette_others(df, obs_key),
-        hue_order=list(populations) + ["Others"],
+        hue_order=sorted(df[obs_key].unique(), key="Others".__eq__),
     )
 
 

@@ -72,12 +72,13 @@ def get_palette_others(
     others: str = "Others",
     value: float = 0.5,
 ):
-    if palette is None:
-        palette = "Set1"
     pops = data[key].unique()
-    colors = sns.color_palette(palette, len(pops))
+
+    colors = sns.color_palette(palette or "Set1", len(pops))
     colors = dict(zip(pops, colors))
-    colors[others] = (value, value, value)
+    if others in colors.keys():
+        colors[others] = (value, value, value)
+
     return colors
 
 
