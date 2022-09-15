@@ -131,10 +131,34 @@ class Scyan(pl.LightningModule):
         return self.marker_pop_matrix.columns
 
     @property
-    def group_names(self) -> set:
-        """Set of all group names if provided in the knowledge table (else `None`)"""
-        if isinstance(self.marker_pop_matrix.index, pd.MultiIndex):
-            return set(self.marker_pop_matrix.index.get_level_values(1))
+    def level_names(self):
+        """All population hierarchical level names, if existing."""
+        if not isinstance(self.marker_pop_matrix.index, pd.MultiIndex):
+            log.warn(
+                "The provided knowledge table has no population hierarchical level. See: https://mics-lab.github.io/scyan/tutorials/advanced/#hierarchical-population-display"
+            )
+            return []
+
+        return list(self.marker_pop_matrix.index.names[1:])
+
+    def populations_level(self, level: str = "level") -> set:
+        """Return the set of all group names at a specific level.
+
+        Args:
+            level: Level name.
+
+        Returns:
+            Set of all unique populations at a given level.
+        """
+
+        assert (
+            self.level_names
+        ), "The provided knowledge table has no population hierarchical level. See: https://mics-lab.github.io/scyan/tutorials/advanced/#hierarchical-population-display"
+        assert (
+            level in self.level_names
+        ), f"Level has to be one of {', '.join(self.level_names)}. Found {level}."
+
+        return set(self.marker_pop_matrix.index.get_level_values(level))
 
     def _prepare_data(self) -> None:
         """Initialize the data and the covariates"""
