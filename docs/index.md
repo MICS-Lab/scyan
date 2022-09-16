@@ -10,10 +10,9 @@ Scyan stands for **S**ingle-cell **Cy**tometry **A**nnotation **N**etwork. Based
 
 Scyan is a Bayesian probabilistic model composed of a deep invertible neural network called a normalizing flow (the function $f_{\phi}$). It maps a latent distribution of cell expressions into the empirical distribution of cell expressions. This cell distribution is a mixture of gaussian-like distributions representing the sum of a cell-specific and a population-specific term. Also, interpretability and batch effect correction are based on the model latent space — more details in the article's Methods section.
 
-<figure markdown>
-  ![Image title](/assets/overview.png)
-  <figcaption>a) Overview of the tasks that Scyan can perform. b) Overview of the model architecture. c) One coupling layer, i.e., the elementary unit that composes the Normalizing Flow.</figcaption>
-</figure>
+<p align="center">
+  <img src="./assets/overview.png" alt="scyan_overview" />
+</p>
 
 ## Technical description
 
