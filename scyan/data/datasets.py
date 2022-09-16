@@ -6,6 +6,7 @@ from urllib import request
 
 import anndata
 import joblib
+import numpy as np
 import pandas as pd
 import umap
 from anndata import AnnData
@@ -55,8 +56,9 @@ def get_local_file(
 
     if kind == "csv":
         df = pd.read_csv(filepath, index_col=0)
-        if df.columns[0] == "Group name":
-            return pd.read_csv(filepath, index_col=[0, 1])
+        level_indices = np.where(df.columns.str.contains("level"))[0]
+        if level_indices.size:
+            return pd.read_csv(filepath, index_col=[0] + list(1 + level_indices))
         return df
 
     if kind == "h5ad":
@@ -75,10 +77,17 @@ def get_data_path() -> Path:
     return data_path
 
 
+def _check_can_write(path: Path, overwrite: bool) -> None:
+    assert (
+        overwrite or not path.exists()
+    ), f"File {path} already exists and 'overwrite' is False. Set 'overwrite' to True to force its creation."
+
+
 def add(
     dataset_name: str,
     *objects: List[Union[AnnData, pd.DataFrame, umap.UMAP]],
     filenames: Union[str, List[str]] = "default",
+    overwrite: bool = False,
 ) -> None:
     """Add an object to a dataset (or create it if not existing). Objects can be `AnnData` objects, a knowledge-table (i.e. a `pd.DataFrame`), or a `UMAP` reducer. The provided filenames are the one you use when loading data with [scyan.data.load][].
 
@@ -88,7 +97,8 @@ def add(
     Args:
         dataset_name: Name of the dataset in which the object will be saved.
         *objects: Object(s) to save.
-        filenames: Name of the file(s) created. The default value (`"default"`) is the filename loaded by default with `scyan.data.load`. If a list is provided, it should have the length of the number of objects provided and should have the same order. If a string, then use the same name for all objects (but different extensions).
+        filenames: Name(s) without extension of the file(s) to create. The default value (`"default"`) is the filename loaded by default with `scyan.data.load`. If a list is provided, it should have the length of the number of objects provided and should have the same order. If a string, then use the same name for all objects (but different extensions).
+        overwrite: If `True`, it will overwrite files that already exist.
 
     Raises:
         ValueError: If the object type is not one of the three required.
@@ -106,12 +116,15 @@ def add(
     for obj, filename in zip(objects, filenames):
         if isinstance(obj, AnnData):
             path = dataset_path / f"{filename}.h5ad"
+            _check_can_write(path, overwrite)
             obj.write_h5ad(path)
         elif isinstance(obj, pd.DataFrame):
             path = dataset_path / f"{filename}.csv"
+            _check_can_write(path, overwrite)
             obj.to_csv(path)
         elif isinstance(obj, umap.UMAP):
             path = dataset_path / f"{filename}.umap"
+            _check_can_write(path, overwrite)
             joblib.dump(obj, path)
         else:
             raise ValueError(

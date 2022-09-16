@@ -34,7 +34,7 @@ def scatter(
         obs_key: Key to look for populations in `adata.obs`. By default, uses the model predictions.
         max_obs: Maximum number of cells per population to be displayed.
         s: Dot marker size.
-        show: Whether or not to display the plot.
+        show: Whether or not to display the figure.
     """
     adata = model.adata
     markers = select_markers(model, markers, n_markers, obs_key, populations)
@@ -82,66 +82,50 @@ def umap(
     sc.pl.umap(adata, color=color, vmax=vmax, vmin=vmin, **scanpy_kwargs)
 
 
-def _get_pop_to_group(model: Scyan) -> dict:
-    df = model.marker_pop_matrix
+def pop_level(
+    model: Scyan,
+    group_name: str,
+    level_name: str = "level",
+    obs_key: str = "scyan_pop",
+    **scanpy_kwargs: int,
+) -> None:
+    """Plot all subpopulations of a group at a certain level on a UMAP (according to the populations levels provided in the knowledge table).
+
+    Args:
+        model: Scyan model.
+        group_name: The group to look at among the populations of the selected level.
+        level_name: Name of the column of the knowledge table containing the names of the grouped populations.
+        obs_key: Key of `adata.obs` to access the model predictions.
+    """
+    adata = model.adata
+    mpm = model.marker_pop_matrix
 
     assert isinstance(
-        df.index, pd.MultiIndex
-    ), "To plot main populations, you need to provide a 'Group name' to your CSV file (the second column)."
+        mpm.index, pd.MultiIndex
+    ), "To use this function, you need a MultiIndex DataFrame, see: https://mics-lab.github.io/scyan/tutorials/advanced/#hierarchical-population-display"
 
-    return {pop: group for pop, group in df.index}
-
-
-def all_groups(model: Scyan, obs_key: str = "scyan_pop", **scanpy_kwargs: int) -> None:
-    """Plot all main groups on a UMAP (according to the populations groups provided in the knowledge table).
-
-    Args:
-        model: Scyan model.
-        obs_key: Key of `adata.obs` to access the model predictions.
-    """
-    adata = model.adata
-
+    level_names = mpm.index.names[1:]
     assert (
-        "scyan_pop" in adata.obs.columns
-    ), "Found no model predictions. Have you run 'model.predict()' first?"
+        level_name in level_names
+    ), f"Level '{level_name}' unknown. Choose one of: {level_names}"
 
-    pop_to_group = _get_pop_to_group(model)
-
-    adata.obs["scyan_group"] = pd.Categorical(
-        [pop_to_group[pop] for pop in adata.obs[obs_key]]
-    )
-
-    umap(adata, color="scyan_group", **scanpy_kwargs)
-
-
-def one_group(
-    model: Scyan, group_name: str, obs_key: str = "scyan_pop", **scanpy_kwargs: int
-) -> None:
-    """Plot all subpopulations of a group on a UMAP (according to the populations groups provided in the knowledge table).
-
-    Args:
-        model: Scyan model.
-        group_name: The group to look at.
-        obs_key: Key of `adata.obs` to access the model predictions.
-    """
-    adata = model.adata
-
-    pop_to_group = _get_pop_to_group(model)
-
+    base_pops = mpm.index.get_level_values(0)
+    group_pops = mpm.index.get_level_values(level_name)
     assert (
-        group_name in pop_to_group.values()
-    ), f"Invalid group name '{group_name}'. It has to be one of: {', '.join(pop_to_group.values())}."
+        group_name in group_pops
+    ), f"Invalid group name '{group_name}'. It has to be one of: {', '.join(group_pops)}."
 
-    adata.obs["scyan_one_group"] = pd.Categorical(
-        [
-            pop if pop_to_group[pop] == group_name else "Others"
-            for pop in adata.obs[obs_key]
-        ]
+    valid_populations = [
+        pop for pop, group in zip(base_pops, group_pops) if group == group_name
+    ]
+    key_name = f"{obs_key}_one_level"
+    adata.obs[key_name] = pd.Categorical(
+        [pop if pop in valid_populations else "Others" for pop in adata.obs[obs_key]]
     )
-    palette = get_palette_others(adata.obs, "scyan_one_group")
+    palette = get_palette_others(adata.obs, key_name)
     umap(
         adata,
-        color="scyan_one_group",
+        color=key_name,
         palette=palette,
         title=f"Among {group_name}",
         **scanpy_kwargs,

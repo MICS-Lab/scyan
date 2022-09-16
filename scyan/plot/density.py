@@ -38,7 +38,7 @@ def kde_per_population(
         obs_key: Key to look for populations in `adata.obs`. By default, uses the model predictions.
         var_name: Name displayed on the graphs.
         value_name: Name displayed on the graphs.
-        show: Whether or not to display the plot.
+        show: Whether or not to display the figure.
     """
     indices = _get_subset_indices(model.adata, n_cells)
     adata = model.adata[indices]
@@ -68,7 +68,7 @@ def kde_per_population(
         common_norm=False,
         facet_kws=dict(sharey=False),
         palette=get_palette_others(df, obs_key),
-        hue_order=list(populations) + ["Others"],
+        hue_order=sorted(df[obs_key].unique(), key="Others".__eq__),
     )
 
 
@@ -94,7 +94,7 @@ def latent_expressions(
         max_value: Maximum absolute latent value.
         num_pieces: Number of pieces to display the colorbar.
         radius: Radius used to chunk the colorbar. Increase this value if multiple names overlap.
-        show: Whether or not to display the plot.
+        show: Whether or not to display the figure.
     """
     condition = model.adata.obs[obs_key] == population
     u_mean = model(condition).mean(dim=0)
