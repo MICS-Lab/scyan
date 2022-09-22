@@ -321,7 +321,7 @@ class Scyan(pl.LightningModule):
 
         Args:
             key_added: Key added to `model.adata.obs` to save the predictions. If `None`, then the predictions will not be saved.
-            add_levels: If `True`, and if [hierarchical population names](/tutorials/advanced/#hierarchical-population-display) were provided, then it also saves the prediction for every population level.
+            add_levels: If `True`, and if [hierarchical population names](../../tutorials/advanced/#hierarchical-population-display) were provided, then it also saves the prediction for every population level.
 
         Returns:
             Population predictions (pandas `Series` of length $N$).
