@@ -4,6 +4,10 @@
 # Documentation
 site
 
+# Code Ocean related
+code
+results
+
 # Logs
 outputs
 multirun
