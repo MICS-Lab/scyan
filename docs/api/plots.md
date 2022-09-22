@@ -10,7 +10,7 @@
     options:
       show_root_heading: true
 
-::: scyan.plot.latent_heatmap
+::: scyan.plot.pops_expressions
     options:
       show_root_heading: true
 
@@ -18,7 +18,7 @@
     options:
       show_root_heading: true
 
-::: scyan.plot.latent_expressions
+::: scyan.plot.pop_expressions
     options:
       show_root_heading: true
 

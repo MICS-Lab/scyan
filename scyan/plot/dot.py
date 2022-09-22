@@ -48,12 +48,11 @@ def scatter(
         groups = data.groupby("Population").groups
         data = data.loc[[i for pop in pops[::-1] for i in _subset(groups[pop], max_obs)]]
 
-    g = sns.PairGrid(data, hue="Population", corner=True)
-
     palette = get_palette_others(data, "Population")
 
-    g.map_offdiag(sns.scatterplot, s=s, palette=palette, hue_order=pops)
-    g.map_diag(sns.histplot, palette=palette)
+    g = sns.PairGrid(data, hue="Population", corner=True, palette=palette, hue_order=pops)
+    g.map_offdiag(sns.scatterplot, s=s)
+    g.map_diag(sns.histplot)
     g.add_legend()
 
 
@@ -120,13 +119,12 @@ def pop_level(
     ]
     key_name = f"{obs_key}_one_level"
     adata.obs[key_name] = pd.Categorical(
-        [pop if pop in valid_populations else "Others" for pop in adata.obs[obs_key]]
+        [pop if pop in valid_populations else np.nan for pop in adata.obs[obs_key]]
     )
-    palette = get_palette_others(adata.obs, key_name)
     umap(
         adata,
         color=key_name,
-        palette=palette,
         title=f"Among {group_name}",
+        na_in_legend=False,
         **scanpy_kwargs,
     )

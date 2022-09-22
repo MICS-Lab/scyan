@@ -59,32 +59,6 @@ def probs_per_marker(
 @torch.no_grad()
 @_requires_fit
 @optional_show
-def latent_heatmap(
-    model: Scyan,
-    obs_key: str = "scyan_pop",
-    n_cells: Optional[int] = 200000,
-    show: bool = True,
-):
-    """Show Scyan latent space for each population.
-
-    Args:
-        model: Scyan model.
-        obs_key: Key to look for populations in `adata.obs`. By default, uses the model predictions.
-        n_cells: Number of cells to be considered for the heatmap (to accelerate it when $N$ is very high). If `None`, consider all cells.
-        show: Whether or not to display the figure.
-    """
-    indices = _get_subset_indices(model.adata, n_cells)
-    u = model(indices)
-
-    df = pd.DataFrame(u.cpu().numpy(), columns=model.var_names)
-    df["Population"] = model.adata[indices].obs[obs_key].values
-
-    sns.heatmap(df.groupby("Population").mean(), vmax=1.2, vmin=-1.2, cmap="coolwarm")
-
-
-@torch.no_grad()
-@_requires_fit
-@optional_show
 def subclusters(
     model: Scyan,
     n_cells: Optional[int] = 200000,
