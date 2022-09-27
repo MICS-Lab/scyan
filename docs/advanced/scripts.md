@@ -2,7 +2,7 @@
 
 !!! caution
 
-    You can run `Scyan` without using these scripts. Use it **only if** you want to use Hydra and/or Weight and Biases. Before continuing, ensure that you have [configured your project](/advanced/hydra_wandb).
+    You can run `Scyan` without using these scripts. Use it **only if** you want to use Hydra and/or Weight and Biases. Before continuing, ensure that you have [configured your project](../../advanced/hydra_wandb).
 
 ## Usage examples
 
@@ -28,7 +28,7 @@ python -m scripts.run project=<project-name> model.temperature=0.5 model.prior_s
 
 ## Reproduce the article results
 
-The hyperparameters were obtained by (unsupervised) hyperparameter optimization (see [Hydra configuration](/advanced/hydra_wandb)).
+The hyperparameters were obtained by (unsupervised) hyperparameter optimization (see [Hydra configuration](../../advanced/hydra_wandb)).
 
 ```bash
 # Testing on BMMC
