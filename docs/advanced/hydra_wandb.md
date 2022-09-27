@@ -2,11 +2,11 @@
 
 If needed, you can use [Hydra](https://hydra.cc/docs/intro/) to manage your configuration. It allows to run the scripts or run hyperparameter optimization easily. You can also monitor your jobs with [Weight & Biases](https://wandb.ai/site)
 
-For that, clone the repository and make an editable install of the project (see [Getting Started](/getting_started)). Then, you have to follow the step listed below.
+For that, clone the repository and make an editable install of the project (see [Getting Started](../../getting_started)). Then, you have to follow the step listed below.
 
 ## Create a new project configuration
 
-Create a new project at `config/project/<your-project-name>.yaml`, where `<your-project-name>` is the one you used to [create your dataset](/advanced/data).
+Create a new project at `config/project/<your-project-name>.yaml`, where `<your-project-name>` is the one you used to [create your dataset](../../advanced/data).
 In this file, add `name: <your-project-name>`.
 
 Add optionally:
@@ -34,4 +34,4 @@ Update `config/sweeper/optuna.yaml` to select the parameters you want to optimiz
 
 !!! check
 
-    Now that you have configured your project, you can run the scripts (see [running scripts](/advanced/scripts)) by providing the argument `project=<your-project-name>`.
+    Now that you have configured your project, you can run the scripts (see [running scripts](../../advanced/scripts)) by providing the argument `project=<your-project-name>`.
