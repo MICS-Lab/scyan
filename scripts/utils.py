@@ -161,7 +161,7 @@ def compute_umap(model: Scyan, config: DictConfig, obs_key: str = "scyan_pop") -
         wandb.log(
             {
                 "umap": scyan.utils._wandb_plt_image(
-                    lambda: sc.pl.umap(
+                    lambda: scyan.plot.umap(
                         model.adata, color=obs_key, show=False, palette=palette
                     )
                 )

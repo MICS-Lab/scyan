@@ -62,21 +62,32 @@ def probs_per_marker(
 def subclusters(
     model: Scyan,
     n_cells: Optional[int] = 200000,
+    latent: bool = True,
     obs_key: str = "scyan_pop",
     subcluster_key: str = "subcluster_index",
     figsize: Tuple[int, int] = (10, 5),
+    vmax: float = 1.2,
+    vmin: float = -1.2,
+    cmap: Optional[str] = None,
     show: bool = True,
 ):
     """Display Scyan latent space for each population sub-clusters.
     !!! warning
         To run this plot function, you have to run [scyan.tools.subcluster][] first.
 
+    !!! note
+        If using the latent space, it will only show the marker you provided to Scyan. Else, it shows every marker of the panel.
+
     Args:
         model: Scyan model.
         n_cells: Number of cells to be considered for the heatmap (to accelerate it when $N$ is very high). If `None`, consider all cells.
+        latent: If `True`, displays Scyan's latent expressions, else just the standardized expressions.
         obs_key: Key to look for populations in `adata.obs`. By default, uses the model predictions.
         subcluster_key: Key created by `scyan.tools.subcluster`.
         figsize: Matplotlib figure size. Increase it if you have display issues.
+        vmax: Maximum value on the heatmap.
+        vmax: Minimum value on the heatmap.
+        cmap: Colormap name. By default, uses `"coolwarm"` if `latent`, else `"viridis"`.
         show: Whether or not to display the figure.
     """
     assert (
@@ -86,10 +97,12 @@ def subclusters(
     plt.figure(figsize=figsize)
 
     indices = _get_subset_indices(model.adata, n_cells)
-    u = model(indices)
     adata = model.adata[indices]
 
-    df = pd.DataFrame(u.cpu().numpy(), columns=model.var_names)
+    x = model(indices).cpu().numpy() if latent else adata.X
+    columns = model.var_names if latent else adata.var_names
+
+    df = pd.DataFrame(x, columns=columns)
     df[obs_key] = adata.obs[obs_key].values
     df[subcluster_key] = adata.obs[subcluster_key].values
 
@@ -97,7 +110,10 @@ def subclusters(
     pops = df.index.get_level_values(obs_key)
     df.index = list(df.index.get_level_values(subcluster_key))
 
-    ax = sns.heatmap(df, vmax=1.2, vmin=-1.2, cmap="coolwarm")
+    if cmap is None:
+        cmap = "coolwarm" if latent else "viridis"
+
+    ax = sns.heatmap(df, vmax=vmax, vmin=vmin, cmap=cmap)
     trans = ax.get_xaxis_transform()
 
     x0 = -1

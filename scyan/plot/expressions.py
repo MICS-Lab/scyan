@@ -27,6 +27,9 @@ def pops_expressions(
 ):
     """Heatmap that shows (latent or standardized) cell expressions for all populations.
 
+    !!! note
+        If using the latent space, it will only show the marker you provided to Scyan. Else, it shows every marker of the panel.
+
     Args:
         model: Scyan model.
         obs_key: Key to look for populations in `adata.obs`. By default, uses the model predictions.
@@ -38,9 +41,11 @@ def pops_expressions(
         show: Whether or not to display the figure.
     """
     indices = _get_subset_indices(model.adata, n_cells)
-    x = model(indices) if latent else model.x[indices]
 
-    df = pd.DataFrame(x.cpu().numpy(), columns=model.var_names)
+    x = model(indices).cpu().numpy() if latent else model.adata[indices].X
+    columns = model.var_names if latent else model.adata.var_names
+
+    df = pd.DataFrame(x, columns=columns)
     df["Population"] = model.adata[indices].obs[obs_key].values
 
     if cmap is None:
