@@ -24,5 +24,5 @@ model.predict()
         - sample
         - pop_names
         - var_names
+        - pops
         - level_names
-        - populations_level

@@ -180,6 +180,13 @@ def _add_level_predictions(model, obs_key: str) -> None:
     adata.obs[obs_keys] = pd.DataFrame(preds, dtype="category", index=adata.obs.index)
 
 
+def _get_pop_index(pop: str, marker_pop_matrix: pd.DataFrame):
+    for i in range(marker_pop_matrix.index.nlevels - 1, -1, -1):
+        if pop in marker_pop_matrix.index.get_level_values(i):
+            return i
+    raise BaseException(f"Population {pop} not found.")
+
+
 def _validate_inputs(adata: AnnData, df: pd.DataFrame):
     assert isinstance(
         adata, AnnData
@@ -201,6 +208,12 @@ def _validate_inputs(adata: AnnData, df: pd.DataFrame):
         )
         df = df.apply(pd.to_numeric, errors="coerce")
 
+    ratio_nan = df.isna().values.mean()
+    if ratio_nan > 0.7:
+        log.warn(
+            f"Found {ratio_nan:.1%} of NA in the table, which is very high. If this is intended, just ignore the warning."
+        )
+
     X = adata[:, df.columns].X
 
     assert (
@@ -214,8 +227,15 @@ def _validate_inputs(adata: AnnData, df: pd.DataFrame):
 
     duplicates = df.duplicated()
     if duplicates.any():
+        duplicates_names = duplicates[duplicates].index.get_level_values(0)
         log.warn(
-            f"Found duplicate populations in the knowledge matrix. We advise updating or removing the following rows: {', '.join(duplicates[duplicates].index)}"
+            f"Found duplicate populations in the knowledge matrix. We advise updating or removing the following rows: {', '.join(duplicates_names)}"
+        )
+
+    ratio_non_standard = 1 - ((df**2 == 1) | df.isna()).values.mean()
+    if ratio_non_standard > 0.15:
+        log.warn(
+            f"Found a significant proportion ({ratio_non_standard:.1%}) of non-standard values in the knowledge table. Scyan expects to find mostly -1/1/NA in the table, even though any other numerical value is accepted. If this is intended, just ignore the warning, else correct the table using mainly -1, 1 and NA (to denote negative expressions, positive expressions, or not-applicable respectively)."
         )
 
     return adata, df
