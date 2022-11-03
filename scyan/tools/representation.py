@@ -98,6 +98,7 @@ def subcluster(
 def umap(
     adata: AnnData,
     markers: Optional[List[str]] = None,
+    obsm: Optional[str] = None,
     n_cells: Optional[int] = 500000,
     min_dist: float = 0.5,
     obsm_key: str = "X_umap",
@@ -117,6 +118,7 @@ def umap(
     Args:
         adata: An `anndata` object.
         markers: List marker names. By default, use all the panel markers, i.e., `adata.var_names`.
+        obsm: Name of the obsm to consider to train the UMAP. By default, uses `adata.X`.
         n_cells: Number of cells to be considered for the UMAP (to accelerate it when $N$ is very high). If `None`, consider all cells.
         min_dist: Min dist UMAP parameter.
         obsm_key: Key for `adata.obsm` to add the embedding.
@@ -133,7 +135,8 @@ def umap(
 
     adata.obsm[obsm_key] = np.zeros((adata.n_obs, 2))
     indices = _get_subset_indices(adata, n_cells)
-    X = adata[indices, markers].X
+    adata_view = adata[indices, markers]
+    X = adata_view.X if obsm is None else adata_view.obsm[obsm]
 
     if n_cells is not None:
         adata.obs["has_umap"] = np.in1d(np.arange(adata.n_obs), indices)

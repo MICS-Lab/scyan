@@ -17,9 +17,9 @@ from .utils import check_population, optional_show
 @optional_show
 def pops_expressions(
     model: Scyan,
+    latent: bool = True,
     obs_key: str = "scyan_pop",
     n_cells: Optional[int] = 200000,
-    latent: bool = True,
     vmax: float = 1.2,
     vmin: float = -1.2,
     cmap: Optional[str] = None,
@@ -32,9 +32,9 @@ def pops_expressions(
 
     Args:
         model: Scyan model.
+        latent: If `True`, displays Scyan's latent expressions, else just the standardized expressions.
         obs_key: Key to look for populations in `adata.obs`. By default, uses the model predictions.
         n_cells: Number of cells to be considered for the heatmap (to accelerate it when $N$ is very high). If `None`, consider all cells.
-        latent: If `True`, displays Scyan's latent expressions, else just the standardized expressions.
         vmax: Maximum value on the heatmap.
         vmax: Minimum value on the heatmap.
         cmap: Colormap name. By default, uses `"coolwarm"` if `latent`, else `"viridis"`.
@@ -55,6 +55,48 @@ def pops_expressions(
     plt.title(
         f"{'Latent' if latent else 'Standardized'} expressions grouped by {obs_key}"
     )
+
+
+@torch.no_grad()
+@_requires_fit
+@optional_show
+def boxplot_expressions(
+    model: Scyan,
+    marker: str,
+    latent: bool = False,
+    obs_key: str = "scyan_pop",
+    ascending: bool = False,
+    figsize: tuple = (10, 5),
+    fliersize: float = 0.5,
+):
+    """Boxplot of expressions per population (for one marker).
+
+    Args:
+        model: Scyan model.
+        marker: Name of the marker whose expressions are to be displayed.
+        latent: If `True`, displays Scyan's latent expressions, else just the standardized expressions.
+        obs_key: Key to look for populations in `adata.obs`. By default, uses the model predictions.
+        ascending: Whether to sort populations by ascending mean expressions.
+        figsize: Figure size. Defaults to (10, 5).
+        fliersize: Outlier dot size (see seaborn boxplot).
+    """
+    if latent:
+        assert (
+            marker in model.var_names
+        ), f"Marker {marker} was not used during the model training, impossible to use 'latent=True'."
+
+        u = model()
+        y = u[:, model.var_names.get_loc(marker)].cpu().numpy()
+    else:
+        y = model.adata.obs_vector(marker)
+
+    df = pd.DataFrame({obs_key: model.adata.obs[obs_key], "y": y})
+    order = df.groupby(obs_key).mean().sort_values("y", ascending=ascending).index
+
+    plt.figure(figsize=figsize)
+    sns.boxplot(data=df, x=obs_key, y="y", fliersize=fliersize, order=order)
+    plt.xticks(rotation=90)
+    plt.ylabel(f"{marker} {'latent' if latent else 'standardized'} expression")
 
 
 @torch.no_grad()
