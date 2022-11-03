@@ -6,7 +6,7 @@ import scanpy as sc
 
 from .model import Scyan
 from . import data, plot, tools, utils
-from .utils import read_fcs, write_fcs
+from .utils import read_fcs, write_fcs, write_csv
 
 __version__ = importlib.metadata.version("scyan")
 

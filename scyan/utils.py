@@ -2,7 +2,7 @@ import logging
 import warnings
 from functools import wraps
 from pathlib import Path
-from typing import Callable, List, Optional, Tuple, Union
+from typing import Callable, Dict, List, Optional, Tuple, Union
 
 import flowio
 import matplotlib.pyplot as plt
@@ -11,6 +11,7 @@ import pandas as pd
 import torch
 from anndata import AnnData
 from pandas.api.types import is_numeric_dtype
+from sklearn.preprocessing import LabelEncoder
 from torch import Tensor
 
 log = logging.getLogger(__name__)
@@ -93,29 +94,81 @@ def read_fcs(
     return AnnData(X=X, var=var, obs=obs)
 
 
-def write_fcs(adata: AnnData, path: str) -> None:
-    """Write a FCS file based on a `AnnData` object.
+def _to_df(adata: AnnData, layer: Optional[str] = None) -> pd.DataFrame:
+    df = pd.concat([adata.to_df(layer), adata.obs], axis=1)
+
+    for key in adata.obsm:
+        names = [f"{key}{i+1}" for i in range(adata.obsm[key].shape[1])]
+        df[names] = adata.obsm[key]
+
+    return df
+
+
+def write_fcs(
+    adata: AnnData,
+    path: str,
+    layer: Optional[str] = None,
+    columns_to_numeric: Optional[List] = None,
+) -> Union[None, Dict]:
+    """Based on a `AnnData` object, it writes a FCS file that contains (i) all the markers intensities, (ii) every numeric column of `adata.obs`, and (iii) all `adata.obsm` variables.
+
+    !!! note
+        As the FCS format doesn't support strings, some observations will not be kept in the FCS file.
 
     Args:
         adata: `AnnData` object to save.
         path: Path to write the file.
+        layer: Name of the `adata` layer from which intensities will be extracted. If `None`, uses `adata.X`.
+        columns_to_numeric: List of **non-numerical** column names from `adata.obs` that should be kept, by transforming them into integers. Note that you don't need to list the numerical columns, that are written inside the FCS by default.
+
+    Returns:
+        If `columns_to_numeric` is `None`, returns nothing. Else, return a dict whose keys are the observation column names being transformed, and the values are ordered lists of the label encoded classes. E.g., `{"batch": ["b1", "b2"]}` means that the batch `"b1"` was encoded by 0, and `"b2"` by 1.
     """
-    X = adata.X
-    channel_names = list(adata.var_names)
+    df = _to_df(adata, layer)
+    dict_classes = {}
+    columns_removed = []
 
-    for column in adata.obs.columns:
-        if is_numeric_dtype(adata.obs[column].dtype):
-            X = np.c_[X, adata.obs[column].values]
-            channel_names.append(column)
+    for column in df.columns:
+        if is_numeric_dtype(df[column].dtype):
+            continue
+        try:
+            df[column] = pd.to_numeric(df[column].values)
+            continue
+        except:
+            if columns_to_numeric is not None and column in columns_to_numeric:
+                le = LabelEncoder()
+                df[column] = le.fit_transform(df[column].values)
+                dict_classes[column] = list(le.classes_)
+            else:
+                del df[column]
+                columns_removed.append(column)
 
-    for key in adata.obsm:
-        X = np.concatenate((X, adata.obsm[key]), axis=1)
-        channel_names += [f"{key}{i+1}" for i in range(adata.obsm[key].shape[1])]
-
-    log.info(f"Found {len(channel_names)} channels: {', '.join(channel_names)}")
+    log.info(f"Found {len(df.columns)} features: {', '.join(df.columns)}.")
+    if columns_removed:
+        log.info(
+            f"FCS does not support strings, so the following columns where removed: {', '.join(columns_removed)}.\nIf you want to keep these str observations, use the 'columns_to_numeric' argument to encod them."
+        )
 
     with open(path, "wb") as f:
-        flowio.create_fcs(f, X.flatten(), channel_names)
+        flowio.create_fcs(f, df.values.flatten(), df.columns)
+
+    if columns_to_numeric is not None:
+        return dict_classes
+
+
+def write_csv(
+    adata: AnnData,
+    path: str,
+    layer: Optional[str] = None,
+) -> Union[None, Dict]:
+    """Based on a `AnnData` object, it writes a CSV file that contains (i) all the markers intensities, (ii) every numeric column of `adata.obs`, and (iii) all `adata.obsm` variables.
+
+    Args:
+        adata: `AnnData` object to save.
+        path: Path to write the file.
+        layer: Name of the `adata` layer from which intensities will be extracted. If `None`, uses `adata.X`.
+    """
+    _to_df(adata, layer).to_csv(path)
 
 
 def _subset(indices: List[str], max_obs: int):

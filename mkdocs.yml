@@ -18,19 +18,19 @@ nav:
     - tutorials/advanced.ipynb
   - API: 
     - scyan.Scyan: api/model.md
+    - IO (Read/write): api/io.md
+    - Tools:
+      - Preprocessing: api/preprocessing.md
+      - Representation: api/representation.md
+      - Results analysis: api/analysis.md
+    - Plots: api/plots.md
+    - Loading/adding datasets: api/datasets.md
     - Modules:
       - scyan.module.ScyanModule: api/module.md
       - scyan.module.PriorDistribution: api/prior.md
       - scyan.module.RealNVP: api/real_nvp.md
       - scyan.module.CouplingLayer: api/coupling_layer.md
       - scyan.module.LossMMD: api/loss_mmd.md
-    - Plots: api/plots.md
-    - Tools:
-      - Preprocessing: api/preprocessing.md
-      - Representation: api/representation.md
-      - Results analysis: api/analysis.md
-    - Loading/adding datasets: api/datasets.md
-    - Read/write FCS: api/io.md
   - Advanced usage:
     - Add your own dataset: advanced/data.md
     - Advice to make the knowledge table: advanced/advice.md
