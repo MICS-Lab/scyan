@@ -14,7 +14,7 @@
     options:
       show_root_heading: true
 
-::: scyan.plot.subclusters
+::: scyan.plot.subcluster
     options:
       show_root_heading: true
 

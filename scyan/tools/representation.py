@@ -10,7 +10,7 @@ from umap import UMAP
 if TYPE_CHECKING:
     from . import Scyan
 
-from ..utils import _get_subset_indices
+from ..utils import _check_is_processed, _get_subset_indices
 
 log = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ def subcluster(
         ```python
         import scanpy as sc
         scyan.plot.umap(adata, color="leiden_subcluster") # Visualize the sub clusters
-        scyan.plot.subclusters(model) # Scyan latent space on each sub cluster
+        scyan.plot.subcluster(model) # Scyan latent space on each sub cluster
         ```
 
     Args:
@@ -137,6 +137,8 @@ def umap(
     indices = _get_subset_indices(adata, n_cells)
     adata_view = adata[indices, markers]
     X = adata_view.X if obsm is None else adata_view.obsm[obsm]
+
+    _check_is_processed(X)
 
     if n_cells is not None:
         adata.obs["has_umap"] = np.in1d(np.arange(adata.n_obs), indices)

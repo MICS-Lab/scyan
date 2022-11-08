@@ -12,12 +12,16 @@ from .. import Scyan
 from ..utils import _get_subset_indices
 
 
-def optional_show(f: Callable) -> Callable:
+def plot_decorator(f: Callable) -> Callable:
     """Decorator that shows a matplotlib figure if the provided 'show' argument is True"""
 
     @wraps(f)
-    def wrapper(*args, **kwargs):
-        res = f(*args, **kwargs)
+    def wrapper(model, *args, **kwargs):
+        assert isinstance(
+            model, Scyan
+        ), f"{f.__name__} first argument has to be scyan.Scyan model. Received type {type(model)}."
+
+        res = f(model, *args, **kwargs)
         if kwargs.get("show", True):
             plt.show()
         return res

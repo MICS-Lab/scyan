@@ -9,12 +9,12 @@ import torch
 
 from .. import Scyan
 from ..utils import _get_subset_indices, _requires_fit
-from .utils import check_population, optional_show
+from .utils import check_population, plot_decorator
 
 
 @torch.no_grad()
+@plot_decorator
 @_requires_fit
-@optional_show
 @check_population(one=True)
 def probs_per_marker(
     model: Scyan,
@@ -57,9 +57,9 @@ def probs_per_marker(
 
 
 @torch.no_grad()
+@plot_decorator
 @_requires_fit
-@optional_show
-def subclusters(
+def subcluster(
     model: Scyan,
     n_cells: Optional[int] = 200000,
     latent: bool = True,

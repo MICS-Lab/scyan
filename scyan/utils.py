@@ -215,7 +215,7 @@ def _requires_fit(f: Callable) -> Callable:
     def wrapper(model, *args, **kwargs):
         assert (
             model._is_fitted
-        ), "The model have to be trained first, consider running 'model.fit()'"
+        ), "The model has to be trained first, consider running 'model.fit()'"
         return f(model, *args, **kwargs)
 
     return wrapper
@@ -238,6 +238,12 @@ def _get_pop_index(pop: str, marker_pop_matrix: pd.DataFrame):
         if pop in marker_pop_matrix.index.get_level_values(i):
             return i
     raise BaseException(f"Population {pop} not found.")
+
+
+def _check_is_processed(X: np.ndarray) -> None:
+    assert (
+        np.abs(X).max() < 1e3
+    ), "The provided values are very high: have you run preprocessing first? E.g., consider running 'scyan.tools.asinh_transform' or 'scyan.tools.auto_logicle_transform' (see our tutorial: https://mics-lab.github.io/scyan/tutorials/preprocessing/)"
 
 
 def _validate_inputs(adata: AnnData, df: pd.DataFrame):
@@ -269,9 +275,7 @@ def _validate_inputs(adata: AnnData, df: pd.DataFrame):
 
     X = adata[:, df.columns].X
 
-    assert (
-        np.abs(X).max() < 1e3
-    ), "The provided values are very high: have you run preprocessing first? E.g., consider 'scyan.tools.asinh_transform' or 'scyan.tools.auto_logicle_transform'"
+    _check_is_processed(X)
 
     if np.abs(X.mean(axis=0)).max() > 0.2 or np.abs(X.std(axis=0) - 1).max() > 0.2:
         log.warn(
