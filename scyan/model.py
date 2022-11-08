@@ -16,6 +16,7 @@ from .data import AdataDataset, RandomSampler, _prepare_data
 from .module import ScyanModule
 from .utils import (
     _add_level_predictions,
+    _get_pop_index,
     _process_pop_sample,
     _requires_fit,
     _validate_inputs,
@@ -141,24 +142,55 @@ class Scyan(pl.LightningModule):
 
         return list(self.marker_pop_matrix.index.names[1:])
 
-    def populations_level(self, level: str = "level") -> set:
-        """Return the set of all group names at a specific level.
+    def pops(
+        self,
+        level: Union[str, int, None] = None,
+        parent_of: Optional[str] = None,
+        children_of: Optional[str] = None,
+    ) -> Union[set, str]:
+        """Get the name of the populations that match a given contraint (only available if a hierarchical populations are provided, see [this tutorial](https://mics-lab.github.io/scyan/tutorials/advanced/#hierarchical-population-display)). If `level` is provided, returns all populations at this level. If `parent_of`, returns the parent of the given pop. If `children_of`, returns the children of the given pop.
+
+        !!! note
+            If you want to get the names of the leaves populations, you can simply use `model.pop_names`, which is equivalent to `model.pops(level=0)`.
 
         Args:
-            level: Level name.
+            level: If `str`, level name. If `int`, level index (0 corresponds to leaves).
+            parent_of: name of the population of which we want to get the parent in the tree.
+            children_of: name of the population of which we want to get the children populations in the tree.
 
         Returns:
-            Set of all unique populations at a given level.
+            Set of all populations that match the contraint, or one name if `parent_of` is not `None`.
         """
 
         assert (
             self.level_names
-        ), "The provided knowledge table has no population hierarchical level. See: https://mics-lab.github.io/scyan/tutorials/advanced/#hierarchical-population-display"
-        assert (
-            level in self.level_names
-        ), f"Level has to be one of {', '.join(self.level_names)}. Found {level}."
+        ), "The provided knowledge table has no population hierarchical level. See the doc."
 
-        return set(self.marker_pop_matrix.index.get_level_values(level))
+        assert (
+            sum(arg is not None for arg in [level, parent_of, children_of]) == 1
+        ), "One and exactly one argument has to be provided. Choose one among 'level', 'parent_of', and 'children_of'."
+
+        if level is not None:
+            assert (
+                isinstance(level, int) or level in self.level_names
+            ), f"Level has to be one of [{', '.join(self.level_names)}]. Found {level}."
+
+            return set(self.marker_pop_matrix.index.get_level_values(level))
+
+        name = parent_of or children_of
+        index = _get_pop_index(name, self.marker_pop_matrix)
+        where = self.marker_pop_matrix.index.get_level_values(index) == name
+
+        if children_of is not None:
+            if index == 0:
+                return set()
+            return set(self.marker_pop_matrix.index.get_level_values(index - 1)[where])
+
+        assert (
+            index < self.marker_pop_matrix.index.nlevels - 1
+        ), "Can not get parent of highest level population."
+
+        return self.marker_pop_matrix.index.get_level_values(index + 1)[where][0]
 
     def _prepare_data(self) -> None:
         """Initialize the data and the covariates"""
@@ -197,7 +229,7 @@ class Scyan(pl.LightningModule):
         return self.batch_to_id.get(self.hparams.batch_ref)
 
     def forward(self, indices: Optional[np.ndarray] = None) -> Tensor:
-        """Model forward function (not used during training).
+        """Model forward function (not used during training, see `training_step`instead).
 
         !!! note
             The core logic and the functions used for training are implemented in [ScyanModule][scyan.module.ScyanModule] (or see [scyan.Scyan.training_step][]).

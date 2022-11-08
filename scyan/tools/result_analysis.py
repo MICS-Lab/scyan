@@ -20,7 +20,7 @@ def count_cell_populations(
     """
     grouped = adata.obs.groupby(groupby)
     counts = grouped[obs_key].apply(lambda s: s.value_counts(normalize))
-    return counts.unstack(level=1)
+    return counts.unstack(level=-1)
 
 
 def mean_intensities(

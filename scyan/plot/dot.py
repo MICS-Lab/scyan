@@ -8,14 +8,14 @@ from anndata import AnnData
 
 from .. import Scyan
 from ..utils import _subset
-from .utils import check_population, get_palette_others, optional_show, select_markers
+from .utils import check_population, get_palette_others, plot_decorator, select_markers
 
 
-@optional_show
+@plot_decorator
 @check_population(return_list=True)
 def scatter(
     model: Scyan,
-    populations: Union[str, List[str]],
+    population: Union[str, List[str]],
     markers: Optional[List[str]] = None,
     n_markers: Optional[int] = 3,
     obs_key: str = "scyan_pop",
@@ -28,7 +28,7 @@ def scatter(
 
     Args:
         model: Scyan model
-        populations: One population or a list of population to be colored. To be valid, a population name have to be in `adata.obs[obs_key]`.
+        population: One population or a list of population to be colored. To be valid, a population name have to be in `adata.obs[obs_key]`.
         markers: List of markers to plot. If `None`, the list is chosen automatically.
         n_markers: Number of markers to choose automatically if `markers is None`.
         obs_key: Key to look for populations in `adata.obs`. By default, uses the model predictions.
@@ -37,23 +37,22 @@ def scatter(
         show: Whether or not to display the figure.
     """
     adata = model.adata
-    markers = select_markers(model, markers, n_markers, obs_key, populations)
+    markers = select_markers(model, markers, n_markers, obs_key, population)
 
     data = adata[:, markers].to_df()
     keys = adata.obs[obs_key].astype(str)
-    data["Population"] = np.where(~np.isin(keys, populations), "Others", keys)
+    data["Population"] = np.where(~np.isin(keys, population), "Others", keys)
 
-    pops = list(populations) + ["Others"]
+    pops = list(population) + ["Others"]
     if max_obs is not None:
         groups = data.groupby("Population").groups
         data = data.loc[[i for pop in pops[::-1] for i in _subset(groups[pop], max_obs)]]
 
-    g = sns.PairGrid(data, hue="Population", corner=True)
-
     palette = get_palette_others(data, "Population")
 
-    g.map_offdiag(sns.scatterplot, s=s, palette=palette, hue_order=pops)
-    g.map_diag(sns.histplot, palette=palette)
+    g = sns.PairGrid(data, hue="Population", corner=True, palette=palette, hue_order=pops)
+    g.map_offdiag(sns.scatterplot, s=s)
+    g.map_diag(sns.histplot)
     g.add_legend()
 
 
@@ -76,6 +75,14 @@ def umap(
         vmin: `scanpy.pl.umap` vmin argument.
         **scanpy_kwargs: Optional kwargs provided to `scanpy.pl.umap`.
     """
+    assert isinstance(
+        adata, AnnData
+    ), f"umap first argument has to be an AnnData object. Received type {type(adata)}."
+
+    assert (
+        "X_umap" in adata.obsm_keys()
+    ), "Before plotting data, UMAP coordinates need to be computed using 'scyan.tools.umap(...)' (see https://mics-lab.github.io/scyan/api/representation/#scyan.tools.umap)"
+
     if "has_umap" in adata.obs:
         adata = adata[adata.obs.has_umap]
 
@@ -120,13 +127,12 @@ def pop_level(
     ]
     key_name = f"{obs_key}_one_level"
     adata.obs[key_name] = pd.Categorical(
-        [pop if pop in valid_populations else "Others" for pop in adata.obs[obs_key]]
+        [pop if pop in valid_populations else np.nan for pop in adata.obs[obs_key]]
     )
-    palette = get_palette_others(adata.obs, key_name)
     umap(
         adata,
         color=key_name,
-        palette=palette,
         title=f"Among {group_name}",
+        na_in_legend=False,
         **scanpy_kwargs,
     )

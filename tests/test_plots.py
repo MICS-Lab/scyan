@@ -27,16 +27,16 @@ def test_kde_per_population(model: Scyan, pop: str, ref: str):
     scyan.plot.kde_per_population(model, pop, show=False)
 
 
-def test_latent_expressions(model: Scyan, pop: str, ref: str):
-    scyan.plot.latent_expressions(model, pop, show=False)
+def test_pop_expressions(model: Scyan, pop: str, ref: str):
+    scyan.plot.pop_expressions(model, pop, show=False)
 
 
 def test_probs_per_marker(model: Scyan, pop: str, ref: str):
     scyan.plot.probs_per_marker(model, pop, show=False)
 
 
-def test_latent_heatmap(model: Scyan):
-    scyan.plot.latent_heatmap(model, show=False)
+def test_pops_expressions(model: Scyan):
+    scyan.plot.pops_expressions(model, show=False)
 
 
 def test_scatter(model: Scyan, pop: str, ref: str):

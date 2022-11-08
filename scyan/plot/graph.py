@@ -4,10 +4,10 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 from .. import Scyan
-from .utils import optional_show
+from .utils import plot_decorator
 
 
-@optional_show
+@plot_decorator
 def pops_hierarchy(model: Scyan, figsize: tuple = (18, 5), show: bool = True) -> None:
     """Plot populations as a tree, where each level corresponds to more detailed populations. To run this function, your knowledge table need to contain at least one population 'level' (see [this tutorial](../../tutorials/advanced/#hierarchical-population-display)), and you need to install `graphviz`.
 

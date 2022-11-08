@@ -10,15 +10,15 @@
     options:
       show_root_heading: true
 
-::: scyan.plot.latent_heatmap
+::: scyan.plot.pops_expressions
     options:
       show_root_heading: true
 
-::: scyan.plot.subclusters
+::: scyan.plot.subcluster
     options:
       show_root_heading: true
 
-::: scyan.plot.latent_expressions
+::: scyan.plot.pop_expressions
     options:
       show_root_heading: true
 

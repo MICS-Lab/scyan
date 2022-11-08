@@ -121,4 +121,4 @@ Scyan is a **Python** library based on:
 
 # Cite us
 
-Our paper is not published yet. Meanwhile, you can [read our preprint or arXiv](https://arxiv.org/abs/2208.05745).
+Our paper is not published yet. Meanwhile, you can [read our preprint on arXiv](https://arxiv.org/abs/2208.05745).
