@@ -8,13 +8,12 @@ import torch
 from scipy.stats import norm
 
 from .. import Scyan
-from ..utils import _get_subset_indices, _requires_fit
+from ..utils import _get_subset_indices
 from .utils import check_population, plot_decorator
 
 
 @torch.no_grad()
 @plot_decorator
-@_requires_fit
 def pops_expressions(
     model: Scyan,
     latent: bool = True,
@@ -59,7 +58,6 @@ def pops_expressions(
 
 @torch.no_grad()
 @plot_decorator
-@_requires_fit
 def boxplot_expressions(
     model: Scyan,
     marker: str,
@@ -101,7 +99,6 @@ def boxplot_expressions(
 
 @torch.no_grad()
 @plot_decorator
-@_requires_fit
 @check_population(one=True)
 def pop_expressions(
     model: Scyan,

@@ -228,6 +228,7 @@ class Scyan(pl.LightningModule):
     def batch_ref_id(self):
         return self.batch_to_id.get(self.hparams.batch_ref)
 
+    @_requires_fit
     def forward(self, indices: Optional[np.ndarray] = None) -> Tensor:
         """Model forward function (not used during training, see `training_step`instead).
 
