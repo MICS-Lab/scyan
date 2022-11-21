@@ -43,7 +43,7 @@ def get_local_file(
 
         try:
             log.info(
-                f"Downloading {filename} from dataset {dataset_name}. It can take dozens of seconds."
+                f"File not found locally. Trying to load {filename} from dataset {dataset_name} on github. It can take dozens of seconds."
             )
             request.urlretrieve(url, filepath)
             log.info(f"Successfully downloaded and saved locally at {filepath}")

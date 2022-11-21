@@ -41,7 +41,7 @@ def auto_logicle_transform(
                     w = (m - np.log10(t / abs(r))) / 2
 
         if not w or w > 2:
-            log.warning(
+            log.warn(
                 f"Auto logicle transformation failed for {marker}. Using default logicle."
             )
             w, t = 1, 5e5

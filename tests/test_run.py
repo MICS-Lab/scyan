@@ -20,17 +20,17 @@ def short_model_batch_effect(init_data):
     return Scyan(*init_data, batch_key="subject", batch_ref="H1")
 
 
-def test_inverse(short_model: Scyan):
-    u = short_model()
-    x = short_model.module.inverse(u, short_model.covariates)
-
-    assert torch.isclose(x, short_model.x, atol=1e-6).all()
-
-
 @pytest.fixture
 def test_run_model(short_model: Scyan):
     short_model.fit(max_epochs=2)
     return short_model
+
+
+def test_inverse(test_run_model: Scyan):
+    u = test_run_model()
+    x = test_run_model.module.inverse(u, test_run_model.covariates)
+
+    assert torch.isclose(x, test_run_model.x, atol=1e-6).all()
 
 
 def test_run_model_batch_effect(short_model_batch_effect: Scyan):

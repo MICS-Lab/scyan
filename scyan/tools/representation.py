@@ -140,7 +140,7 @@ def umap(
 
     _check_is_processed(X)
 
-    if n_cells is not None:
+    if n_cells is not None and n_cells < adata.n_obs:
         adata.obs["has_umap"] = np.in1d(np.arange(adata.n_obs), indices)
 
     log.info("Fitting UMAP...")
