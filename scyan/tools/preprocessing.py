@@ -21,6 +21,7 @@ def auto_logicle_transform(
         m: See logicle article. Defaults to 4.5.
     """
     adata.uns["scyan_logicle"] = {}
+    markers_failed = []
 
     for marker in adata.var_names:
         column = adata[:, marker].X.toarray().flatten()
@@ -41,9 +42,7 @@ def auto_logicle_transform(
                     w = (m - np.log10(t / abs(r))) / 2
 
         if not w or w > 2:
-            log.warn(
-                f"Auto logicle transformation failed for {marker}. Using default logicle."
-            )
+            markers_failed.append(marker)
             w, t = 1, 5e5
 
         column = flowutils.transforms.logicle(column, None, t=t, m=m, w=w)
@@ -53,6 +52,11 @@ def auto_logicle_transform(
             adata[:, marker] = column
         else:
             adata[:, marker] = column.clip(np.quantile(column, quantile_clip))
+
+    if markers_failed:
+        log.warn(
+            f"Auto logicle transformation failed for the following markers (logicle was used instead): {', '.join(markers_failed)}.\nIt can happen when expressions are all positive or all negative."
+        )
 
 
 def _logicle_inverse_one(adata: AnnData, obsm: Optional[str], marker: str) -> np.ndarray:
