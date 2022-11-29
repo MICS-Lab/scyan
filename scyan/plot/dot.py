@@ -11,10 +11,10 @@ from ..utils import _subset
 from .utils import check_population, get_palette_others, plot_decorator, select_markers
 
 
-@plot_decorator
+@plot_decorator(adata=True)
 @check_population(return_list=True)
 def scatter(
-    model: Scyan,
+    adata: AnnData,
     population: Union[str, List[str]],
     markers: Optional[List[str]] = None,
     n_markers: Optional[int] = 3,
@@ -27,7 +27,7 @@ def scatter(
     One scatter plot is displayed for each pair of markers.
 
     Args:
-        model: Scyan model
+        adata: An `anndata` object.
         population: One population or a list of population to be colored. To be valid, a population name have to be in `adata.obs[obs_key]`.
         markers: List of markers to plot. If `None`, the list is chosen automatically.
         n_markers: Number of markers to choose automatically if `markers is None`.
@@ -36,8 +36,7 @@ def scatter(
         s: Dot marker size.
         show: Whether or not to display the figure.
     """
-    adata = model.adata
-    markers = select_markers(model, markers, n_markers, obs_key, population)
+    markers = select_markers(adata, markers, n_markers, obs_key, population)
 
     data = adata[:, markers].to_df()
     keys = adata.obs[obs_key].astype(str)

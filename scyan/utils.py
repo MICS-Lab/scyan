@@ -70,10 +70,10 @@ def _pops_to_indices(model, pops: List[str]) -> Tensor:
     return torch.tensor([_pop_to_index(model, pop) for pop in pops], dtype=int)
 
 
-def _get_subset_indices(adata, n_cells: Union[int, None]):
-    if n_cells is None or n_cells >= adata.n_obs:
-        return np.arange(adata.n_obs)
-    return np.random.choice(adata.n_obs, size=n_cells, replace=False)
+def _get_subset_indices(n_obs, n_cells: Union[int, None]):
+    if n_cells is None or n_cells >= n_obs:
+        return np.arange(n_obs)
+    return np.random.choice(n_obs, size=n_cells, replace=False)
 
 
 def _process_pop_sample(model, pop: Union[str, List[str], int, Tensor, None] = None):

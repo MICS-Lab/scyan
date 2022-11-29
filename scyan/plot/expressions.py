@@ -13,12 +13,12 @@ from .utils import check_population, plot_decorator
 
 
 @torch.no_grad()
-@plot_decorator
+@plot_decorator()
 def pops_expressions(
     model: Scyan,
     latent: bool = True,
     obs_key: str = "scyan_pop",
-    n_cells: Optional[int] = 200000,
+    n_cells: Optional[int] = 200_000,
     vmax: float = 1.2,
     vmin: float = -1.2,
     cmap: Optional[str] = None,
@@ -39,7 +39,7 @@ def pops_expressions(
         cmap: Colormap name. By default, uses `"coolwarm"` if `latent`, else `"viridis"`.
         show: Whether or not to display the figure.
     """
-    indices = _get_subset_indices(model.adata, n_cells)
+    indices = _get_subset_indices(model.adata.n_obs, n_cells)
 
     x = model(indices).cpu().numpy() if latent else model.adata[indices].X
     columns = model.var_names if latent else model.adata.var_names
@@ -57,7 +57,7 @@ def pops_expressions(
 
 
 @torch.no_grad()
-@plot_decorator
+@plot_decorator()
 def boxplot_expressions(
     model: Scyan,
     marker: str,
@@ -98,7 +98,7 @@ def boxplot_expressions(
 
 
 @torch.no_grad()
-@plot_decorator
+@plot_decorator()
 @check_population(one=True)
 def pop_expressions(
     model: Scyan,
