@@ -20,14 +20,11 @@ nav:
   - Usage advices: advice.md
   - API: 
     - scyan.Scyan: api/model.md
-    - IO (Read/write): api/io.md
-    - Tools:
-      - Preprocessing: api/preprocessing.md
-      - Representation: api/representation.md
-      - Results analysis: api/analysis.md
+    - IO (read/write): api/io.md
+    - Tools: api/tools.md
     - Plots: api/plots.md
     - Loading/adding datasets: api/datasets.md
-    - Modules:
+    - Modules (advanced):
       - scyan.module.ScyanModule: api/module.md
       - scyan.module.PriorDistribution: api/prior.md
       - scyan.module.RealNVP: api/real_nvp.md

@@ -23,7 +23,7 @@ def subcluster(
 ) -> None:
     """Create sub-clusters among a given populations, and filters small clusters according to (i) a minimum number of cells and (ii) a minimum ratio of cells.
     !!! info
-        After having run this method, you can analyze the results with [scyan.plot.umap](../plots/#scyan.plot.umap) and [scyan.plot.pops_expression](../plots/#scyan.plot.pops_expression).
+        After having run this method, you can analyze the results with [scyan.plot.umap][] and [scyan.plot.pops_expressions][].
 
     Args:
         adata: An `anndata` object.
