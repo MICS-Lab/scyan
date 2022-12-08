@@ -1,4 +1,5 @@
 import logging
+import warnings
 from functools import wraps
 from pathlib import Path
 from typing import Callable, List, Tuple, Union
@@ -12,6 +13,10 @@ from pandas.api.types import is_numeric_dtype
 from torch import Tensor
 
 log = logging.getLogger(__name__)
+
+warnings.filterwarnings("ignore", message="Transforming to str index")
+warnings.filterwarnings("ignore", message=r".*Trying to modify attribute `._uns`[\s\S]*")
+warnings.filterwarnings("ignore", message=r".*No data for colormapping provided'.*")
 
 
 def _root_path() -> Path:
@@ -105,11 +110,9 @@ def _add_level_predictions(model, obs_key: str) -> None:
     level_names = mpm.index.names[1:]
     obs_keys = [f"{obs_key}_{name}" for name in level_names]
 
-    pop_dict = {pop: levels_pops for pop, *levels_pops in mpm.index}
-    preds = np.vstack(
-        adata.obs[obs_key].astype(str).apply(lambda x: pop_dict.get(x, np.nan))
-    )
-    adata.obs[obs_keys] = pd.DataFrame(preds, dtype="category", index=adata.obs.index)
+    for i, new_obs_key in enumerate(obs_keys):
+        pop_dict = {pop: levels_pops[i] for pop, *levels_pops in mpm.index}
+        adata.obs[new_obs_key] = adata.obs[obs_key].map(pop_dict).astype("category")
 
 
 def _get_pop_index(pop: str, marker_pop_matrix: pd.DataFrame):
@@ -167,6 +170,11 @@ def _validate_inputs(adata: AnnData, df: pd.DataFrame):
         log.warn(
             f"Found duplicate populations in the knowledge matrix. We advise updating or removing the following rows: {', '.join(duplicates_names)}"
         )
+
+    if isinstance(df.index, pd.MultiIndex):
+        assert (
+            not df.index.to_frame().isna().any().any()
+        ), "One or multiple population name(s) are NaN, you have to name them."
 
     ratio_non_standard = 1 - ((df**2 == 1) | df.isna()).values.mean()
     if ratio_non_standard > 0.15:

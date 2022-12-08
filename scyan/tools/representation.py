@@ -49,17 +49,18 @@ def subcluster(
     else:
         if "has_umap" not in adata.obs or condition.sum() <= n_cells:
             indices = _get_subset_indices(condition.sum(), n_cells)
+            indices = np.where(condition)[0][indices]
         else:
             indices = _get_subset_indices((condition & adata.obs.has_umap).sum(), n_cells)
+            indices = np.where(condition & adata.obs.has_umap)[0][indices]
 
             k = len(indices)
             if k < n_cells:
                 indices2 = _get_subset_indices(
                     (condition & ~adata.obs.has_umap).sum(), n_cells - k
                 )
+                indices2 = np.where(condition & ~adata.obs.has_umap)[0][indices2]
                 indices = np.concatenate([indices, indices2])
-
-        indices = np.where(condition)[0][indices]
 
         adata_sub = adata[indices, markers].copy()
         sc.pp.neighbors(adata_sub)
@@ -68,6 +69,7 @@ def subcluster(
     adata.obs[leiden_key] = np.nan
     leiden_index = adata.obs.columns.get_loc(leiden_key)
     adata.obs.iloc[indices, leiden_index] = adata_sub.obs[leiden_key]
+    adata.obs[leiden_key] = adata.obs[leiden_key].astype("category")
 
     counts = adata_sub.obs[leiden_key].value_counts()
     remove = counts < max(counts.sum() * size_ratio_th, min_cells_th)
@@ -83,6 +85,7 @@ def subcluster(
     adata.obs[subcluster_key] = np.nan
     subcluster_index = adata.obs.columns.get_loc(subcluster_key)
     adata.obs.iloc[indices, subcluster_index] = adata_sub.obs[leiden_key]
+    adata.obs[subcluster_key] = adata.obs[subcluster_key].astype("category")
 
     adata.uns[leiden_key] = markers
     log.info(

@@ -1,5 +1,4 @@
 import logging
-import warnings
 from typing import Dict, List, Optional, Union
 
 import fcsparser
@@ -10,8 +9,6 @@ from anndata import AnnData
 from pandas.api.types import is_numeric_dtype
 
 log = logging.getLogger(__name__)
-
-warnings.filterwarnings("ignore", message="Transforming to str index")
 
 
 def read_fcs(
