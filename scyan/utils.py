@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 
 warnings.filterwarnings("ignore", message="Transforming to str index")
 warnings.filterwarnings("ignore", message=r".*Trying to modify attribute `._uns`[\s\S]*")
-warnings.filterwarnings("ignore", message=r".*No data for colormapping provided'.*")
+warnings.filterwarnings("ignore", message=r".*No data for colormapping provided[\s\S]*")
 
 
 def _root_path() -> Path:
@@ -168,7 +168,7 @@ def _validate_inputs(adata: AnnData, df: pd.DataFrame):
     if duplicates.any():
         duplicates_names = duplicates[duplicates].index.get_level_values(0)
         log.warn(
-            f"Found duplicate populations in the knowledge matrix. We advise updating or removing the following rows: {', '.join(duplicates_names)}"
+            f"Found duplicate populations in the knowledge matrix. We advise updating or removing the following rows: {', '.join(map(str, duplicates_names))}"
         )
 
     if isinstance(df.index, pd.MultiIndex):

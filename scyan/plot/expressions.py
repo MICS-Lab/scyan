@@ -67,7 +67,7 @@ def boxplot_expressions(
     figsize: tuple = (10, 5),
     fliersize: float = 0.5,
 ):
-    """Boxplot of expressions per population (for one marker).
+    """Boxplot of expressions for all population (for one marker).
 
     Args:
         model: Scyan model.
