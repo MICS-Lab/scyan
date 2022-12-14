@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -17,6 +19,7 @@ def probs_per_marker(
     obs_key: str = "scyan_pop",
     prob_name: str = "Prob",
     vmin_threshold: int = -100,
+    figsize: Tuple[float] = (10, 6),
     show: bool = True,
 ):
     """Interpretability tool: get a group of cells and plot a heatmap of marker probabilities for each population.
@@ -27,6 +30,7 @@ def probs_per_marker(
         obs_key: Key to look for population in `adata.obs`. By default, uses the model predictions.
         prob_name: Name to display on the plot.
         vmin_threshold: Minimum threshold for the heatmap colorbar.
+        figsize: Pair `(width, height)` indicating the size of the figure.
         show: Whether or not to display the figure.
     """
     u = model(model.adata.obs[obs_key] == population)
@@ -47,5 +51,7 @@ def probs_per_marker(
     df_probs.insert(0, prob_name, means)
     df_probs.insert(1, " ", np.nan)
     df_probs.sort_values(by=prob_name, inplace=True, ascending=False)
+
+    plt.figure(figsize=figsize)
     sns.heatmap(df_probs, cmap="magma", vmin=max(vmin_threshold, mean_log_probs.min()))
     plt.title("Log probabilities per marker for each population")

@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -22,6 +22,7 @@ def pops_expressions(
     vmax: float = 1.2,
     vmin: float = -1.2,
     cmap: Optional[str] = None,
+    figsize: Tuple[float] = (10, 6),
     show: bool = True,
 ):
     """Heatmap that shows (latent or standardized) cell expressions for all populations.
@@ -37,6 +38,7 @@ def pops_expressions(
         vmax: Maximum value on the heatmap.
         vmax: Minimum value on the heatmap.
         cmap: Colormap name. By default, uses `"coolwarm"` if `latent`, else `"viridis"`.
+        figsize: Pair `(width, height)` indicating the size of the figure.
         show: Whether or not to display the figure.
     """
     indices = _get_subset_indices(model.adata.n_obs, n_cells)
@@ -50,6 +52,7 @@ def pops_expressions(
     if cmap is None:
         cmap = "coolwarm" if latent else "viridis"
 
+    plt.figure(figsize=figsize)
     sns.heatmap(df.groupby("Population").mean(), vmax=vmax, vmin=vmin, cmap=cmap)
     plt.title(
         f"{'Latent' if latent else 'Standardized'} expressions grouped by {obs_key}"
