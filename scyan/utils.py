@@ -2,21 +2,21 @@ import logging
 import warnings
 from functools import wraps
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Tuple, Union
+from typing import Callable, List, Tuple, Union
 
-import flowio
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import torch
 from anndata import AnnData
 from pandas.api.types import is_numeric_dtype
-from sklearn.preprocessing import LabelEncoder
 from torch import Tensor
 
 log = logging.getLogger(__name__)
 
 warnings.filterwarnings("ignore", message="Transforming to str index")
+warnings.filterwarnings("ignore", message=r".*Trying to modify attribute `._uns`[\s\S]*")
+warnings.filterwarnings("ignore", message=r".*No data for colormapping provided[\s\S]*")
 
 
 def _root_path() -> Path:
@@ -53,124 +53,6 @@ def _wandb_plt_image(fun: Callable, figsize: Tuple[int, int] = [7, 5]):
     return wandb.Image(Image.open(img_buf))
 
 
-def read_fcs(
-    path: str, names_selection: Optional[List[str]] = None, log_names: bool = True
-) -> AnnData:
-    """Read a FCS file and return an AnnData instance
-
-    Args:
-        path: Path to the FCS file that has to be read.
-        names_selection: If `None`, automatically detect if a channel has to be loaded in `obs` (e.g. Time) or if it is a marker (e.g. CD4). Else, you can provide a list of channels to select as variables.
-        log_names: If `True` and if `names_selection` is not `None`, then it logs all the names detected from the FCS file. It can be useful to set `names_selection` properly.
-
-    Returns:
-        `AnnData` instance containing the FCS data.
-    """
-    fcs_data = flowio.FlowData(str(path))
-    data = np.reshape(fcs_data.events, (-1, fcs_data.channel_count))
-
-    names = np.array(
-        [value.get("PnS", value["PnN"]) for value in fcs_data.channels.values()]
-    )
-
-    if names_selection is None:
-        is_marker = np.array(["PnS" in value for value in fcs_data.channels.values()])
-    else:
-        if log_names:
-            log.info(
-                f"Found {len(names)} names: {', '.join(names)}. Set log_names=False to disable this log."
-            )
-
-        is_marker = np.array([name in names_selection for name in names])
-
-    X = data[:, is_marker]
-    var = pd.DataFrame(index=names[is_marker])
-    obs = pd.DataFrame(
-        data=data[:, ~is_marker],
-        columns=names[~is_marker],
-        index=range(data.shape[0]),
-    )
-
-    return AnnData(X=X, var=var, obs=obs)
-
-
-def _to_df(adata: AnnData, layer: Optional[str] = None) -> pd.DataFrame:
-    df = pd.concat([adata.to_df(layer), adata.obs], axis=1)
-
-    for key in adata.obsm:
-        names = [f"{key}{i+1}" for i in range(adata.obsm[key].shape[1])]
-        df[names] = adata.obsm[key]
-
-    return df
-
-
-def write_fcs(
-    adata: AnnData,
-    path: str,
-    layer: Optional[str] = None,
-    columns_to_numeric: Optional[List] = None,
-) -> Union[None, Dict]:
-    """Based on a `AnnData` object, it writes a FCS file that contains (i) all the markers intensities, (ii) every numeric column of `adata.obs`, and (iii) all `adata.obsm` variables.
-
-    !!! note
-        As the FCS format doesn't support strings, some observations will not be kept in the FCS file.
-
-    Args:
-        adata: `AnnData` object to save.
-        path: Path to write the file.
-        layer: Name of the `adata` layer from which intensities will be extracted. If `None`, uses `adata.X`.
-        columns_to_numeric: List of **non-numerical** column names from `adata.obs` that should be kept, by transforming them into integers. Note that you don't need to list the numerical columns, that are written inside the FCS by default.
-
-    Returns:
-        If `columns_to_numeric` is `None`, returns nothing. Else, return a dict whose keys are the observation column names being transformed, and the values are ordered lists of the label encoded classes. E.g., `{"batch": ["b1", "b2"]}` means that the batch `"b1"` was encoded by 0, and `"b2"` by 1.
-    """
-    df = _to_df(adata, layer)
-    dict_classes = {}
-    columns_removed = []
-
-    for column in df.columns:
-        if is_numeric_dtype(df[column].dtype):
-            continue
-        try:
-            df[column] = pd.to_numeric(df[column].values)
-            continue
-        except:
-            if columns_to_numeric is not None and column in columns_to_numeric:
-                le = LabelEncoder()
-                df[column] = le.fit_transform(df[column].values)
-                dict_classes[column] = list(le.classes_)
-            else:
-                del df[column]
-                columns_removed.append(column)
-
-    log.info(f"Found {len(df.columns)} features: {', '.join(df.columns)}.")
-    if columns_removed:
-        log.info(
-            f"FCS does not support strings, so the following columns where removed: {', '.join(columns_removed)}.\nIf you want to keep these str observations, use the 'columns_to_numeric' argument to encod them."
-        )
-
-    with open(path, "wb") as f:
-        flowio.create_fcs(f, df.values.flatten(), df.columns)
-
-    if columns_to_numeric is not None:
-        return dict_classes
-
-
-def write_csv(
-    adata: AnnData,
-    path: str,
-    layer: Optional[str] = None,
-) -> Union[None, Dict]:
-    """Based on a `AnnData` object, it writes a CSV file that contains (i) all the markers intensities, (ii) every numeric column of `adata.obs`, and (iii) all `adata.obsm` variables.
-
-    Args:
-        adata: `AnnData` object to save.
-        path: Path to write the file.
-        layer: Name of the `adata` layer from which intensities will be extracted. If `None`, uses `adata.X`.
-    """
-    _to_df(adata, layer).to_csv(path)
-
-
 def _subset(indices: List[str], max_obs: int):
     if len(indices) < max_obs:
         return indices
@@ -193,10 +75,10 @@ def _pops_to_indices(model, pops: List[str]) -> Tensor:
     return torch.tensor([_pop_to_index(model, pop) for pop in pops], dtype=int)
 
 
-def _get_subset_indices(adata, n_cells: Union[int, None]):
-    if n_cells is None or n_cells >= adata.n_obs:
-        return np.arange(adata.n_obs)
-    return np.random.choice(adata.n_obs, size=n_cells, replace=False)
+def _get_subset_indices(n_obs, n_cells: Union[int, None]):
+    if n_cells is None or n_cells >= n_obs:
+        return np.arange(n_obs)
+    return np.random.choice(n_obs, size=n_cells, replace=False)
 
 
 def _process_pop_sample(model, pop: Union[str, List[str], int, Tensor, None] = None):
@@ -228,9 +110,9 @@ def _add_level_predictions(model, obs_key: str) -> None:
     level_names = mpm.index.names[1:]
     obs_keys = [f"{obs_key}_{name}" for name in level_names]
 
-    pop_dict = {pop: levels_pops for pop, *levels_pops in mpm.index}
-    preds = np.vstack(adata.obs[obs_key].astype(str).apply(pop_dict.get))
-    adata.obs[obs_keys] = pd.DataFrame(preds, dtype="category", index=adata.obs.index)
+    for i, new_obs_key in enumerate(obs_keys):
+        pop_dict = {pop: levels_pops[i] for pop, *levels_pops in mpm.index}
+        adata.obs[new_obs_key] = adata.obs[obs_key].map(pop_dict).astype("category")
 
 
 def _get_pop_index(pop: str, marker_pop_matrix: pd.DataFrame):
@@ -277,7 +159,7 @@ def _validate_inputs(adata: AnnData, df: pd.DataFrame):
 
     _check_is_processed(X)
 
-    if np.abs(X.mean(axis=0)).max() > 0.2 or np.abs(X.std(axis=0) - 1).max() > 0.2:
+    if np.abs(X.std(axis=0) - 1).max() > 0.2:
         log.warn(
             "It seems that the data is not standardised. We advise using scaling (scyan.tools.scale) before initializing the model."
         )
@@ -286,8 +168,13 @@ def _validate_inputs(adata: AnnData, df: pd.DataFrame):
     if duplicates.any():
         duplicates_names = duplicates[duplicates].index.get_level_values(0)
         log.warn(
-            f"Found duplicate populations in the knowledge matrix. We advise updating or removing the following rows: {', '.join(duplicates_names)}"
+            f"Found duplicate populations in the knowledge matrix. We advise updating or removing the following rows: {', '.join(map(str, duplicates_names))}"
         )
+
+    if isinstance(df.index, pd.MultiIndex):
+        assert (
+            not df.index.to_frame().isna().any().any()
+        ), "One or multiple population name(s) are NaN, you have to name them."
 
     ratio_non_standard = 1 - ((df**2 == 1) | df.isna()).values.mean()
     if ratio_non_standard > 0.15:

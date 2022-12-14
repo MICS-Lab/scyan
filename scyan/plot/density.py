@@ -3,22 +3,22 @@ from typing import List, Optional, Union
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from anndata import AnnData
 
-from .. import Scyan
 from ..utils import _get_subset_indices
 from .utils import check_population, get_palette_others, plot_decorator, select_markers
 
 
-@plot_decorator
+@plot_decorator(adata=True)
 @check_population(return_list=True)
 def kde_per_population(
-    model: Scyan,
+    adata: AnnData,
     population: Union[str, List[str]],
     markers: Optional[List[str]] = None,
+    obs_key: str = "scyan_pop",
     n_markers: Optional[int] = 3,
     n_cells: Optional[int] = 100000,
     ncols: int = 2,
-    obs_key: str = "scyan_pop",
     var_name: str = "Marker",
     value_name: str = "Expression",
     show: bool = True,
@@ -26,21 +26,21 @@ def kde_per_population(
     """Plot Kernel-Density-Estimation for each provided population and for multiple markers.
 
     Args:
-        model: Scyan model.
+        adata: An `anndata` object.
         population: One population or a list of population to interpret. To be valid, a population name have to be in `adata.obs[obs_key]`.
         markers: List of markers to plot. If `None`, the list is chosen automatically.
+        obs_key: Key to look for populations in `adata.obs`. By default, uses the model predictions.
         n_markers: Number of markers to choose automatically if `markers is None`.
         n_cells: Number of cells to be considered for the heatmap (to accelerate it when $N$ is very high). If `None`, consider all cells.
         ncols: Number of figures per row.
-        obs_key: Key to look for populations in `adata.obs`. By default, uses the model predictions.
         var_name: Name displayed on the graphs.
         value_name: Name displayed on the graphs.
         show: Whether or not to display the figure.
     """
-    indices = _get_subset_indices(model.adata, n_cells)
-    adata = model.adata[indices]
+    indices = _get_subset_indices(adata.n_obs, n_cells)
+    adata = adata[indices]
 
-    markers = select_markers(model, markers, n_markers, obs_key, population, 1)
+    markers = select_markers(adata, markers, n_markers, obs_key, population, 1)
 
     df = adata.to_df()
 

@@ -1,8 +1,17 @@
+### General advices
+
+- Make sure your data only contains the population of interest. E.g., if you are interested into the annotation of immune cells, then consider providing only the live cells that are CD45+.
+- Don't provide overlapping populations in the table. For instance, if you have CD16- NK and CD16+ NK, you don't need to write knowledge about NK cells. Note that, we would actually indirectly annotate NK cells, because they are the union of CD16- NK cells and CD16+ NK cells. You could also provide a [hierarchical description of the populations](../tutorials/advanced/#working-with-hierarchical-populations).
+- Before to run batch effect correction, check if you really have a significant batch effect (else, you could simply run Scyan without batch-effect correction). You can check that by plotting the batch observation on the umap (see [scyan.plot.umap][]).
+
+!!! note
+    For now, Scyan annotates every population (WIP). That is, if one existing population is not described in the table, it will still be annotated. Yet, it may be obvious that this population is missing while looking at the umap, and using the tools from the population discovery can help figuring out which population it is.
+
+### Advice for the creation of the table
+
 !!! important
 
     The design of the knowledge table is essential for the annotations. The literature can help its creation, but we also provide some advice to enhance the table.
-
-### General advice
 
 - Check that all markers are working as intended. A marker that didn't work during the cytometer acquisition should be removed from the knowledge table, as it can mislead the model.
 - It is better to provide no knowledge than false information; therefore, the user should feel comfortable using "Not Applicable" for a marker when unsure (depending on your table, 70% of NA can be acceptable). Besides, if needed, population discovery can be used to go deeper into this marker afterwards.
@@ -24,7 +33,7 @@
 ### What should I do if Scyan seems wrong?
 
 - First thing to do is to check your table again. You may have made a typo that could confuse the model. Typically, if you have written `Marker+` for a population that is `Marker-` (or the opposite), it can perturb the prediction toward this population **and** toward other populations.
-- Try using [scyan.plot.probs_per_marker](../../api/plots/#scyan.plot.probs_per_marker). Many markers may show up dark on the heatmap at places they shouldn't, but the errors may be due to only one marker. You can find which marker it is by checking actual marker expressions on [a UMAP plot](../../api/plots/#scyan.plot.umap), or with a [scatter plot](../../api/plots/#scyan.plot.scatter), and then update your table or read some literature again.
+- Try using [scyan.plot.probs_per_marker][] by targetting one cluster or population that seems weird. Many markers may show up dark on the heatmap at places they shouldn't, but the errors may be due to only one marker. You can find which marker it is by checking actual marker expressions on [a UMAP plot][scyan.plot.umap], or with a [scatter plot][scyan.plot.scatter], and then update your table or read some literature again.
 - One reason for not predicting a population may be an unbalanced knowledge quantity between two related populations. For instance, having 10 values inside the table for `CD4 T CM` cells versus 5 values for `CD4 T EM` cells will probably make the model predict very few `CD4 T CM` cells. Indeed, `CD4 T CM` has many constraints compared to `CD4 T EM`, which becomes the "easy prediction" (indeed, very few constraints are applied to this population). In that case, read the advice related to the scatter plot above again.
 
 !!! info "Example about how Scyan handles NA"

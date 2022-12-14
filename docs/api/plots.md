@@ -1,24 +1,21 @@
-::: scyan.plot.scatter
-    options:
-      show_root_heading: true
-
 ::: scyan.plot.umap
     options:
       show_root_heading: true
 
-::: scyan.plot.probs_per_marker
+::: scyan.plot.scatter
     options:
       show_root_heading: true
+
 
 ::: scyan.plot.pops_expressions
     options:
       show_root_heading: true
 
-::: scyan.plot.subcluster
+::: scyan.plot.pop_expressions
     options:
       show_root_heading: true
 
-::: scyan.plot.pop_expressions
+::: scyan.plot.probs_per_marker
     options:
       show_root_heading: true
 

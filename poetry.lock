@@ -424,12 +424,28 @@ python-versions = "*"
 devel = ["colorama", "jsonschema", "json-spec", "pylint", "pytest", "pytest-benchmark", "pytest-cache", "validictory"]
 
 [[package]]
-name = "flowio"
-version = "1.0.1"
-description = "FlowIO is a Python library for reading / writing Flow Cytometry Standard (FCS) files"
+name = "fcsparser"
+version = "0.2.4"
+description = "A python package for reading raw fcs files"
 category = "main"
 optional = false
 python-versions = "*"
+
+[package.dependencies]
+numpy = "*"
+pandas = "*"
+six = "*"
+
+[[package]]
+name = "fcswrite"
+version = "0.6.2"
+description = "Write .fcs files (flow cytometry)"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+numpy = ">=1.7.0"
 
 [[package]]
 name = "flowutils"
@@ -474,14 +490,14 @@ python-versions = ">=3.7"
 
 [[package]]
 name = "fsspec"
-version = "2022.7.1"
+version = "2022.11.0"
 description = "File-system specification"
 category = "main"
 optional = false
 python-versions = ">=3.7"
 
 [package.dependencies]
-aiohttp = {version = "*", optional = true, markers = "extra == \"http\""}
+aiohttp = {version = "<4.0.0a0 || >4.0.0a0,<4.0.0a1 || >4.0.0a1", optional = true, markers = "extra == \"http\""}
 requests = {version = "*", optional = true, markers = "extra == \"http\""}
 
 [package.extras]
@@ -498,7 +514,7 @@ github = ["requests"]
 gs = ["gcsfs"]
 gui = ["panel"]
 hdfs = ["pyarrow (>=1)"]
-http = ["requests", "aiohttp"]
+http = ["requests", "aiohttp (!=4.0.0a0,!=4.0.0a1)"]
 libarchive = ["libarchive-c"]
 oci = ["ocifs"]
 s3 = ["s3fs"]
@@ -2614,7 +2630,7 @@ docs = ["mkdocs-material", "mkdocstrings", "mkdocstrings-python", "mkdocs-jupyte
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.8,<3.11"
-content-hash = "744e838b04005b07bebfe0f6904271547636f6165a09ac9f426e9c82eb17b9d4"
+content-hash = "6105ec28287999ac0ff7799a86a145469e513963154bfda6580f9a95b8eaa0e3"
 
 [metadata.files]
 absl-py = []
@@ -2908,9 +2924,8 @@ entrypoints = [
 ]
 executing = []
 fastjsonschema = []
-flowio = [
-    {file = "FlowIO-1.0.1.tar.gz", hash = "sha256:3bc3d4f3328c3767b6ae2a3c277a341b9e8f1941d2a7e0fd393f59336ecec5e2"},
-]
+fcsparser = []
+fcswrite = []
 flowutils = []
 fonttools = []
 frozenlist = [

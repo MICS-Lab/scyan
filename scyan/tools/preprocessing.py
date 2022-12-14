@@ -21,6 +21,7 @@ def auto_logicle_transform(
         m: See logicle article. Defaults to 4.5.
     """
     adata.uns["scyan_logicle"] = {}
+    markers_failed = []
 
     for marker in adata.var_names:
         column = adata[:, marker].X.toarray().flatten()
@@ -41,9 +42,7 @@ def auto_logicle_transform(
                     w = (m - np.log10(t / abs(r))) / 2
 
         if not w or w > 2:
-            log.warning(
-                f"Auto logicle transformation failed for {marker}. Using default logicle."
-            )
+            markers_failed.append(marker)
             w, t = 1, 5e5
 
         column = flowutils.transforms.logicle(column, None, t=t, m=m, w=w)
@@ -54,6 +53,11 @@ def auto_logicle_transform(
         else:
             adata[:, marker] = column.clip(np.quantile(column, quantile_clip))
 
+    if markers_failed:
+        log.warn(
+            f"Auto logicle transformation failed for the following markers (logicle was used instead): {', '.join(markers_failed)}.\nIt can happen when expressions are all positive or all negative."
+        )
+
 
 def _logicle_inverse_one(adata: AnnData, obsm: Optional[str], marker: str) -> np.ndarray:
     column = adata[:, marker].X if obsm is None else adata[:, marker].obsm[obsm]
@@ -63,7 +67,7 @@ def _logicle_inverse_one(adata: AnnData, obsm: Optional[str], marker: str) -> np
     )
 
 
-def asinh_transform(adata: AnnData, translation: float = 1, cofactor: float = 5) -> None:
+def asinh_transform(adata: AnnData, translation: float = 0, cofactor: float = 5) -> None:
     """Asinh transformation for cell-expressions: $asinh((x - translation)/cofactor)$.
 
     Args:
@@ -139,19 +143,21 @@ def inverse_transform(
 
 
 def scale(adata: AnnData, max_value: float = 10) -> None:
-    """Standardise data.
+    """Tranform the data such as (i) `std=1`, and (ii) either `0` is sent to `-1` (for CyTOF data) or `means=0` (for flow or spectral flow data).
 
     Args:
         adata: An `anndata` object.
         max_value: Clip to this value after scaling.
     """
-    means = adata.X.mean(axis=0)
-    adata.X = adata.X - means
-
     stds = adata.X.std(axis=0)
-    adata.X = (adata.X / stds).clip(-max_value, max_value)
+    adata.uns["scyan_scaling_stds"] = stds
 
-    adata.uns["scyan_scaling"] = {"means": means, "stds": stds}
+    if "scyan_logicle" in adata.uns:
+        means = adata.X.mean(axis=0)
+        adata.X = ((adata.X - means) / stds).clip(-max_value, max_value)
+        adata.uns["scyan_scaling_means"] = means
+    else:
+        adata.X = (adata.X / stds - 1).clip(-max_value, max_value)
 
 
 def unscale(
@@ -168,11 +174,11 @@ def unscale(
         Unscaled numpy array of shape $(N, M)$.
     """
     assert (
-        "scyan_scaling" in adata.uns
+        "scyan_scaling_stds" in adata.uns
     ), "It seems you haven't run 'scyan.tools.scale' before."
 
     X = adata.X if obsm is None else adata.obsm[obsm]
-    means, stds = adata.uns["scyan_scaling"]["means"], adata.uns["scyan_scaling"]["stds"]
+    stds = adata.uns["scyan_scaling_stds"]
 
     if obsm is not None and X.shape[1] != adata.n_vars:
         assert (
@@ -180,6 +186,9 @@ def unscale(
         ), f"Found {X.shape[1]} markers in adata.obsm['{obsm}'], but 'adata' has {adata.n_vars} vars. Please use the 'obsm_names' argument to provide the ordered names of the markers used in adata.obsm['{obsm}']."
 
         indices = [adata.var_names.get_loc(marker) for marker in obsm_names]
-        means, stds = means[indices], stds[indices]
+        stds = stds[indices]
 
-    return means + X * stds
+    if "scyan_scaling_means" in adata.uns:
+        return adata.uns["scyan_scaling_means"] + stds * X
+
+    return (X + 1) * stds

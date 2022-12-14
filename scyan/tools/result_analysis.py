@@ -26,6 +26,7 @@ def count_cell_populations(
 def mean_intensities(
     adata: AnnData,
     groupby: Union[str, List[str]] = "scyan_pop",
+    unstack_join: Optional[str] = None,
     layer: Optional[str] = None,
     obsm: Optional[str] = None,
     obsm_names: Optional[List[str]] = None,
@@ -34,7 +35,8 @@ def mean_intensities(
 
     Args:
         adata: An `AnnData` object.
-        groupby: Key(s) of `adata.obs` used to create groups. E.g., `scyan_pop` creates group of populations. It can be one string, or a list of strings: for instance, use `["id", "scyan_pop"]` computes MMI per population for each ID.
+        groupby: Key(s) of `adata.obs` used to create groups. E.g., `scyan_pop` creates group of populations. It can be one string, or a list of strings: for instance, use `["id", "scyan_pop"]` computes MMI per population for each ID. If you want to get one row per `id`, use `unstack_join`.
+        unstack_join: If not `None`, flattens the biomarkers into one series (or one row per group if `groupby` is a list) and uses `unstack_join` to join the names of the multi-level columns. For instance, `' '` can be a good choice.
         layer: In which `adata.layers` we get fluorescence intensities. By default, it uses `adata.X`.
         obsm: In which `adata.obsm` we get fluorescence intensities. By default, it uses `adata.X`. If not `None` then `obsm_names` is required too.
         obsm_names: Ordered list of names in `adata.obsm[obsm]` if `obsm` was provided.
@@ -57,4 +59,14 @@ def mean_intensities(
     for group in groupby:
         df[group] = adata.obs[group].values
 
-    return df.groupby(groupby).mean()
+    res = df.groupby(groupby).mean()
+
+    if unstack_join is None:
+        return res
+
+    res = res.unstack(level=-1)
+    if isinstance(res, pd.Series):
+        res.index = [unstack_join.join(row).strip() for row in res.index.values]
+    else:
+        res.columns = [unstack_join.join(col).strip() for col in res.columns.values]
+    return res

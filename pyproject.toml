@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "scyan"
-version = "1.2.0"
+version = "1.2.1"
 description = "Single-cell Cytometry Annotation Network"
 documentation = "https://mics-lab.github.io/scyan/"
 homepage = "https://mics-lab.github.io/scyan/"
@@ -30,8 +30,9 @@ scipy = "^1.7.3"
 seaborn = "^0.11.2"
 umap-learn = "^0.5.3"
 llvmlite = "^0.38.1"
-FlowIO = "^1.0.1"
 FlowUtils = "^1.0.0"
+fcsparser = "^0.2.4"
+fcswrite = "^0.6.2"
 wandb = {version = "^0.12.20", optional = true}
 hydra-core = {version = "^1.2.0", optional = true}
 hydra-colorlog = {version = "^1.2.0", optional = true}

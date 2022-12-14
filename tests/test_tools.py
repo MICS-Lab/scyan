@@ -18,9 +18,18 @@ def raw_adata() -> AnnData:
 
 
 @pytest.fixture
-def test_asinh(raw_adata: AnnData):
-    scyan.tools.asinh_transform(raw_adata)
-    return raw_adata
+def raw_adata_cytof() -> AnnData:
+    adata, _ = scyan.data.load("aml", version="short")
+    adata = adata.raw.to_adata()
+    adata.X = adata.X.clip(0)
+    adata.raw = adata
+    return adata
+
+
+@pytest.fixture
+def test_asinh(raw_adata_cytof: AnnData):
+    scyan.tools.asinh_transform(raw_adata_cytof)
+    return raw_adata_cytof
 
 
 @pytest.fixture
@@ -41,13 +50,18 @@ def test_inverse_logicle(test_autologicle: AnnData):
     assert_is_zero(inversed - test_autologicle.raw.X, 1e-2)
 
 
+def test_scale_cytof(test_asinh: AnnData) -> AnnData:
+    scyan.tools.scale(test_asinh)
+
+    assert test_asinh.X.min() == -1
+
+
 def test_scale_unscale(test_autologicle: AnnData) -> AnnData:
     adata = test_autologicle
     adata.raw = adata
 
     scyan.tools.scale(adata, max_value=np.inf)
 
-    assert_is_zero(adata.X.mean(axis=0))
     assert_is_zero(adata.X.std(axis=0) - 1)
 
     unscaled = scyan.tools.unscale(adata)

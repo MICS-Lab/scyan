@@ -17,16 +17,14 @@ nav:
     - tutorials/debarcoding.ipynb
     - tutorials/post_analysis.ipynb
     - tutorials/advanced.ipynb
+  - Usage advices: advice.md
   - API: 
     - scyan.Scyan: api/model.md
-    - IO (Read/write): api/io.md
-    - Tools:
-      - Preprocessing: api/preprocessing.md
-      - Representation: api/representation.md
-      - Results analysis: api/analysis.md
+    - IO (read/write): api/io.md
+    - Tools: api/tools.md
     - Plots: api/plots.md
     - Loading/adding datasets: api/datasets.md
-    - Modules:
+    - Modules (advanced):
       - scyan.module.ScyanModule: api/module.md
       - scyan.module.PriorDistribution: api/prior.md
       - scyan.module.RealNVP: api/real_nvp.md
@@ -34,7 +32,6 @@ nav:
       - scyan.module.LossMMD: api/loss_mmd.md
   - Advanced usage:
     - Add your own dataset: advanced/data.md
-    - Advice to make the knowledge table: advanced/advice.md
     - Selecting parameters: advanced/parameters.md
     - Configuration and monitoring: advanced/hydra_wandb.md
     - CLI/Running scripts: advanced/scripts.md

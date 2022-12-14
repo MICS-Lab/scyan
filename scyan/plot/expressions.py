@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -8,21 +8,21 @@ import torch
 from scipy.stats import norm
 
 from .. import Scyan
-from ..utils import _get_subset_indices, _requires_fit
+from ..utils import _get_subset_indices
 from .utils import check_population, plot_decorator
 
 
 @torch.no_grad()
-@plot_decorator
-@_requires_fit
+@plot_decorator()
 def pops_expressions(
     model: Scyan,
     latent: bool = True,
     obs_key: str = "scyan_pop",
-    n_cells: Optional[int] = 200000,
+    n_cells: Optional[int] = 200_000,
     vmax: float = 1.2,
     vmin: float = -1.2,
     cmap: Optional[str] = None,
+    figsize: Tuple[float] = (10, 6),
     show: bool = True,
 ):
     """Heatmap that shows (latent or standardized) cell expressions for all populations.
@@ -38,9 +38,10 @@ def pops_expressions(
         vmax: Maximum value on the heatmap.
         vmax: Minimum value on the heatmap.
         cmap: Colormap name. By default, uses `"coolwarm"` if `latent`, else `"viridis"`.
+        figsize: Pair `(width, height)` indicating the size of the figure.
         show: Whether or not to display the figure.
     """
-    indices = _get_subset_indices(model.adata, n_cells)
+    indices = _get_subset_indices(model.adata.n_obs, n_cells)
 
     x = model(indices).cpu().numpy() if latent else model.adata[indices].X
     columns = model.var_names if latent else model.adata.var_names
@@ -51,6 +52,7 @@ def pops_expressions(
     if cmap is None:
         cmap = "coolwarm" if latent else "viridis"
 
+    plt.figure(figsize=figsize)
     sns.heatmap(df.groupby("Population").mean(), vmax=vmax, vmin=vmin, cmap=cmap)
     plt.title(
         f"{'Latent' if latent else 'Standardized'} expressions grouped by {obs_key}"
@@ -58,8 +60,7 @@ def pops_expressions(
 
 
 @torch.no_grad()
-@plot_decorator
-@_requires_fit
+@plot_decorator()
 def boxplot_expressions(
     model: Scyan,
     marker: str,
@@ -69,7 +70,7 @@ def boxplot_expressions(
     figsize: tuple = (10, 5),
     fliersize: float = 0.5,
 ):
-    """Boxplot of expressions per population (for one marker).
+    """Boxplot of expressions for all population (for one marker).
 
     Args:
         model: Scyan model.
@@ -100,8 +101,7 @@ def boxplot_expressions(
 
 
 @torch.no_grad()
-@plot_decorator
-@_requires_fit
+@plot_decorator()
 @check_population(one=True)
 def pop_expressions(
     model: Scyan,

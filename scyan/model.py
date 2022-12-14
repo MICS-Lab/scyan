@@ -228,6 +228,7 @@ class Scyan(pl.LightningModule):
     def batch_ref_id(self):
         return self.batch_to_id.get(self.hparams.batch_ref)
 
+    @_requires_fit
     def forward(self, indices: Optional[np.ndarray] = None) -> Tensor:
         """Model forward function (not used during training, see `training_step`instead).
 
@@ -348,18 +349,23 @@ class Scyan(pl.LightningModule):
         self,
         key_added: Optional[str] = "scyan_pop",
         add_levels: bool = True,
+        log_prob_th: float = -50,
     ) -> pd.Series:
         """Model population predictions, i.e. one population is assigned for each cell. Predictions are saved in `adata.obs.scyan_pop` by default.
 
         Args:
             key_added: Key added to `model.adata.obs` to save the predictions. If `None`, then the predictions will not be saved.
             add_levels: If `True`, and if [hierarchical population names](../../tutorials/advanced/#hierarchical-population-display) were provided, then it also saves the prediction for every population level.
+            log_prob_th: If the log-probability of the most probable population for one cell is below this threshold, this cell will not be annotated (`np.nan`).
 
         Returns:
             Population predictions (pandas `Series` of length $N$).
         """
         df = self.predict_proba()
+        max_log_probs = df.pop("max_log_prob")
+
         populations = df.idxmax(axis=1).astype("category")
+        populations[max_log_probs < log_prob_th] = np.nan
 
         if key_added is not None:
             self.adata.obs[key_added] = pd.Categorical(populations)
@@ -369,7 +375,7 @@ class Scyan(pl.LightningModule):
         missing_pops = self.n_pops - len(populations.cat.categories)
         if missing_pops:
             log.info(
-                f"{missing_pops} population(s) were not predicted. It may be due to:\n  - Errors in the knowledge table (see https://mics-lab.github.io/scyan/advanced/advice/)\n  - The model hyperparameters choice (see https://mics-lab.github.io/scyan/advanced/parameters/)\n  - Or maybe these populations are really absent from this dataset."
+                f"{missing_pops} population(s) were not predicted. It may be due to:\n  - Errors in the knowledge table (see https://mics-lab.github.io/scyan/advice/#advice-for-the-creation-of-the-table)\n  - The model hyperparameters choice (see https://mics-lab.github.io/scyan/advanced/parameters/)\n  - Or maybe these populations are really absent from this dataset."
             )
 
         return populations
@@ -382,11 +388,15 @@ class Scyan(pl.LightningModule):
         Returns:
             Dataframe of shape `(N, P)` with probabilities for each population.
         """
-        probs = torch.softmax(
-            torch.cat(self.trainer.predict(self, self.predict_dataloader()), dim=0), dim=1
+        log_probs = torch.cat(
+            self.trainer.predict(self, self.predict_dataloader()), dim=0
         )
+        probs = torch.softmax(log_probs, dim=1)
 
-        return pd.DataFrame(probs.cpu().numpy(), columns=self.pop_names)
+        df = pd.DataFrame(probs.cpu().numpy(), columns=self.pop_names)
+        df["max_log_prob"] = log_probs.max(1).values.cpu().numpy()
+
+        return df
 
     def configure_optimizers(self):
         """PyTorch lightning `configure_optimizers` implementation"""

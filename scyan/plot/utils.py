@@ -6,27 +6,36 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from anndata import AnnData
 from scipy import stats
 
 from .. import Scyan
 from ..utils import _get_subset_indices
 
 
-def plot_decorator(f: Callable) -> Callable:
-    """Decorator that shows a matplotlib figure if the provided 'show' argument is True"""
+def plot_decorator(adata: bool = False):
+    def decorator(f: Callable) -> Callable:
+        """Decorator that shows a matplotlib figure if the provided 'show' argument is True"""
 
-    @wraps(f)
-    def wrapper(model, *args, **kwargs):
-        assert isinstance(
-            model, Scyan
-        ), f"{f.__name__} first argument has to be scyan.Scyan model. Received type {type(model)}."
+        @wraps(f)
+        def wrapper(model, *args, **kwargs):
+            if adata:
+                assert isinstance(
+                    model, AnnData
+                ), f"{f.__name__} first argument has to be anndata.AnnData instance. Received type {type(model)}."
+            else:
+                assert isinstance(
+                    model, Scyan
+                ), f"{f.__name__} first argument has to be scyan.Scyan model. Received type {type(model)}."
 
-        res = f(model, *args, **kwargs)
-        if kwargs.get("show", True):
-            plt.show()
-        return res
+            res = f(model, *args, **kwargs)
+            if kwargs.get("show", True):
+                plt.show()
+            return res
 
-    return wrapper
+        return wrapper
+
+    return decorator
 
 
 def check_population(return_list: bool = False, one: bool = False):
@@ -41,10 +50,11 @@ def check_population(return_list: bool = False, one: bool = False):
             obs_key="scyan_pop",
             **kwargs,
         ):
-            if model.adata.obs[obs_key].dtype == "category":
-                populations = model.adata.obs[obs_key].cat.categories.values
+            adata = model if isinstance(model, AnnData) else model.adata
+            if adata.obs[obs_key].dtype == "category":
+                populations = adata.obs[obs_key].cat.categories.values
             else:
-                populations = set(model.adata.obs[obs_key].values)
+                populations = set(adata.obs[obs_key].values)
             if isinstance(population, str):
                 if population not in populations:
                     raise NameError(
@@ -87,9 +97,8 @@ def get_palette_others(
 
 
 def ks_statistics(
-    model: Scyan, obs_key: str, populations: List[str], max_obs: int = 5000
+    adata: AnnData, obs_key: str, populations: List[str], max_obs: int = 5000
 ):
-    adata = model.adata
     statistics = defaultdict(float)
 
     for pop in populations:
@@ -101,10 +110,10 @@ def ks_statistics(
         else:
             adata2 = adata[adata.obs[obs_key] != pop]
 
-        adata1 = adata1[_get_subset_indices(adata1, max_obs)]
-        adata2 = adata2[_get_subset_indices(adata2, max_obs)]
+        adata1 = adata1[_get_subset_indices(adata1.n_obs, max_obs)]
+        adata2 = adata2[_get_subset_indices(adata2.n_obs, max_obs)]
 
-        for marker in model.var_names:
+        for marker in adata.var_names:
             statistics[marker] += stats.kstest(
                 adata1[:, marker].X.flatten(), adata2[:, marker].X.flatten()
             ).statistic
@@ -113,7 +122,7 @@ def ks_statistics(
 
 
 def select_markers(
-    model: Scyan,
+    adata: AnnData,
     markers: Optional[List[str]],
     n_markers: Optional[int],
     obs_key: str,
@@ -128,7 +137,7 @@ def select_markers(
         ), "You need to provide a list of markers or a number of markers to be chosen automatically"
         assert n_markers >= min_markers, MIN_MARKERS_ERROR
 
-        statistics = ks_statistics(model, obs_key, populations)
+        statistics = ks_statistics(adata, obs_key, populations)
         statistics = sorted(statistics.items(), key=lambda x: x[1], reverse=True)
         markers = [m for m, _ in statistics[:n_markers]]
 

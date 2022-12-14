@@ -1,14 +1,10 @@
 import logging
-from typing import TYPE_CHECKING, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 import numpy as np
-import pandas as pd
 import scanpy as sc
 from anndata import AnnData
 from umap import UMAP
-
-if TYPE_CHECKING:
-    from . import Scyan
 
 from ..utils import _check_is_processed, _get_subset_indices
 
@@ -16,82 +12,84 @@ log = logging.getLogger(__name__)
 
 
 def subcluster(
-    model: "Scyan",
-    resolution: float = 1,
-    size_ratio_th: float = 0.02,
-    min_cells_th: int = 200,
-    population: Optional[str] = None,
+    adata: AnnData,
+    population: str,
+    markers: Optional[List[str]] = None,
     obs_key: str = "scyan_pop",
-    subcluster_key: str = "subcluster_index",
-    umap_display_key: str = "leiden_subcluster",
+    resolution: float = 1,
+    size_ratio_th: float = 0.1,
+    min_cells_th: int = 200,
+    n_cells: int = 200_000,
 ) -> None:
-    """Create sub-clusters among the populations predicted by Scyan. Some population may not be divided.
+    """Create sub-clusters among a given populations, and filters small clusters according to (i) a minimum number of cells and (ii) a minimum ratio of cells.
     !!! info
-        After having run this method, you can analyze the results with:
-        ```python
-        import scanpy as sc
-        scyan.plot.umap(adata, color="leiden_subcluster") # Visualize the sub clusters
-        scyan.plot.subcluster(model) # Scyan latent space on each sub cluster
-        ```
+        After having run this method, you can analyze the results with [scyan.plot.umap][] and [scyan.plot.pops_expressions][].
 
     Args:
-        model: Scyan model
+        adata: An `anndata` object.
+        population: Name of the population to target (one of `adata.obs[obs_key]`).
+        markers: Optional list of markers used to create subclusters. By default, uses the complete panel.
+        obs_key: Key to look for population in `adata.obs`. By default, uses the model predictions, but you can also choose a population level (if any), or other observations.
         resolution: Resolution used for leiden clustering. Higher resolution leads to more clusters.
         size_ratio_th: (Only used if `population` is `None`): Minimum ratio of cells to be considered as a significant cluster (compared to the parent cluster).
         min_cells_th: (Only used if `population` is `None`): Minimum number of cells to be considered as a significant cluster.
-        population: Name of the population to target. By default, run population discovery on all populations.
-        obs_key: Key to look for population in `adata.obs`. By default, uses the model predictions, but you can also choose a population level (if any).
-        subcluster_key: Key added to `adata.obs` to indicate the index of the subcluster.
-        umap_display_key: Key added to `adata.obs` to plot the sub-clusters on a UMAP.
+        n_cells: Number of cells to be considered for the subclustering (to accelerate it when $N$ is very high). If `None`, consider all cells.
     """
-    adata = model.adata
-    key_added = f"scyan_leiden_{resolution}"
-    if population is not None:
-        key_added = f"{key_added}_{population}"
+    leiden_key = f"leiden_{resolution}_{population}"
+    subcluster_key = f"scyan_subcluster_{population}"
+    condition = adata.obs[obs_key] == population
+    markers = list(adata.var_names if markers is None else markers)
 
-    if key_added in adata.obs:
+    if leiden_key in adata.obs and adata.uns.get(leiden_key, []) == markers:
         log.info(
             "Found leiden labels with the same resolution. Skipping leiden clustering."
         )
-    elif population is None:
-        sc.pp.neighbors(adata)
-        sc.tl.leiden(adata, resolution=resolution, key_added=key_added)
+        indices = np.where(~adata.obs[leiden_key].isna())[0]
+        adata_sub = adata[indices, markers].copy()
     else:
-        condition = adata.obs[obs_key] == population
-        adata_sub = adata[condition].copy()
+        if "has_umap" not in adata.obs or condition.sum() <= n_cells:
+            indices = _get_subset_indices(condition.sum(), n_cells)
+            indices = np.where(condition)[0][indices]
+        else:
+            indices = _get_subset_indices((condition & adata.obs.has_umap).sum(), n_cells)
+            indices = np.where(condition & adata.obs.has_umap)[0][indices]
+
+            k = len(indices)
+            if k < n_cells:
+                indices2 = _get_subset_indices(
+                    (condition & ~adata.obs.has_umap).sum(), n_cells - k
+                )
+                indices2 = np.where(condition & ~adata.obs.has_umap)[0][indices2]
+                indices = np.concatenate([indices, indices2])
+
+        adata_sub = adata[indices, markers].copy()
         sc.pp.neighbors(adata_sub)
-        sc.tl.leiden(adata_sub, resolution=resolution)
-        adata.obs[key_added] = np.nan
-        adata.obs.loc[condition, key_added] = adata_sub.obs.leiden
-        adata.obs[subcluster_key] = adata.obs[key_added]
+        sc.tl.leiden(adata_sub, resolution=resolution, key_added=leiden_key)
 
-    if population is None:
-        adata.obs[subcluster_key] = ""
-        for pop in adata.obs[obs_key].cat.categories:
-            condition = adata.obs[obs_key] == pop
+    adata.obs[leiden_key] = np.nan
+    leiden_index = adata.obs.columns.get_loc(leiden_key)
+    adata.obs.iloc[indices, leiden_index] = adata_sub.obs[leiden_key]
+    adata.obs[leiden_key] = adata.obs[leiden_key].astype("category")
 
-            labels = adata[condition].obs[key_added]
-            ratios = labels.value_counts(normalize=True)
-            ratios = ratios[labels.value_counts() > min_cells_th]
+    counts = adata_sub.obs[leiden_key].value_counts()
+    remove = counts < max(counts.sum() * size_ratio_th, min_cells_th)
 
-            if (ratios > size_ratio_th).sum() < 2:
-                adata.obs.loc[condition, subcluster_key] = np.nan
-                continue
+    assert (
+        not remove.all()
+    ), "All subclusters where filtered. Consider updating size_ratio_th and/or min_cells_th."
 
-            rename_dict = {
-                k: i for i, (k, v) in enumerate(ratios.items()) if v > size_ratio_th
-            }
-            adata.obs.loc[condition, subcluster_key] = [
-                rename_dict.get(l, np.nan) for l in labels
-            ]
+    adata_sub.obs.loc[
+        np.isin(adata_sub.obs[leiden_key], remove[remove].index), leiden_key
+    ] = np.nan
 
-    series = adata.obs[subcluster_key]
-    adata.obs[umap_display_key] = pd.Categorical(
-        np.where(
-            series.isna(),
-            np.nan,
-            adata.obs[obs_key].astype(str) + " -> " + series.astype(str),
-        )
+    adata.obs[subcluster_key] = np.nan
+    subcluster_index = adata.obs.columns.get_loc(subcluster_key)
+    adata.obs.iloc[indices, subcluster_index] = adata_sub.obs[leiden_key]
+    adata.obs[subcluster_key] = adata.obs[subcluster_key].astype("category")
+
+    adata.uns[leiden_key] = markers
+    log.info(
+        f"Subclusters created, you can now use:\n- scyan.plot.umap(adata, color='{subcluster_key}') to show the clusters\n- scyan.plot.pops_expressions(model, obs_key='{subcluster_key}') to plot their expressions"
     )
 
 
@@ -99,7 +97,7 @@ def umap(
     adata: AnnData,
     markers: Optional[List[str]] = None,
     obsm: Optional[str] = None,
-    n_cells: Optional[int] = 500000,
+    n_cells: Optional[int] = 200_000,
     min_dist: float = 0.5,
     obsm_key: str = "X_umap",
     filter: Optional[Tuple] = None,
@@ -134,13 +132,13 @@ def umap(
         markers = adata.var_names
 
     adata.obsm[obsm_key] = np.zeros((adata.n_obs, 2))
-    indices = _get_subset_indices(adata, n_cells)
+    indices = _get_subset_indices(adata.n_obs, n_cells)
     adata_view = adata[indices, markers]
     X = adata_view.X if obsm is None else adata_view.obsm[obsm]
 
     _check_is_processed(X)
 
-    if n_cells is not None:
+    if n_cells is not None and n_cells < adata.n_obs:
         adata.obs["has_umap"] = np.in1d(np.arange(adata.n_obs), indices)
 
     log.info("Fitting UMAP...")

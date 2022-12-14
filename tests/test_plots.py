@@ -24,7 +24,7 @@ def model() -> Scyan:
 
 
 def test_kde_per_population(model: Scyan, pop: str, ref: str):
-    scyan.plot.kde_per_population(model, pop, show=False)
+    scyan.plot.kde_per_population(model.adata, pop, show=False)
 
 
 def test_pop_expressions(model: Scyan, pop: str, ref: str):
@@ -40,4 +40,4 @@ def test_pops_expressions(model: Scyan):
 
 
 def test_scatter(model: Scyan, pop: str, ref: str):
-    scyan.plot.scatter(model, [pop, ref], max_obs=100, show=False)
+    scyan.plot.scatter(model.adata, [pop, ref], max_obs=100, show=False)

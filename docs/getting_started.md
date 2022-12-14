@@ -68,7 +68,7 @@ This code should run in approximately 40 seconds (once the dataset is loaded).
 
 ### Inputs details
 
-- `adata` is an [AnnData](https://anndata.readthedocs.io/en/latest/) object, whose variables (`adata.var`) corresponds to markers, and observations (`adata.obs`) to cells. `adata.X` is a matrix of size ($N$ cells, $M$ markers) representing cell-marker expressions after being **preprocessed** ([asinh](../api/preprocessing/#scyan.tools.asinh_transform) or [logicle](../api/preprocessing/#scyan.tools.auto_logicle_transform)) and [**standardized**](../api/preprocessing/#scyan.tools.scale).
+- `adata` is an [AnnData](https://anndata.readthedocs.io/en/latest/) object, whose variables (`adata.var`) corresponds to markers, and observations (`adata.obs`) to cells. `adata.X` is a matrix of size ($N$ cells, $M$ markers) representing cell-marker expressions after being **preprocessed** ([asinh][scyan.tools.asinh_transform] or [logicle][scyan.tools.auto_logicle_transform]) and [**standardized**][scyan.tools.scale].
 - `marker_pop_matrix` is a [pandas DataFrame](https://pandas.pydata.org/) with $P$ rows (one per population) and $M$ columns (one per marker). Each value represents the knowledge about the expected expression, i.e. `-1` for negative expression, `1` for positive expression, or `NA` if we don't know. It can also be any float value such as `0` or `0.5` for mid and low expressions, respectively (use it only when necessary).
 
 !!! note "Help to create the `adata` object and the `marker_pop_matrix`"
@@ -82,7 +82,7 @@ This code should run in approximately 40 seconds (once the dataset is loaded).
 ## Resources to guide you
 
 - Read the tutorials (e.g. [how to prepare your data](../tutorials/preprocessing) or [usage example with interpretability](../tutorials/usage)).
-- Read our [advice](../advanced/advice) to design the knowledge table.
-- Read the API to know more about what you can do (e.g. [scyan.Scyan](../api/model)).
+- Read our [advice](../advice/#advice-for-the-creation-of-the-table) to design the knowledge table.
+- Read the API to know more about what you can do (e.g. [scyan.Scyan][]).
 - [Save and load your own dataset](../advanced/data).
 - [How to choose the model parameters if you don't want to use the default ones](../advanced/parameters).
