@@ -143,16 +143,21 @@ def inverse_transform(
 
 
 def scale(adata: AnnData, max_value: float = 10) -> None:
-    """Tranform the data such as `std=1` and `0` is sent to `-1`.
+    """Tranform the data such as (i) `std=1`, and (ii) either `0` is sent to `-1` (for CyTOF data) or `means=0` (for flow or spectral flow data).
 
     Args:
         adata: An `anndata` object.
         max_value: Clip to this value after scaling.
     """
     stds = adata.X.std(axis=0)
-
-    adata.X = (adata.X / stds - 1).clip(-max_value, max_value)
     adata.uns["scyan_scaling_stds"] = stds
+
+    if "scyan_logicle" in adata.uns:
+        means = adata.X.mean(axis=0)
+        adata.X = ((adata.X - means) / stds).clip(-max_value, max_value)
+        adata.uns["scyan_scaling_means"] = means
+    else:
+        adata.X = (adata.X / stds - 1).clip(-max_value, max_value)
 
 
 def unscale(
@@ -182,5 +187,8 @@ def unscale(
 
         indices = [adata.var_names.get_loc(marker) for marker in obsm_names]
         stds = stds[indices]
+
+    if "scyan_scaling_means" in adata.uns:
+        return adata.uns["scyan_scaling_means"] + stds * X
 
     return (X + 1) * stds
