@@ -82,7 +82,7 @@ def umap(
         "X_umap" in adata.obsm_keys()
     ), "Before plotting data, UMAP coordinates need to be computed using 'scyan.tools.umap(...)' (see https://mics-lab.github.io/scyan/api/representation/#scyan.tools.umap)"
 
-    if "has_umap" in adata.obs:
+    if "has_umap" in adata.obs and not adata.obs.has_umap.all():
         adata = adata[adata.obs.has_umap]
 
     sc.pl.umap(adata, color=color, vmax=vmax, vmin=vmin, **scanpy_kwargs)

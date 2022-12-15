@@ -15,7 +15,7 @@ from torch import Tensor
 log = logging.getLogger(__name__)
 
 warnings.filterwarnings("ignore", message="Transforming to str index")
-warnings.filterwarnings("ignore", message=r".*Trying to modify attribute `._uns`[\s\S]*")
+warnings.filterwarnings("ignore", message=r".*Trying to modify attribute[\s\S]*")
 warnings.filterwarnings("ignore", message=r".*No data for colormapping provided[\s\S]*")
 
 

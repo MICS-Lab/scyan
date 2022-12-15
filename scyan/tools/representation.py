@@ -140,6 +140,8 @@ def umap(
 
     if n_cells is not None and n_cells < adata.n_obs:
         adata.obs["has_umap"] = np.in1d(np.arange(adata.n_obs), indices)
+    else:
+        adata.obs["has_umap"] = True
 
     log.info("Fitting UMAP...")
     if filter is None:
