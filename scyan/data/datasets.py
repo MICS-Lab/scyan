@@ -38,6 +38,13 @@ def get_local_file(
     filepath = dataset_path / filename
 
     if not filepath.is_file():
+        assert dataset_name in [
+            "aml",
+            "bmmc",
+            "debarcoding",
+            "poised",
+        ], f"File {filepath} not existing."
+
         base_url = "https://github.com/MICS-Lab/scyan_data"
         url = f"{base_url}/raw/main/data/{dataset_name}/{filename}"
 

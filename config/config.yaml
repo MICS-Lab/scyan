@@ -11,7 +11,7 @@ wandb:
   mode: disabled # online, offline, disabled
   save_umap: false
 
-n_run: 20
+n_run: 5
 save_predictions: false
 
 model:

@@ -33,7 +33,7 @@ llvmlite = "^0.38.1"
 FlowUtils = "^1.0.0"
 fcsparser = "^0.2.4"
 fcswrite = "^0.6.2"
-wandb = {version = "^0.12.20", optional = true}
+wandb = "0.13.7"
 hydra-core = {version = "^1.2.0", optional = true}
 hydra-colorlog = {version = "^1.2.0", optional = true}
 hydra-optuna-sweeper = {version = "^1.2.0", optional = true}

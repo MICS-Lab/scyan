@@ -23,56 +23,19 @@ hydra:
 
     direction: minimize
     storage: null
-    n_trials: 50
+    n_trials: 40
     n_jobs: 1
 
-    search_space:
-      model.temperature:
-        type: float
-        low: 0.5
-        high: 10
-        log: true
-      model.modulo_temp:
-        type: int
-        low: 2
-        high: 4
-      # model.mmd_max_samples:
-      #   type: categorical
-      #   choices: [512, 1024, 2048]
-      # model.alpha_batch_effect:
-      #   type: float
-      #   low: 10
-      #   high: 200
-      #   log: true
-      model.hidden_size:
-        type: categorical
-        choices: [16, 32]
-      model.n_hidden_layers:
-        type: int
-        low: 6
-        high: 8
-      model.n_layers:
-        type: int
-        low: 6
-        high: 8
-      model.prior_std:
-        type: float
-        low: 0.15
-        high: 0.35
-      model.lr:
-        type: float
-        low: 0.0001
-        high: 0.002
-        log: true
-      # model.batch_size:
-      #   type: categorical
-      #   choices: [8192, 16384]
-      callbacks.early_stopping.patience:
-        type: int
-        low: 2
-        high: 5
-      callbacks.early_stopping.min_delta:
-        type: float
-        low: 0.25
-        high: 2
-        log: true
+    params:
+      model.temperature: tag(log, interval(0.5, 10))
+      model.modulo_temp: range(2, 4)
+      # model.mmd_max_samples: choice(512, 1024, 2048)
+      # model.alpha_batch_effect: tag(log, interval(10, 200))
+      model.hidden_size: choice(16, 32)
+      model.n_hidden_layers: range(6, 8)
+      model.n_layers: range(6, 8)
+      model.prior_std: interval(0.15, 0.35)
+      model.lr: tag(log, interval(0.0001, 0.002))
+      # model.batch_size: choice(8192, 16384)
+      callbacks.early_stopping.patience: range(2, 5)
+      callbacks.early_stopping.min_delta: tag(log, interval(0.25, 2))

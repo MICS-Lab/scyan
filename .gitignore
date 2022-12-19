@@ -12,6 +12,8 @@ results
 outputs
 multirun
 lightning_logs
+checkpoints
+run.log
 
 # Data files
 data/*/*
