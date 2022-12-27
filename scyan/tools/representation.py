@@ -16,8 +16,8 @@ def subcluster(
     population: str,
     markers: Optional[List[str]] = None,
     obs_key: str = "scyan_pop",
-    resolution: float = 1,
-    size_ratio_th: float = 0.1,
+    resolution: float = 0.2,
+    size_ratio_th: float = 0.02,
     min_cells_th: int = 200,
     n_cells: int = 200_000,
 ) -> None:

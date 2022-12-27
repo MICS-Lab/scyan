@@ -58,7 +58,7 @@ def _to_df(adata: AnnData, layer: Optional[str] = None) -> pd.DataFrame:
 
     for key in adata.obsm:
         names = [f"{key}{i+1}" for i in range(adata.obsm[key].shape[1])]
-        df[names] = adata.obsm[key]
+        df[names] = np.array(adata.obsm[key])
 
     return df
 
@@ -90,6 +90,9 @@ def write_fcs(
     columns_removed = []
 
     for column in df.columns:
+        if df[column].dtype == "bool":
+            df[column] = df[column].astype(int).values
+            continue
         if is_numeric_dtype(df[column].dtype):
             continue
         try:

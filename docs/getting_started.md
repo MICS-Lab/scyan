@@ -32,22 +32,22 @@ Choose one of the following, depending on your needs (it should take at most a f
     pip install .
     ```
 
-=== "Local install (pip, editable mode)"
+=== "Local install (pip, dev mode)"
 
     ``` bash
     git clone https://github.com/MICS-Lab/scyan.git
     cd scyan
 
-    pip install -e '.[dev,docs,discovery]'
+    pip install -e '.[dev,hydra,discovery]'
     ```
 
-=== "Poetry (editable mode)"
+=== "Poetry (dev mode)"
 
     ``` bash
     git clone https://github.com/MICS-Lab/scyan.git
     cd scyan
 
-    poetry install -E 'dev docs discovery'
+    poetry install -E 'dev hydra discovery'
     ```
 
 ## Usage

@@ -19,8 +19,12 @@ def count_cell_populations(
         A DataFrame of counts (one row per group, one column per population).
     """
     grouped = adata.obs.groupby(groupby)
-    counts = grouped[obs_key].apply(lambda s: s.value_counts(normalize))
-    return counts.unstack(level=-1)
+    counts = grouped[obs_key].apply(lambda s: s.value_counts(normalize)).unstack(level=-1)
+
+    column_suffix = "percentage" if normalize else "count"
+    counts.columns = [f"{name} {column_suffix}" for name in counts.columns]
+
+    return counts
 
 
 def mean_intensities(

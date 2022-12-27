@@ -1,21 +1,18 @@
 import logging
-from collections import Counter
 from typing import List, Optional
 
 import hydra
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-import scanpy as sc
+import wandb
 from anndata import AnnData
-from imblearn.over_sampling import SMOTE
 from omegaconf import DictConfig
 from pytorch_lightning import Callback, Trainer
 from pytorch_lightning.loggers import WandbLogger
 from sklearn import metrics
 
 import scyan
-import wandb
 from scyan.model import Scyan
 
 log = logging.getLogger(__name__)
