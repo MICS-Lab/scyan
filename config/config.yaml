@@ -36,6 +36,6 @@ callbacks:
     min_delta: 0.5
     check_on_train_epoch_end: True
 
-work_dir: ${hydra:runtime.cwd}
+work_dir: ${hydra:runtime.cwd}/hydra_logs
 
 seed: 0
