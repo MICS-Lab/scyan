@@ -9,7 +9,6 @@
 ::: scyan.tools.inverse_transform
     options:
       show_root_heading: true
-      heading_level: 2
 
 ::: scyan.tools.scale
     options:
@@ -22,7 +21,6 @@
 ::: scyan.tools.umap
     options:
       show_root_heading: true
-      heading_level: 2
 
 ::: scyan.tools.subcluster
     options:

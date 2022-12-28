@@ -1,11 +1,8 @@
 ### General advices
 
-- Make sure your data only contains the population of interest. E.g., if you are interested into the annotation of immune cells, then consider providing only the live cells that are CD45+.
+- Make sure your data only contains the population of interest. E.g., if you are interested into the annotation of immune cells, then consider providing only the live cells that are CD45+. If needed, Scyan can be run to first extract the cells of interest before to annotate the different populations.
 - Don't provide overlapping populations in the table. For instance, if you have CD16- NK and CD16+ NK, you don't need to write knowledge about NK cells. Note that, we would actually indirectly annotate NK cells, because they are the union of CD16- NK cells and CD16+ NK cells. You could also provide a [hierarchical description of the populations](../tutorials/advanced/#working-with-hierarchical-populations).
-- Before to run batch effect correction, check if you really have a significant batch effect (else, you could simply run Scyan without batch-effect correction). You can check that by plotting the batch observation on the umap (see [scyan.plot.umap][]).
-
-!!! note
-    For now, Scyan annotates every population (WIP). That is, if one existing population is not described in the table, it will still be annotated. Yet, it may be obvious that this population is missing while looking at the umap, and using the tools from the population discovery can help figuring out which population it is.
+- Before to run batch effect correction, check if you really have a significant batch effect (else, you could simply run Scyan without batch-effect correction). You can check that by plotting the batch observation on the umap (see [scyan.plot.umap][]) and see if the different batches overlap or not.
 
 ### Advice for the creation of the table
 
@@ -28,7 +25,7 @@
 </p>
 
 - Note that the model interprets NA values as "any expression is possible". Thus, a population described with extensive use of NA values (e.g., above 90% of markers, with no discriminative marker provided) can be over-predicted. This is a normal behaviour since few constraints are applied to this population.
-- We enable the usage of intermediate expressions such as "mid" and "low" in the table. Yet, we advise using it only to differentiate two similar populations. Overusing these intermediate expressions in the table will challenge you to create the table properly while not improving the results.
+- We enable the usage of intermediate expressions such as "mid" and "low" in the table. For that, choose a value between -1 and 1: for instance, 0 for mid, or 0.5 for low. Yet, we advise using it only to differentiate two similar populations. Overusing these intermediate expressions in the table will challenge you to create the table properly while not improving the results.
 
 ### What should I do if Scyan seems wrong?
 

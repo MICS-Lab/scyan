@@ -9,6 +9,7 @@ theme:
 nav:
   - Home: index.md
   - Getting Started: getting_started.md
+  - Usage advices: advice.md
   - Tutorials:
     - tutorials/preprocessing.ipynb
     - tutorials/usage.ipynb
@@ -17,7 +18,6 @@ nav:
     - tutorials/debarcoding.ipynb
     - tutorials/post_analysis.ipynb
     - tutorials/advanced.ipynb
-  - Usage advices: advice.md
   - API: 
     - scyan.Scyan: api/model.md
     - IO (read/write): api/io.md

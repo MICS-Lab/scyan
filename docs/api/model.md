@@ -15,6 +15,8 @@ model.predict()
 
 ::: scyan.Scyan
     options:
+      heading_level: 3
+      group_by_category: False
       members:
         - __init__
         - fit

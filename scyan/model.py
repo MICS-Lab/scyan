@@ -30,10 +30,11 @@ class Scyan(pl.LightningModule):
     Scyan, a.k.a Single-cell Cytometry Annotation Network.
     It is a wrapper to the ScyanModule that contains the core logic (the loss implementation, the forward function, ...).
     While ScyanModule works on tensors, this class works directly on AnnData objects.
+    To read more about the initialization arguments, read [__init__()][scyan.model.Scyan.__init__].
 
     Attributes:
-        adata (AnnData): The provided `adata`
-        table (pd.Dataframe): The table knowledge
+        adata (AnnData): The provided `adata`.
+        table (pd.Dataframe): The knowledge table.
         n_pops (int): Number of populations considered, i.e. $P$
         hparams (object): Model hyperparameters
         module (ScyanModule): A [ScyanModule][scyan.module.ScyanModule] object
@@ -61,8 +62,8 @@ class Scyan(pl.LightningModule):
     ):
         """
         Args:
-            adata: `AnnData` object containing the FCS data ($N$ cells). **Warning**: it has to be preprocessed (e.g. `asinh` or `logicle`) and standardised.
-            table: Dataframe of shape $(P, M)$ representing the biological knowledge about markers and populations.
+            adata: `AnnData` object containing the FCS data of $N$ cells. **Warning**: it has to be preprocessed (e.g. `asinh` or `logicle`) and scaled (see https://mics-lab.github.io/scyan/tutorials/preprocessing/).
+            table: Dataframe of shape $(P, M)$ representing the biological knowledge about markers and populations. The columns names corresponds to marker that must be in `adata.var_names`.
             continuous_covariate_keys: Optional list of keys in `adata.obs` that refers to continuous variables to use during the training.
             categorical_covariate_keys: Optional list of keys in `adata.obs` that refers to categorical variables to use during the training.
             hidden_size: Hidden size of the MLP (`s`, `t`).
