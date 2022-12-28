@@ -3,11 +3,11 @@ from collections import defaultdict
 import hydra
 import numpy as np
 import pytorch_lightning as pl
+import wandb
 from omegaconf import DictConfig, OmegaConf
 from pytorch_lightning.loggers import WandbLogger
 
 import scyan
-import wandb
 from scyan.model import Scyan
 
 from . import utils
@@ -25,7 +25,7 @@ def main(config: DictConfig) -> float:
     Returns:
         Metric chosen by the config to be optimized for hyperparameter search, e.g. the loss.
     """
-    adata, marker_pop_matrix = scyan.data.load(
+    adata, table = scyan.data.load(
         config.project.name,
         version=config.project.get("version", "default"),
         table=config.project.get("table", "default"),
@@ -50,9 +50,7 @@ def main(config: DictConfig) -> float:
         else:
             wandb_logger = None
 
-        model: Scyan = utils.init_and_fit_model(
-            adata, marker_pop_matrix, config, wandb_logger
-        )
+        model: Scyan = utils.init_and_fit_model(adata, table, config, wandb_logger)
 
         if config.save_predictions:
             adata.obs[["scyan_pop"]].reset_index().to_csv(

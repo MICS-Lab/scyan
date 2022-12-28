@@ -104,19 +104,19 @@ def pop_level(
         obs_key: Key of `adata.obs` to access the model predictions.
     """
     adata = model.adata
-    mpm = model.marker_pop_matrix
+    table = model.table
 
     assert isinstance(
-        mpm.index, pd.MultiIndex
+        table.index, pd.MultiIndex
     ), "To use this function, you need a MultiIndex DataFrame, see: https://mics-lab.github.io/scyan/tutorials/advanced/#hierarchical-population-display"
 
-    level_names = mpm.index.names[1:]
+    level_names = table.index.names[1:]
     assert (
         level_name in level_names
     ), f"Level '{level_name}' unknown. Choose one of: {level_names}"
 
-    base_pops = mpm.index.get_level_values(0)
-    group_pops = mpm.index.get_level_values(level_name)
+    base_pops = table.index.get_level_values(0)
+    group_pops = table.index.get_level_values(level_name)
     assert (
         group_name in group_pops
     ), f"Invalid group name '{group_name}'. It has to be one of: {', '.join(group_pops)}."

@@ -235,10 +235,10 @@ def load(
     dataset_path.mkdir(parents=True, exist_ok=True)
 
     adata = get_local_file(dataset_path, dataset_name, version, "h5ad")
-    marker_pop_matrix = get_local_file(dataset_path, dataset_name, table, "csv")
+    table = get_local_file(dataset_path, dataset_name, table, "csv")
 
     if reducer is not None:
         umap_reducer = get_local_file(dataset_path, dataset_name, reducer, "umap")
-        return adata, marker_pop_matrix, umap_reducer
+        return adata, table, umap_reducer
 
-    return adata, marker_pop_matrix
+    return adata, table

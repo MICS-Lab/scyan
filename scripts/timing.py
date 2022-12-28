@@ -24,7 +24,7 @@ def main(config: DictConfig) -> None:
     pl.seed_everything(config.seed)
 
     ### Instantiate everything
-    adata, marker_pop_matrix = scyan.data.load(config.project.name)
+    adata, table = scyan.data.load(config.project.name)
 
     times, n_samples = [], []
 
@@ -34,7 +34,7 @@ def main(config: DictConfig) -> None:
 
         start = time.perf_counter()
 
-        utils.init_and_fit_model(adata, marker_pop_matrix, config)
+        utils.init_and_fit_model(adata, table, config)
 
         times.append(time.perf_counter() - start)
         n_samples.append(n_obs)

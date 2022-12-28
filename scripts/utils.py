@@ -20,7 +20,7 @@ log = logging.getLogger(__name__)
 
 def init_and_fit_model(
     adata: AnnData,
-    marker_pop_matrix: pd,
+    table: pd,
     config: DictConfig,
     wandb_logger: Optional[WandbLogger] = None,
 ) -> Scyan:
@@ -29,7 +29,7 @@ def init_and_fit_model(
 
     Args:
         adata: `AnnData` object containing the FCS data.
-        marker_pop_matrix: Dataframe representing the biological knowledge about markers and populations.
+        table: Dataframe representing the biological knowledge about markers and populations.
         config: Hydra generated configuration.
         wandb_logger: Weight & Biases logger.
 
@@ -39,7 +39,7 @@ def init_and_fit_model(
     model: Scyan = hydra.utils.instantiate(
         config.model,
         adata=adata,
-        marker_pop_matrix=marker_pop_matrix,
+        table=table,
         continuous_covariate_keys=config.project.get("continuous_covariate_keys", []),
         categorical_covariate_keys=config.project.get("categorical_covariate_keys", []),
         batch_key=config.project.get("batch_key"),

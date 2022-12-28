@@ -57,9 +57,9 @@ Choose one of the following, depending on your needs (it should take at most a f
 ```py
 import scyan
 
-adata, marker_pop_matrix = scyan.data.load("aml")
+adata, table = scyan.data.load("aml")
 
-model = scyan.Scyan(adata, marker_pop_matrix)
+model = scyan.Scyan(adata, table)
 model.fit()
 model.predict()
 ```
@@ -69,9 +69,9 @@ This code should run in approximately 40 seconds (once the dataset is loaded).
 ### Inputs details
 
 - `adata` is an [AnnData](https://anndata.readthedocs.io/en/latest/) object, whose variables (`adata.var`) corresponds to markers, and observations (`adata.obs`) to cells. `adata.X` is a matrix of size ($N$ cells, $M$ markers) representing cell-marker expressions after being **preprocessed** ([asinh][scyan.tools.asinh_transform] or [logicle][scyan.tools.auto_logicle_transform]) and [**standardized**][scyan.tools.scale].
-- `marker_pop_matrix` is a [pandas DataFrame](https://pandas.pydata.org/) with $P$ rows (one per population) and $M$ columns (one per marker). Each value represents the knowledge about the expected expression, i.e. `-1` for negative expression, `1` for positive expression, or `NA` if we don't know. It can also be any float value such as `0` or `0.5` for mid and low expressions, respectively (use it only when necessary).
+- `table` is a [pandas DataFrame](https://pandas.pydata.org/) with $P$ rows (one per population) and $M$ columns (one per marker). Each value represents the knowledge about the expected expression, i.e. `-1` for negative expression, `1` for positive expression, or `NA` if we don't know. It can also be any float value such as `0` or `0.5` for mid and low expressions, respectively (use it only when necessary).
 
-!!! note "Help to create the `adata` object and the `marker_pop_matrix`"
+!!! note "Help to create the `adata` object and the `table`"
 
     Read the [preprocessing tutorial](../tutorials/preprocessing) if you have an FCS file and want explanations to initialize `Scyan`.
 

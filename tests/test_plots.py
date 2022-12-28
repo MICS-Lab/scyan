@@ -16,8 +16,8 @@ def ref() -> str:
 
 @pytest.fixture
 def model() -> Scyan:
-    adata, marker_pop_matrix = scyan.data.load("aml", version="short")
-    model = Scyan(adata, marker_pop_matrix)
+    adata, table = scyan.data.load("aml", version="short")
+    model = Scyan(adata, table)
     model.fit(max_epochs=1)
     model.predict()
     return model

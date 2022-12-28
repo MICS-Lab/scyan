@@ -104,7 +104,7 @@ def _requires_fit(f: Callable) -> Callable:
 
 
 def _add_level_predictions(model, obs_key: str) -> None:
-    mpm: pd.DataFrame = model.marker_pop_matrix
+    mpm: pd.DataFrame = model.table
     adata: AnnData = model.adata
 
     level_names = mpm.index.names[1:]
@@ -115,9 +115,9 @@ def _add_level_predictions(model, obs_key: str) -> None:
         adata.obs[new_obs_key] = adata.obs[obs_key].map(pop_dict).astype("category")
 
 
-def _get_pop_index(pop: str, marker_pop_matrix: pd.DataFrame):
-    for i in range(marker_pop_matrix.index.nlevels - 1, -1, -1):
-        if pop in marker_pop_matrix.index.get_level_values(i):
+def _get_pop_index(pop: str, table: pd.DataFrame):
+    for i in range(table.index.nlevels - 1, -1, -1):
+        if pop in table.index.get_level_values(i):
             return i
     raise BaseException(f"Population {pop} not found.")
 

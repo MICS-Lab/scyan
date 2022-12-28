@@ -33,7 +33,7 @@ class Scyan(pl.LightningModule):
 
     Attributes:
         adata (AnnData): The provided `adata`
-        marker_pop_matrix (pd.Dataframe): The table knowledge
+        table (pd.Dataframe): The table knowledge
         n_pops (int): Number of populations considered, i.e. $P$
         hparams (object): Model hyperparameters
         module (ScyanModule): A [ScyanModule][scyan.module.ScyanModule] object
@@ -42,7 +42,7 @@ class Scyan(pl.LightningModule):
     def __init__(
         self,
         adata: AnnData,
-        marker_pop_matrix: pd.DataFrame,
+        table: pd.DataFrame,
         continuous_covariate_keys: Optional[List[str]] = None,
         categorical_covariate_keys: Optional[List[str]] = None,
         hidden_size: int = 16,
@@ -62,7 +62,7 @@ class Scyan(pl.LightningModule):
         """
         Args:
             adata: `AnnData` object containing the FCS data ($N$ cells). **Warning**: it has to be preprocessed (e.g. `asinh` or `logicle`) and standardised.
-            marker_pop_matrix: Dataframe of shape $(P, M)$ representing the biological knowledge about markers and populations.
+            table: Dataframe of shape $(P, M)$ representing the biological knowledge about markers and populations.
             continuous_covariate_keys: Optional list of keys in `adata.obs` that refers to continuous variables to use during the training.
             categorical_covariate_keys: Optional list of keys in `adata.obs` that refers to categorical variables to use during the training.
             hidden_size: Hidden size of the MLP (`s`, `t`).
@@ -80,10 +80,10 @@ class Scyan(pl.LightningModule):
             batch_ref: Batch that will be considered as the reference. By default, choose the batch with the higher number of cells.
         """
         super().__init__()
-        self.adata, self.marker_pop_matrix = _validate_inputs(adata, marker_pop_matrix)
+        self.adata, self.table = _validate_inputs(adata, table)
         self.continuous_covariate_keys = continuous_covariate_keys or []
         self.categorical_covariate_keys = categorical_covariate_keys or []
-        self.n_pops = len(self.marker_pop_matrix)
+        self.n_pops = len(self.table)
 
         self._is_fitted = False
         self._num_workers = 0
@@ -91,7 +91,7 @@ class Scyan(pl.LightningModule):
         self.save_hyperparameters(
             ignore=[
                 "adata",
-                "marker_pop_matrix",
+                "table",
                 "continuous_covariate_keys",
                 "categorical_covariate_keys",
             ]
@@ -100,7 +100,7 @@ class Scyan(pl.LightningModule):
         self._prepare_data()
 
         self.module = ScyanModule(
-            torch.tensor(marker_pop_matrix.values, dtype=torch.float32),
+            torch.tensor(table.values, dtype=torch.float32),
             self.covariates.shape[1],
             self.other_batches,
             hidden_size,
@@ -124,23 +124,23 @@ class Scyan(pl.LightningModule):
     @property
     def pop_names(self) -> pd.Index:
         """Name of the populations considered in the knowledge table"""
-        return self.marker_pop_matrix.index.get_level_values(0)
+        return self.table.index.get_level_values(0)
 
     @property
     def var_names(self) -> pd.Index:
         """Name of the markers considered in the knowledge table"""
-        return self.marker_pop_matrix.columns
+        return self.table.columns
 
     @property
     def level_names(self):
         """All population hierarchical level names, if existing."""
-        if not isinstance(self.marker_pop_matrix.index, pd.MultiIndex):
+        if not isinstance(self.table.index, pd.MultiIndex):
             log.warn(
                 "The provided knowledge table has no population hierarchical level. See: https://mics-lab.github.io/scyan/tutorials/advanced/#hierarchical-population-display"
             )
             return []
 
-        return list(self.marker_pop_matrix.index.names[1:])
+        return list(self.table.index.names[1:])
 
     def pops(
         self,
@@ -175,22 +175,22 @@ class Scyan(pl.LightningModule):
                 isinstance(level, int) or level in self.level_names
             ), f"Level has to be one of [{', '.join(self.level_names)}]. Found {level}."
 
-            return set(self.marker_pop_matrix.index.get_level_values(level))
+            return set(self.table.index.get_level_values(level))
 
         name = parent_of or children_of
-        index = _get_pop_index(name, self.marker_pop_matrix)
-        where = self.marker_pop_matrix.index.get_level_values(index) == name
+        index = _get_pop_index(name, self.table)
+        where = self.table.index.get_level_values(index) == name
 
         if children_of is not None:
             if index == 0:
                 return set()
-            return set(self.marker_pop_matrix.index.get_level_values(index - 1)[where])
+            return set(self.table.index.get_level_values(index - 1)[where])
 
         assert (
-            index < self.marker_pop_matrix.index.nlevels - 1
+            index < self.table.index.nlevels - 1
         ), "Can not get parent of highest level population."
 
-        return self.marker_pop_matrix.index.get_level_values(index + 1)[where][0]
+        return self.table.index.get_level_values(index + 1)[where][0]
 
     def _prepare_data(self) -> None:
         """Initialize the data and the covariates"""
@@ -369,7 +369,7 @@ class Scyan(pl.LightningModule):
 
         if key_added is not None:
             self.adata.obs[key_added] = pd.Categorical(populations)
-            if add_levels and isinstance(self.marker_pop_matrix.index, pd.MultiIndex):
+            if add_levels and isinstance(self.table.index, pd.MultiIndex):
                 _add_level_predictions(self, key_added)
 
         missing_pops = self.n_pops - len(populations.cat.categories)
