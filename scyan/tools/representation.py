@@ -19,7 +19,7 @@ def subcluster(
     resolution: float = 0.2,
     size_ratio_th: float = 0.02,
     min_cells_th: int = 200,
-    n_cells: int = 200_000,
+    n_cells: int = 100_000,
 ) -> None:
     """Create sub-clusters among a given populations, and filters small clusters according to (i) a minimum number of cells and (ii) a minimum ratio of cells.
     !!! info

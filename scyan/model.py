@@ -34,7 +34,7 @@ class Scyan(pl.LightningModule):
 
     Attributes:
         adata (AnnData): The provided `adata`.
-        table (pd.Dataframe): The knowledge table.
+        table (pd.Dataframe): The knowledge table of $P$ populations x $M$ markers.
         n_pops (int): Number of populations considered, i.e. $P$
         hparams (object): Model hyperparameters
         module (ScyanModule): A [ScyanModule][scyan.module.ScyanModule] object
@@ -355,7 +355,7 @@ class Scyan(pl.LightningModule):
         """Model population predictions, i.e. one population is assigned for each cell. Predictions are saved in `adata.obs.scyan_pop` by default.
 
         Args:
-            key_added: Key added to `model.adata.obs` to save the predictions. If `None`, then the predictions will not be saved.
+            key_added: Column name used to save the predictions in `adata.obs`. If `None`, then the predictions will not be saved.
             add_levels: If `True`, and if [hierarchical population names](../../tutorials/advanced/#hierarchical-population-display) were provided, then it also saves the prediction for every population level.
             log_prob_th: If the log-probability of the most probable population for one cell is below this threshold, this cell will not be annotated (`np.nan`).
 

@@ -8,7 +8,13 @@ from anndata import AnnData
 
 from .. import Scyan
 from ..utils import _subset
-from .utils import check_population, get_palette_others, plot_decorator, select_markers
+from .utils import (
+    check_has_umap,
+    check_population,
+    get_palette_others,
+    plot_decorator,
+    select_markers,
+)
 
 
 @plot_decorator(adata=True)
@@ -55,6 +61,7 @@ def scatter(
     g.add_legend()
 
 
+@check_has_umap
 def umap(
     adata: AnnData,
     color: Union[str, List[str]],
@@ -77,10 +84,6 @@ def umap(
     assert isinstance(
         adata, AnnData
     ), f"umap first argument has to be an AnnData object. Received type {type(adata)}."
-
-    assert (
-        "X_umap" in adata.obsm_keys()
-    ), "Before plotting data, UMAP coordinates need to be computed using 'scyan.tools.umap(...)' (see https://mics-lab.github.io/scyan/api/representation/#scyan.tools.umap)"
 
     if "has_umap" in adata.obs and not adata.obs.has_umap.all():
         adata = adata[adata.obs.has_umap]
