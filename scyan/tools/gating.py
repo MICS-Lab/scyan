@@ -39,7 +39,7 @@ class _SelectFromCollection:
         self.canvas.draw_idle()
 
 
-class PolygonGating:
+class PolygonGatingUMAP:
     """Prompts the user to make a polygon gate on a UMAP plot to select cells.
 
     !!! note
@@ -49,7 +49,7 @@ class PolygonGating:
     ```py
     # Usage example (to be run on a jupyter notebook)
     >>> %matplotlib tk
-    >>> polygon_gating = scyan.tools.PolygonGating(adata)
+    >>> polygon_gating = scyan.tools.PolygonGatingUMAP(adata)
     >>> polygon_gating.select() # select the cells
     >>> polygon_gating.save_selection() # save the selected cells in adata.obs
     ```

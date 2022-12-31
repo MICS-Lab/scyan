@@ -14,7 +14,7 @@
     options:
       show_root_heading: true
 
-::: scyan.tools.PolygonGating
+::: scyan.tools.PolygonGatingUMAP
     options:
       show_root_heading: true
       members:
