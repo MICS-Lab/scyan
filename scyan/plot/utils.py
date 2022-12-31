@@ -45,11 +45,13 @@ def check_population(return_list: bool = False, one: bool = False):
         @wraps(f)
         def wrapper(
             model: Scyan,
-            population: Union[str, List[str]],
+            population: Union[str, List[str], None],
             *args,
             obs_key="scyan_pop",
             **kwargs,
         ):
+            if population is None:
+                return f(model, population, *args, obs_key=obs_key, **kwargs)
             adata = model if isinstance(model, AnnData) else model.adata
             if adata.obs[obs_key].dtype == "category":
                 populations = adata.obs[obs_key].cat.categories.values
@@ -129,7 +131,16 @@ def select_markers(
     populations: List[str],
     min_markers: int = 2,
 ):
-    MIN_MARKERS_ERROR = f"Provide at least {min_markers} marker(s) to plot or use 'scyan.plot.kde_per_population'"
+    if populations is None:
+        assert (
+            markers is not None
+        ), "If no population is provided, you should choose the list of markers by providing the 'markers' argument."
+        assert len(markers) >= min_markers, MIN_MARKERS_ERROR
+        return markers
+
+    MIN_MARKERS_ERROR = (
+        f"Provide at least {min_markers} marker(s) to plot or use 'scyan.plot.kde'"
+    )
 
     if markers is None:
         assert (

@@ -19,7 +19,7 @@
     options:
       show_root_heading: true
 
-::: scyan.plot.kde_per_population
+::: scyan.plot.kde
     options:
       show_root_heading: true
 

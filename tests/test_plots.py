@@ -23,8 +23,8 @@ def model() -> Scyan:
     return model
 
 
-def test_kde_per_population(model: Scyan, pop: str, ref: str):
-    scyan.plot.kde_per_population(model.adata, pop, show=False)
+def test_kde(model: Scyan, pop: str, ref: str):
+    scyan.plot.kde(model.adata, pop, show=False)
 
 
 def test_pop_expressions(model: Scyan, pop: str, ref: str):

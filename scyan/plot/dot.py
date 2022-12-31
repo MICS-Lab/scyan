@@ -7,7 +7,7 @@ import seaborn as sns
 from anndata import AnnData
 
 from .. import Scyan
-from ..utils import _has_umap, _subset
+from ..utils import _get_subset_indices, _has_umap, _subset
 from .utils import check_population, get_palette_others, plot_decorator, select_markers
 
 
@@ -15,7 +15,7 @@ from .utils import check_population, get_palette_others, plot_decorator, select_
 @check_population(return_list=True)
 def scatter(
     adata: AnnData,
-    population: Union[str, List[str]],
+    population: Union[str, List[str], None],
     markers: Optional[List[str]] = None,
     n_markers: Optional[int] = 3,
     obs_key: str = "scyan_pop",
@@ -28,15 +28,24 @@ def scatter(
 
     Args:
         adata: An `anndata` object.
-        population: One population or a list of population to be colored. To be valid, a population name have to be in `adata.obs[obs_key]`.
+        population: One population, or a list of population to be colored, or `None`. If not `None`, the population name(s) has to be in `adata.obs[obs_key]`.
         markers: List of markers to plot. If `None`, the list is chosen automatically.
         n_markers: Number of markers to choose automatically if `markers is None`.
         obs_key: Key to look for populations in `adata.obs`. By default, uses the model predictions.
-        max_obs: Maximum number of cells per population to be displayed.
+        max_obs: Maximum number of cells per population to be displayed. If population is None, then this number is multiplied by 10.
         s: Dot marker size.
         show: Whether or not to display the figure.
     """
     markers = select_markers(adata, markers, n_markers, obs_key, population)
+
+    if population is None:
+        indices = _get_subset_indices(adata.n_obs, max_obs * 10)
+        data = adata[indices, markers].to_df()
+        g = sns.PairGrid(data, corner=True)
+        g.map_offdiag(sns.scatterplot, s=s)
+        g.map_diag(sns.histplot)
+        g.add_legend()
+        return
 
     data = adata[:, markers].to_df()
     keys = adata.obs[obs_key].astype(str)
