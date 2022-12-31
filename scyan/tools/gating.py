@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from anndata import AnnData
 
-from ..plot.utils import check_has_umap
+from ..utils import _has_umap
 
 log = logging.getLogger(__name__)
 
@@ -60,10 +60,9 @@ class PolygonGating:
         Args:
             adata: An `anndata` object.
         """
-        check_has_umap(lambda adata: 0)
         self.adata = adata
+        self.has_umap = _has_umap(adata)
         self.x_umap = self.adata.obsm["X_umap"]
-        self.has_umap = self.x_umap.sum(1) != 0
 
     def select(self, s: float = 0.05) -> None:
         """Open a UMAP plot on which you can draw a polygon to select cells.

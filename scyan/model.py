@@ -303,7 +303,7 @@ class Scyan(pl.LightningModule):
         """Correct batch effect by going into the latent space, setting the reference covariate to all cells, and then reversing the flow.
 
         !!! warning
-            As we standardised data for training, the resulting tensor is standardised too. You can save the tensor as a numpy layer of `adata` and use [scyan.tools.unscale][] to unscale it.
+            As we standardised data for training, the resulting tensor is standardised too. You can save the tensor as a numpy layer of `adata` and use [scyan.preprocess.unscale][] to unscale it.
 
         Returns:
             The corrected marker expressions on the original space.

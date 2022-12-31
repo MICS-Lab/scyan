@@ -121,17 +121,6 @@ def ks_statistics(
     return statistics
 
 
-def check_has_umap(f: Callable) -> Callable:
-    @wraps(f)
-    def wrapper(adata, *args, **kwargs):
-        assert (
-            "X_umap" in adata.obsm_keys()
-        ), "Before plotting data, UMAP coordinates need to be computed using 'scyan.tools.umap(...)' (see https://mics-lab.github.io/scyan/api/representation/#scyan.tools.umap)"
-        return f(adata, *args, **kwargs)
-
-    return wrapper
-
-
 def select_markers(
     adata: AnnData,
     markers: Optional[List[str]],

@@ -7,14 +7,8 @@ import seaborn as sns
 from anndata import AnnData
 
 from .. import Scyan
-from ..utils import _subset
-from .utils import (
-    check_has_umap,
-    check_population,
-    get_palette_others,
-    plot_decorator,
-    select_markers,
-)
+from ..utils import _has_umap, _subset
+from .utils import check_population, get_palette_others, plot_decorator, select_markers
 
 
 @plot_decorator(adata=True)
@@ -61,10 +55,9 @@ def scatter(
     g.add_legend()
 
 
-@check_has_umap
 def umap(
     adata: AnnData,
-    color: Union[str, List[str]],
+    color: Union[str, List[str]] = None,
     vmax: Union[str, float] = "p95",
     vmin: Union[str, float] = "p05",
     **scanpy_kwargs: int,
@@ -85,8 +78,9 @@ def umap(
         adata, AnnData
     ), f"umap first argument has to be an AnnData object. Received type {type(adata)}."
 
-    if "has_umap" in adata.obs and not adata.obs.has_umap.all():
-        adata = adata[adata.obs.has_umap]
+    has_umap = _has_umap(adata)
+    if has_umap.all():
+        adata = adata[has_umap]
 
     sc.pl.umap(adata, color=color, vmax=vmax, vmin=vmin, **scanpy_kwargs)
 

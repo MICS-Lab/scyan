@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 def auto_logicle_transform(
     adata: AnnData, q: float = 0.05, m: float = 4.5, quantile_clip: Optional[float] = 1e-5
 ) -> None:
-    """[Auto-logicle transformation](https://pubmed.ncbi.nlm.nih.gov/16604519/), implementation.
+    """[Auto-logicle transformation](https://pubmed.ncbi.nlm.nih.gov/16604519/) implementation.
     We recommend it for flow cytometry or spectral flow cytometry data.
 
     Args:
@@ -85,10 +85,10 @@ def inverse_transform(
     obsm_names: Optional[List[str]] = None,
     transformation: Optional[str] = None,
 ) -> np.ndarray:
-    """Inverses the transformation function, i.e. either [scyan.tools.auto_logicle_transform][] or [scyan.tools.asinh_transform][]. It requires to have run have of these before.
+    """Inverses the transformation function, i.e. either [scyan.preprocess.auto_logicle_transform][] or [scyan.preprocess.asinh_transform][]. It requires to have run have of these before.
 
     !!! note
-        If you scaled your data, the complete inverse consists in running [scyan.tools.unscale][] first, and then this function.
+        If you scaled your data, the complete inverse consists in running [scyan.preprocess.unscale][] first, and then this function.
 
     Args:
         adata: An `anndata` object.
@@ -166,7 +166,7 @@ def scale(
 def unscale(
     adata: AnnData, obsm: Optional[str] = None, obsm_names: Optional[List[str]] = None
 ) -> np.ndarray:
-    """Reverse standardisation. It requires to have run [scyan.tools.scale][] before.
+    """Reverse standardisation. It requires to have run [scyan.preprocess.scale][] before.
 
     Args:
         adata: An `anndata` object.
@@ -178,7 +178,7 @@ def unscale(
     """
     assert (
         "scyan_scaling_stds" in adata.uns
-    ), "It seems you haven't run 'scyan.tools.scale' before."
+    ), "It seems you haven't run 'scyan.preprocess.scale' before."
 
     X = adata.X if obsm is None else adata.obsm[obsm]
     stds = adata.uns["scyan_scaling_stds"]

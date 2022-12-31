@@ -6,7 +6,7 @@ import scanpy as sc
 from anndata import AnnData
 from umap import UMAP
 
-from ..utils import _check_is_processed, _get_subset_indices
+from ..utils import _check_is_processed, _get_subset_indices, _has_umap
 
 log = logging.getLogger(__name__)
 
@@ -47,19 +47,18 @@ def subcluster(
         indices = np.where(~adata.obs[leiden_key].isna())[0]
         adata_sub = adata[indices, markers].copy()
     else:
-        if "has_umap" not in adata.obs or condition.sum() <= n_cells:
+        has_umap = _has_umap(adata)
+        if has_umap.all() or condition.sum() <= n_cells:
             indices = _get_subset_indices(condition.sum(), n_cells)
             indices = np.where(condition)[0][indices]
         else:
-            indices = _get_subset_indices((condition & adata.obs.has_umap).sum(), n_cells)
-            indices = np.where(condition & adata.obs.has_umap)[0][indices]
+            indices = _get_subset_indices((condition & has_umap).sum(), n_cells)
+            indices = np.where(condition & has_umap)[0][indices]
 
             k = len(indices)
             if k < n_cells:
-                indices2 = _get_subset_indices(
-                    (condition & ~adata.obs.has_umap).sum(), n_cells - k
-                )
-                indices2 = np.where(condition & ~adata.obs.has_umap)[0][indices2]
+                indices2 = _get_subset_indices((condition & ~has_umap).sum(), n_cells - k)
+                indices2 = np.where(condition & ~has_umap)[0][indices2]
                 indices = np.concatenate([indices, indices2])
 
         adata_sub = adata[indices, markers].copy()
@@ -137,11 +136,6 @@ def umap(
     X = adata_view.X if obsm is None else adata_view.obsm[obsm]
 
     _check_is_processed(X)
-
-    if n_cells is not None and n_cells < adata.n_obs:
-        adata.obs["has_umap"] = np.in1d(np.arange(adata.n_obs), indices)
-    else:
-        adata.obs["has_umap"] = True
 
     log.info("Fitting UMAP...")
     if filter is None:

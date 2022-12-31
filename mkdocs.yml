@@ -21,6 +21,7 @@ nav:
   - API: 
     - scyan.Scyan: api/model.md
     - IO (read/write): api/io.md
+    - Preprocessing: api/preprocess.md
     - Tools: api/tools.md
     - Plots: api/plots.md
     - Loading/adding datasets: api/datasets.md

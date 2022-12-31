@@ -53,6 +53,14 @@ def _wandb_plt_image(fun: Callable, figsize: Tuple[int, int] = [7, 5]):
     return wandb.Image(Image.open(img_buf))
 
 
+def _has_umap(adata: AnnData) -> np.ndarray:
+    """Returns an ndarray telling on which cells the UMAP coordinates have been computed."""
+    assert (
+        "X_umap" in adata.obsm_keys()
+    ), "Before plotting a UMAP, its coordinates need to be computed using 'scyan.tools.umap(...)' (see https://mics-lab.github.io/scyan/api/representation/#scyan.tools.umap)"
+    return adata.obsm["X_umap"].sum(1) != 0
+
+
 def _subset(indices: List[str], max_obs: int):
     if len(indices) < max_obs:
         return indices
@@ -125,7 +133,7 @@ def _get_pop_index(pop: str, table: pd.DataFrame):
 def _check_is_processed(X: np.ndarray) -> None:
     assert (
         np.abs(X).max() < 1e3
-    ), "The provided values are very high: have you run preprocessing first? E.g., consider running 'scyan.tools.asinh_transform' or 'scyan.tools.auto_logicle_transform' (see our tutorial: https://mics-lab.github.io/scyan/tutorials/preprocessing/)"
+    ), "The provided values are very high: have you run preprocessing first? E.g., consider running 'scyan.preprocess.asinh_transform' or 'scyan.preprocess.auto_logicle_transform' (see our tutorial: https://mics-lab.github.io/scyan/tutorials/preprocessing/)"
 
 
 def _validate_inputs(adata: AnnData, df: pd.DataFrame):
@@ -161,7 +169,7 @@ def _validate_inputs(adata: AnnData, df: pd.DataFrame):
 
     if np.abs(X.std(axis=0) - 1).max() > 0.2 or X.min(0).max() >= 0:
         log.warn(
-            "It seems that the data is not standardised. We advise using scaling (scyan.tools.scale) before initializing the model."
+            "It seems that the data is not standardised. We advise using scaling (scyan.preprocess.scale) before initializing the model."
         )
 
     duplicates = df.duplicated()
