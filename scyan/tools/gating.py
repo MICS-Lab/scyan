@@ -1,12 +1,8 @@
-import logging
-
 import matplotlib.pyplot as plt
 import numpy as np
 from anndata import AnnData
 
 from ..utils import _has_umap
-
-log = logging.getLogger(__name__)
 
 
 class _SelectFromCollection:
