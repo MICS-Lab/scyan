@@ -36,7 +36,7 @@ class _SelectFromCollection:
 
 
 class PolygonGatingUMAP:
-    """Prompts the user to make a polygon gate on a UMAP plot to select cells.
+    """Class used to select cells on a UMAP using polygons.
 
     !!! note
 
@@ -44,10 +44,11 @@ class PolygonGatingUMAP:
 
     ```py
     # Usage example (to be run on a jupyter notebook)
-    >>> %matplotlib tk
-    >>> polygon_gating = scyan.tools.PolygonGatingUMAP(adata)
-    >>> polygon_gating.select() # select the cells
-    >>> polygon_gating.save_selection() # save the selected cells in adata.obs
+    >>> %matplotlib tk            # required for the cell selection
+    >>> selector = scyan.tools.PolygonGatingUMAP(adata)
+    >>> selector.select()         # select the cells
+    >>> selector.save_selection() # save the selected cells in adata.obs
+    >>> %matplotlib inline        # to retrieve the default behavior
     ```
     """
 
@@ -79,7 +80,7 @@ class PolygonGatingUMAP:
         self.selector = _SelectFromCollection(ax, pts)
 
         print(
-            f"Enclose cells within a polygon. Helper:\n    - Click on the plot to add a polygon vertex\n    - Press the 'esc' key to start a new polygon\n    - Try holding the 'ctrl' key to move a single vertex"
+            f"Enclose cells within a polygon. Helper:\n    - Click on the plot to add a polygon vertex\n    - Press the 'esc' key to start a new polygon\n    - Try holding the 'ctrl' key to move a single vertex\n    - Once the polygon is finished and overlaid in red, you can close the window"
         )
         plt.show()
 
@@ -94,4 +95,6 @@ class PolygonGatingUMAP:
         self.adata.obs.iloc[
             np.where(self.has_umap)[0][self.selector.ind], col_index
         ] = True
-        print(f"Cell selection saved in adata.obs['{key_added}']")
+        print(
+            f"Selected {len(self.selector.ind)} cells and saved the selection in adata.obs['{key_added}']"
+        )
