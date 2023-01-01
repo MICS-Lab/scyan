@@ -57,7 +57,7 @@ def check_population(return_list: bool = False, one: bool = False):
                 populations = adata.obs[obs_key].cat.categories.values
             else:
                 populations = set(adata.obs[obs_key].values)
-            if isinstance(population, str):
+            if isinstance(population, str) or isinstance(population, bool):
                 if population not in populations:
                     raise NameError(
                         f"Invalid input population. '{population}' has to be one of {populations}."
@@ -67,7 +67,7 @@ def check_population(return_list: bool = False, one: bool = False):
             else:
                 if one:
                     raise ValueError(
-                        f"Argument 'population' has to be a string. Found {population}."
+                        f"Argument 'population' has to be a string or a bool. Found {population}."
                     )
                 not_found_names = [p for p in population if p not in populations]
                 if not_found_names:

@@ -88,7 +88,7 @@ def umap(
     ), f"umap first argument has to be an AnnData object. Received type {type(adata)}."
 
     has_umap = _has_umap(adata)
-    if has_umap.all():
+    if not has_umap.all():
         adata = adata[has_umap]
 
     sc.pl.umap(adata, color=color, vmax=vmax, vmin=vmin, **scanpy_kwargs)
