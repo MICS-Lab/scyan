@@ -32,8 +32,8 @@ nav:
       - scyan.module.CouplingLayer: api/coupling_layer.md
       - scyan.module.LossMMD: api/loss_mmd.md
   - Advanced usage:
-    - Add your own dataset: advanced/data.md
-    - Selecting parameters: advanced/parameters.md
+    - Save your dataset: advanced/data.md
+    - Hyperparameters: advanced/parameters.md
     - Configuration and monitoring: advanced/hydra_wandb.md
     - CLI/Running scripts: advanced/scripts.md
   - Cite us: cite.md
