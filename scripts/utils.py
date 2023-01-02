@@ -102,7 +102,7 @@ def compute_metrics(model: Scyan, config: DictConfig, obs_key: str = "scyan_pop"
         log.info("No label provided. The classification metrics are not computed.")
         metrics_dict = {}
 
-    X, labels = model.x.cpu().numpy(), model.adata.obs[obs_key]
+    X, labels = model.x.numpy(force=True), model.adata.obs[obs_key]
     X, labels = X[~labels.isna()], labels[~labels.isna()]
 
     n_missing_pop = len(model.pop_names) - len(set(labels.values))

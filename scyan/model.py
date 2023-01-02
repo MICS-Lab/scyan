@@ -49,11 +49,11 @@ class Scyan(pl.LightningModule):
         hidden_size: int = 16,
         n_hidden_layers: int = 7,
         n_layers: int = 7,
-        prior_std: float = 0.3,
+        prior_std: float = 0.25,
         lr: float = 1e-3,
         batch_size: int = 16_384,
         alpha_batch_effect: float = 50.0,
-        temperature: float = 1.0,
+        temperature: float = 0.5,
         mmd_max_samples: int = 2048,
         modulo_temp: int = 2,
         max_samples: Optional[int] = 200_000,
@@ -394,8 +394,8 @@ class Scyan(pl.LightningModule):
         )
         probs = torch.softmax(log_probs, dim=1)
 
-        df = pd.DataFrame(probs.cpu().numpy(), columns=self.pop_names)
-        df["max_log_prob"] = log_probs.max(1).values.cpu().numpy()
+        df = pd.DataFrame(probs.numpy(force=True), columns=self.pop_names)
+        df["max_log_prob"] = log_probs.max(1).values.numpy(force=True)
 
         return df
 
@@ -406,7 +406,10 @@ class Scyan(pl.LightningModule):
     def train_dataloader(self):
         """PyTorch lightning `train_dataloader` implementation"""
         self.dataset = AdataDataset(self.x, self.covariates, self.batches)
-        sampler = RandomSampler(self.dataset, max_samples=self.hparams.max_samples)
+        max_samples = self.hparams.max_samples
+        if max_samples is not None:
+            max_samples = max_samples // self.hparams.batch_size * self.hparams.batch_size
+        sampler = RandomSampler(self.dataset, max_samples=max_samples)
 
         return DataLoader(
             self.dataset,

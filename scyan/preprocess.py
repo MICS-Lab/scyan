@@ -142,20 +142,18 @@ def inverse_transform(
     )
 
 
-def scale(
-    adata: AnnData, max_value: float = 10, centering: Optional[bool] = None
-) -> None:
-    """Tranforms the data such as (i) `std=1`, and (ii) either `0` is sent to `-1` (for CyTOF data) or `means=0` (for flow or spectral flow data); except if `centering` is set (which overwrites the default behavior).
+def scale(adata: AnnData, max_value: float = 10, center: Optional[bool] = None) -> None:
+    """Tranforms the data such as (i) `std=1`, and (ii) either `0` is sent to `-1` (for CyTOF data) or `means=0` (for flow or spectral flow data); except if ` center` is set (which overwrites the default behavior).
 
     Args:
         adata: An `anndata` object.
         max_value: Clip to this value after scaling.
-        centering: If `None`, data is only centered for spectral or flow cytometry data (recommended), else, it is centered or not according to the value given.
+         center: If `None`, data is only centered for spectral or flow cytometry data (recommended), else, it is centered or not according to the value given.
     """
     stds = adata.X.std(axis=0)
     adata.uns["scyan_scaling_stds"] = stds
 
-    if centering or (centering is None and "scyan_logicle" in adata.uns):
+    if center or (center is None and "scyan_logicle" in adata.uns):
         means = adata.X.mean(axis=0)
         adata.X = ((adata.X - means) / stds).clip(-max_value, max_value)
         adata.uns["scyan_scaling_means"] = means

@@ -45,7 +45,7 @@ def pops_expressions(
     indices = _get_subset_indices(not_na.sum(), n_cells)
     indices = np.where(not_na)[0][indices]
 
-    x = model(indices).cpu().numpy() if latent else model.adata[indices].X
+    x = model(indices).numpy(force=True) if latent else model.adata[indices].X
     columns = model.var_names if latent else model.adata.var_names
 
     df = pd.DataFrame(x, columns=columns)
@@ -91,7 +91,7 @@ def boxplot_expressions(
         ), f"Marker {marker} was not used during the model training, impossible to use 'latent=True'."
 
         u = model()
-        y = u[:, model.var_names.get_loc(marker)].cpu().numpy()
+        y = u[:, model.var_names.get_loc(marker)].numpy(force=True)
     else:
         y = model.adata.obs_vector(marker)
 
@@ -131,7 +131,7 @@ def pop_expressions(
     """
     condition = model.adata.obs[obs_key] == population
     u_mean = model(condition).mean(dim=0)
-    values = u_mean.cpu().numpy().clip(-max_value, max_value)
+    values = u_mean.numpy(force=True).clip(-max_value, max_value)
 
     y = np.linspace(-max_value, max_value, num_pieces + 1)
     cmap = plt.get_cmap("RdBu")
