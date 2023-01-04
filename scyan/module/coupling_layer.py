@@ -66,7 +66,7 @@ class CouplingLayer(pl.LightningModule):
         x, covariates, ldj_sum = inputs
 
         x_m = x * self.mask
-        st_input = torch.cat([x_m, covariates], dim=1)
+        st_input = torch.cat([x_m, 100 * covariates], dim=1)
 
         s_out = self.sfun(st_input)
         t_out = self.tfun(st_input)
@@ -88,7 +88,7 @@ class CouplingLayer(pl.LightningModule):
             Outputs tensor.
         """
         y_m = y * self.mask
-        st_input = torch.cat([y_m, covariates], dim=1)
+        st_input = torch.cat([y_m, 100 * covariates], dim=1)
 
         return y_m + (1 - self.mask) * (
             y * (1 - self.mask) - self.tfun(st_input)
