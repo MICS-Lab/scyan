@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 import torch
 from anndata import AnnData
+from lightning_lite.utilities.warnings import PossibleUserWarning
 from pandas.api.types import is_numeric_dtype
 from torch import Tensor
 
@@ -17,6 +18,8 @@ log = logging.getLogger(__name__)
 warnings.filterwarnings("ignore", message="Transforming to str index")
 warnings.filterwarnings("ignore", message=r".*Trying to modify attribute[\s\S]*")
 warnings.filterwarnings("ignore", message=r".*No data for colormapping provided[\s\S]*")
+warnings.filterwarnings("ignore", message=r".*does not have many workers[\s\S]*")
+warnings.filterwarnings("ignore", category=PossibleUserWarning)
 
 
 def _root_path() -> Path:

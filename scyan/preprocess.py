@@ -148,7 +148,7 @@ def scale(adata: AnnData, max_value: float = 10, center: Optional[bool] = None) 
     Args:
         adata: An `anndata` object.
         max_value: Clip to this value after scaling.
-         center: If `None`, data is only centered for spectral or flow cytometry data (recommended), else, it is centered or not according to the value given.
+        center: If `None`, data is only centered for spectral or flow cytometry data (recommended), else, it is centered or not according to the value given.
     """
     stds = adata.X.std(axis=0)
     adata.uns["scyan_scaling_stds"] = stds

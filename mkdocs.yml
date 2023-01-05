@@ -30,7 +30,6 @@ nav:
       - scyan.module.PriorDistribution: api/prior.md
       - scyan.module.RealNVP: api/real_nvp.md
       - scyan.module.CouplingLayer: api/coupling_layer.md
-      - scyan.module.LossMMD: api/loss_mmd.md
   - Advanced usage:
     - Save your dataset: advanced/data.md
     - Hyperparameters: advanced/parameters.md
