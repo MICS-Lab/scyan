@@ -58,13 +58,24 @@ class RandomSampler(torch.utils.data.Sampler):
 
         return torch.randperm(len(indices))[: self.batch_size]
 
+    def _select_batches(self):
+        q, r = divmod(self.n_batch, len(self.batch_list))
+        batches_order = np.concatenate(
+            [
+                self.batch_list.repeat(q),
+                np.random.choice(self.batch_list, r, replace=False),
+            ]
+        )
+        np.random.shuffle(batches_order)
+        return batches_order
+
     def __iter__(self):
         if not self.corr_mode:
             yield from torch.randperm(self.n_obs)[: self.n_samples]
         else:
-            for _ in range(self.n_batch):
-                batch = np.random.choice(self.batch_list)
-                yield from self.choice(torch.where(self.batches == batch)[0])
+            for batch in self._select_batches():
+                indices = torch.where(self.batches == batch)[0]
+                yield from indices[self.choice(indices)]
 
     def __len__(self):
         return self.n_samples
