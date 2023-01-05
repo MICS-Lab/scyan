@@ -120,7 +120,7 @@ def compute_metrics(model: Scyan, config: DictConfig, obs_key: str = "scyan_pop"
         corr = model.batch_effect_correction()
         model.adata.obsm["scyan_corrected"] = corr.numpy(force=True)
         lisi = compute_lisi(model.adata, model.hparams.batch_key, "scyan_corrected")
-        metrics_dict["iLISI"] = lisi
+        metrics_dict["iLISI"] = -lisi  # negative for hyperoptimisation
 
     metrics_dict["Heuristic"] = (n_missing_pop + 1) * dbs * neg_log_dir
 
