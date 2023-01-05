@@ -20,6 +20,7 @@ data/*/*
 !data/aml/default.csv
 !data/aml/short.h5ad
 !data/bmmc/default.csv
+!data/poised/default.csv
 !data/debarcoding/default.csv
 !data/README.md
 
