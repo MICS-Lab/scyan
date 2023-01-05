@@ -2,7 +2,7 @@ defaults:
   - _self_
   - trainer: default
   - sweeper: optuna
-  - project: aml
+  - project: aml # name of the config/project yaml file
 
   - override hydra/job_logging: colorlog
   - override hydra/hydra_logging: colorlog
@@ -11,7 +11,8 @@ wandb:
   mode: disabled # online, offline, disabled
   save_umap: false
 
-n_run: 5
+optimized_metric: Heuristic # Metric for hyperoptimisation. Recommended: Heuristic or iLISI
+n_run: 5 # Number or run per trial to stabilise the metrics over one set of hyperparameters
 save_predictions: false
 
 model:

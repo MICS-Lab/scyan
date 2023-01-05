@@ -106,7 +106,7 @@ class Scyan(pl.LightningModule):
             cov_repr = "No covariate provided."
         else:
             cov_repr = f"Covariates: {', '.join(self.continuous_covariate_keys + self.categorical_covariate_keys)}"
-        return f"Scyan model with N={self.adata.n_obs} cells, P={self.n_pops} populations and M={len(self.var_names)} markers. {cov_repr}\nBatch correction mode: {self._corr_mode}"
+        return f"Scyan model with N={self.adata.n_obs} cells, P={self.n_pops} populations and M={len(self.var_names)} markers.\n   ├── {cov_repr}\n   └── Batch correction mode: {self._corr_mode}"
 
     @property
     def _corr_mode(self):

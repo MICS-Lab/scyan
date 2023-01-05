@@ -3,8 +3,6 @@
 defaults:
   - override /hydra/sweeper: optuna
 
-optimized_metric: Heuristic
-
 hydra:
   sweeper:
     sampler:
