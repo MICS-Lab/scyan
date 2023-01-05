@@ -136,6 +136,26 @@ def _check_is_processed(X: np.ndarray) -> None:
     ), "The provided values are very high: have you run preprocessing first? E.g., consider running 'scyan.preprocess.asinh_transform' or 'scyan.preprocess.auto_logicle_transform' (see our tutorial: https://mics-lab.github.io/scyan/tutorials/preprocessing/)"
 
 
+def _check_batch_arg(adata, batch_key, batch_ref):
+    assert (
+        batch_key is not None
+    ), "Scyan model was trained with no batch_key, thus not correcting batch effect"
+
+    batches = adata.obs[batch_key]
+
+    if batch_ref is None:
+        batch_ref = batches.value_counts().index[0]
+        log.info(f"No batch_ref was provided, using {batch_ref} as reference.")
+        return batch_ref
+
+    possible_batches = set(batches)
+    assert (
+        batch_ref in possible_batches
+    ), f"Batch reference '{batch_ref}' is not an existing batch. Choose one among: {', '.join(list(possible_batches))}."
+
+    return batch_ref
+
+
 def _validate_inputs(adata: AnnData, df: pd.DataFrame):
     assert isinstance(
         adata, AnnData

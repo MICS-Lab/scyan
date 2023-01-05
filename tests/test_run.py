@@ -17,7 +17,7 @@ def short_model(init_data):
 
 @pytest.fixture
 def short_model_batch_effect(init_data):
-    return Scyan(*init_data, batch_key="subject", batch_ref="H1")
+    return Scyan(*init_data, batch_key="subject")
 
 
 @pytest.fixture

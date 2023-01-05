@@ -12,15 +12,10 @@ from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from torch import Tensor
 from torch.utils.data import DataLoader, TensorDataset
 
+from . import utils
 from .data import AdataDataset, RandomSampler, _prepare_data
 from .module import ScyanModule
-from .utils import (
-    _add_level_predictions,
-    _get_pop_index,
-    _process_pop_sample,
-    _requires_fit,
-    _validate_inputs,
-)
+from .utils import _requires_fit
 
 log = logging.getLogger(__name__)
 
@@ -56,7 +51,6 @@ class Scyan(pl.LightningModule):
         modulo_temp: int = 2,
         max_samples: Optional[int] = 200_000,
         batch_key: Optional[str] = None,
-        batch_ref: Union[str, int, None] = None,
     ):
         """
         Args:
@@ -74,10 +68,9 @@ class Scyan(pl.LightningModule):
             modulo_temp: At which frequency temperature has to be applied.
             max_samples: Maximum number of samples per epoch.
             batch_key: Key in `adata.obs` referring to the cell batch variable.
-            batch_ref: Batch that will be considered as the reference. By default, choose the batch with the higher number of cells.
         """
         super().__init__()
-        self.adata, self.table = _validate_inputs(adata, table)
+        self.adata, self.table = utils._validate_inputs(adata, table)
         self.continuous_covariate_keys = continuous_covariate_keys or []
         self.categorical_covariate_keys = categorical_covariate_keys or []
         self.n_pops = len(self.table)
@@ -176,7 +169,7 @@ class Scyan(pl.LightningModule):
             return set(self.table.index.get_level_values(level))
 
         name = parent_of or children_of
-        index = _get_pop_index(name, self.table)
+        index = utils._get_pop_index(name, self.table)
         where = self.table.index.get_level_values(index) == name
 
         if children_of is not None:
@@ -192,23 +185,6 @@ class Scyan(pl.LightningModule):
 
     def _prepare_data(self) -> None:
         """Initialize the data and the covariates"""
-        if self.hparams.batch_key is None:
-            assert (
-                self.hparams.batch_ref is None
-            ), "To correct batch effect, please profide a batch_key (received only a batch_ref)."
-        else:
-            batches = self.adata.obs[self.hparams.batch_key]
-
-            if self.hparams.batch_ref is None:
-                self.hparams.batch_ref = batches.value_counts().index[0]
-                log.warn(
-                    f"No batch_ref was provided, using {self.hparams.batch_ref} as reference."
-                )
-
-            assert self.hparams.batch_ref in set(
-                batches
-            ), f"Batch reference '{self.hparams.batch_ref}' is not an existing batch."
-
         x, covariates, batches = _prepare_data(
             self.adata,
             self.var_names,
@@ -248,7 +224,7 @@ class Scyan(pl.LightningModule):
 
         return self.dataset_apply(lambda *batch: self.module(*batch)[0], (x, cov))
 
-    def _repeat_ref_covariates(self, k: Optional[int] = None) -> Tensor:
+    def _repeat_ref_covariates(self, batch_ref: str, k: Optional[int] = None) -> Tensor:
         """Repeat the covariates from the reference batch along axis 0.
 
         Args:
@@ -260,7 +236,7 @@ class Scyan(pl.LightningModule):
         n_repetitions = self.adata.n_obs if k is None else k
 
         ref_covariate = self.covariates[
-            self.adata.obs[self.hparams.batch_key] == self.hparams.batch_ref
+            self.adata.obs[self.hparams.batch_key] == batch_ref
         ][0]
         return ref_covariate.repeat((n_repetitions, 1))
 
@@ -284,7 +260,7 @@ class Scyan(pl.LightningModule):
         Returns:
             Sampled cells expressions and, if `return_z`, the populations associated to these cells.
         """
-        z = _process_pop_sample(self, pop)
+        z = utils._process_pop_sample(self, pop)
 
         if covariates_sample is None:
             if self.hparams.batch_key is None:
@@ -297,21 +273,22 @@ class Scyan(pl.LightningModule):
 
     @torch.no_grad()
     @_requires_fit
-    def batch_effect_correction(self) -> Tensor:
+    def batch_effect_correction(self, batch_ref: Optional[str] = None) -> Tensor:
         """Correct batch effect by going into the latent space, setting the reference covariate to all cells, and then reversing the flow.
 
         !!! warning
             As we standardised data for training, the resulting tensor is standardised too. You can save the tensor as a numpy layer of `adata` and use [scyan.preprocess.unscale][] to unscale it.
 
+        Args:
+            batch_ref: Name of the batch that will be considered as the reference. By default, it chooses the batch with the highest number of cells.
+
         Returns:
-            The corrected marker expressions on the original space.
+            The corrected marker expressions in the original space (a Tensor of shape $N$ cells x $M$ markers).
         """
-        assert (
-            self.hparams.batch_key is not None
-        ), "Scyan model was trained with no batch_key, thus not correcting batch effect"
+        batch_ref = utils._check_batch_arg(self.adata, self.hparams.batch_key, batch_ref)
 
         u = self()
-        ref_covariates = self._repeat_ref_covariates()
+        ref_covariates = self._repeat_ref_covariates(batch_ref)
 
         return self.dataset_apply(self.module.inverse, (u, ref_covariates))
 
@@ -352,7 +329,7 @@ class Scyan(pl.LightningModule):
             log_prob_th: If the log-probability of the most probable population for one cell is below this threshold, this cell will not be annotated (`np.nan`).
 
         Returns:
-            Population predictions (pandas `Series` of length $N$).
+            Population predictions (pandas `Series` of length $N$ cells).
         """
         df = self.predict_proba()
         max_log_probs = df.pop("max_log_prob")
@@ -363,7 +340,7 @@ class Scyan(pl.LightningModule):
         if key_added is not None:
             self.adata.obs[key_added] = pd.Categorical(populations)
             if add_levels and isinstance(self.table.index, pd.MultiIndex):
-                _add_level_predictions(self, key_added)
+                utils._add_level_predictions(self, key_added)
 
         missing_pops = self.n_pops - len(populations.cat.categories)
         if missing_pops:
