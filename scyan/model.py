@@ -185,7 +185,7 @@ class Scyan(pl.LightningModule):
 
     def _prepare_data(self) -> None:
         """Initialize the data and the covariates"""
-        x, covariates, batches = _prepare_data(
+        x, covariates = _prepare_data(
             self.adata,
             self.var_names,
             self.hparams.batch_key,
@@ -195,7 +195,6 @@ class Scyan(pl.LightningModule):
 
         self.register_buffer("x", x)
         self.register_buffer("covariates", covariates)
-        self.batches = batches
 
         self._n_samples = (
             min(self.hparams.max_samples or self.adata.n_obs, self.adata.n_obs)
@@ -301,18 +300,6 @@ class Scyan(pl.LightningModule):
 
         return loss
 
-    def predict_step(self, data: Tuple[Tensor], _) -> Tensor:
-        """Compute log probabilities for each population and for each cell. Do not use directly, prefer `predict` or `predict_proba` instead.
-
-        Args:
-            data: One mini-batch of data representing $B$ cells.
-
-        Returns:
-            Log probabilities as a tensor of shape $(B, P)$.
-        """
-        log_probs, *_ = self.module.compute_probabilities(*data)
-        return log_probs
-
     @_requires_fit
     @torch.no_grad()
     def predict(
@@ -358,8 +345,8 @@ class Scyan(pl.LightningModule):
         Returns:
             Dataframe of shape `(N, P)` with probabilities for each population.
         """
-        log_probs = torch.cat(
-            self.trainer.predict(self, self.predict_dataloader()), dim=0
+        log_probs = self.dataset_apply(
+            lambda *data: self.module.compute_probabilities(*data)[0]
         )
         probs = torch.softmax(log_probs, dim=1)
 
@@ -376,18 +363,10 @@ class Scyan(pl.LightningModule):
         """PyTorch lightning `train_dataloader` implementation"""
         self.dataset = AdataDataset(self.x, self.covariates)
 
-        sampler = RandomSampler(
-            self.adata.n_obs,
-            self._n_samples,
-            self.hparams.batch_size,
-            self.batches,
-            self._corr_mode,
-        )
-
         return DataLoader(
             self.dataset,
             batch_size=self.hparams.batch_size,
-            sampler=sampler,
+            sampler=RandomSampler(self.adata.n_obs, self._n_samples),
             num_workers=self._num_workers,
         )
 
@@ -414,7 +393,7 @@ class Scyan(pl.LightningModule):
         else:
             from tqdm import tqdm as _tqdm
 
-        if not data:
+        if data is None:
             loader = self.predict_dataloader()
         else:
             loader = DataLoader(

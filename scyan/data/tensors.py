@@ -1,4 +1,4 @@
-from typing import List, Optional, Sized, Tuple, Union
+from typing import List, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -25,14 +25,7 @@ class AdataDataset(torch.utils.data.Dataset):
 class RandomSampler(torch.utils.data.Sampler):
     """Random sampling during training. It stops the epoch when we reached `max_samples` samples (if provided)."""
 
-    def __init__(
-        self,
-        n_obs: int,
-        n_samples: int,
-        batch_size: int,
-        batches: Tensor,
-        corr_mode: bool,
-    ):
+    def __init__(self, n_obs: int, n_samples: int):
         """
         Args:
             n_obs: Total number of cells.
@@ -43,39 +36,9 @@ class RandomSampler(torch.utils.data.Sampler):
         """
         self.n_obs = n_obs
         self.n_samples = n_samples
-        self.batch_size = batch_size
-        self.batches = batches
-        self.corr_mode = corr_mode
-
-        if self.corr_mode:
-            self.batch_list = np.unique(batches.numpy())  # Set of biological batches
-            self.n_batch = self.n_samples // self.batch_size  # Number of mini-batches
-
-    def choice(self, indices):
-        assert (
-            len(indices) >= self.batch_size
-        ), f"One batch has {len(indices)} samples, which is less than the batch-size ({self.batch_size}). We don't allow using such small batches."
-
-        return torch.randperm(len(indices))[: self.batch_size]
-
-    def _select_batches(self):
-        q, r = divmod(self.n_batch, len(self.batch_list))
-        batches_order = np.concatenate(
-            [
-                self.batch_list.repeat(q),
-                np.random.choice(self.batch_list, r, replace=False),
-            ]
-        )
-        np.random.shuffle(batches_order)
-        return batches_order
 
     def __iter__(self):
-        if not self.corr_mode:
-            yield from torch.randperm(self.n_obs)[: self.n_samples]
-        else:
-            for batch in self._select_batches():
-                indices = torch.where(self.batches == batch)[0]
-                yield from indices[self.choice(indices)]
+        yield from torch.randperm(self.n_obs)[: self.n_samples]
 
     def __len__(self):
         return self.n_samples
@@ -121,9 +84,4 @@ def _prepare_data(
         dtype=torch.float32,
     )
 
-    if batch_key is not None:
-        batch_to_id = {b: i for i, b in enumerate(adata.obs[batch_key].cat.categories)}
-        batches = torch.tensor([batch_to_id[b] for b in adata.obs[batch_key]])
-        return x, covariates, batches
-
-    return x, covariates, torch.empty((adata.n_obs,))
+    return x, covariates
