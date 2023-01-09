@@ -91,7 +91,10 @@ def umap(
     if not has_umap.all():
         adata = adata[has_umap]
 
-    sc.pl.umap(adata, color=color, vmax=vmax, vmin=vmin, **scanpy_kwargs)
+    if color is None:
+        return sc.pl.umap(adata, **scanpy_kwargs)
+
+    return sc.pl.umap(adata, color=color, vmax=vmax, vmin=vmin, **scanpy_kwargs)
 
 
 def pop_level(

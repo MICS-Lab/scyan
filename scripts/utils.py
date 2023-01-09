@@ -60,7 +60,7 @@ def init_and_fit_model(
     )
 
     model.fit(trainer=trainer)
-    model.predict()
+    model.predict(log_prob_th=-np.inf)  # Prediction on all cells for hyperoptimisation
 
     return model
 
