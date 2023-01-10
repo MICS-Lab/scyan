@@ -3,6 +3,8 @@
 defaults:
   - override /hydra/sweeper: optuna
 
+optimized_metric: Heuristic
+
 hydra:
   sweeper:
     sampler:
@@ -21,7 +23,7 @@ hydra:
 
     direction: minimize
     storage: null
-    n_trials: 40
+    n_trials: 40 # number of Optuna trials
     n_jobs: 1
 
     params:

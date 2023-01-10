@@ -1,19 +1,27 @@
+### --- Hydra config file ---
+### A usage guide can be found here: https://mics-lab.github.io/scyan/advanced/hydra_wandb/
+### The main parameters to update are the commented one, the others can remain as such
+
 defaults:
   - _self_
+  - project: aml # name of the yaml file in ./config/project
   - trainer: default
   - sweeper: optuna
-  - project: aml # name of the config/project yaml file
 
   - override hydra/job_logging: colorlog
   - override hydra/hydra_logging: colorlog
 
-wandb:
-  mode: disabled # online, offline, disabled
-  save_umap: false
+n_run: 5                # Number or run (if hyperoptimization is run, its the number of run per trial)
+save_predictions: false # If true, then saves the predictions in the hydra log directory
 
-optimized_metric: Heuristic # Metric for hyperoptimisation. Recommended: Heuristic or iLISI
-n_run: 5 # Number or run per trial to stabilise the metrics over one set of hyperparameters
-save_predictions: false
+wandb:
+  mode: disabled   # online, offline, disabled
+  save_umap: false # save the umap on Weight & Biases
+
+
+### --- Model default parameters ---
+### You can either modify the parameters directly, or via the command line
+### Note that you don't have to update it if you run hyperoptimization
 
 model:
   _target_: scyan.model.Scyan
