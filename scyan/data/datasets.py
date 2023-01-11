@@ -63,7 +63,7 @@ def get_local_file(
 
     if kind == "csv":
         df = pd.read_csv(filepath, index_col=0)
-        level_indices = np.where(df.columns.str.contains("level"))[0]
+        level_indices = np.where(df.columns.str.lower().str.contains("level"))[0]
         if level_indices.size:
             return pd.read_csv(filepath, index_col=[0] + list(1 + level_indices))
         return df
