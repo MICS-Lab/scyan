@@ -38,6 +38,13 @@ def get_local_file(
     filepath = dataset_path / filename
 
     if not filepath.is_file():
+        assert dataset_name in [
+            "aml",
+            "bmmc",
+            "debarcoding",
+            "poised",
+        ], f"File {filepath} not existing."
+
         base_url = "https://github.com/MICS-Lab/scyan_data"
         url = f"{base_url}/raw/main/data/{dataset_name}/{filename}"
 
@@ -56,7 +63,7 @@ def get_local_file(
 
     if kind == "csv":
         df = pd.read_csv(filepath, index_col=0)
-        level_indices = np.where(df.columns.str.contains("level"))[0]
+        level_indices = np.where(df.columns.str.lower().str.contains("level"))[0]
         if level_indices.size:
             return pd.read_csv(filepath, index_col=[0] + list(1 + level_indices))
         return df
@@ -202,8 +209,8 @@ def _list(dataset_name: Optional[str] = None) -> None:
 
 def load(
     dataset_name: str,
-    version: str = "default",
-    table: str = "default",
+    version: Optional[str] = "default",
+    table: Optional[str] = "default",
     reducer: Optional[str] = None,
 ) -> Tuple[AnnData, pd.DataFrame]:
     """Load a dataset, i.e. its `AnnData` object and its knowledge table. Public datasets available are `"aml"`, `"bmmc"`, and `"debarcoding"`; note that, if the dataset was not loaded yet, it is automatically downloaded (requires internet connection). Existing dataset names and versions/tables can be listed using [scyan.data.list][].
@@ -215,23 +222,24 @@ def load(
 
     Args:
         dataset_name: Name of the dataset. Either one of your dataset, or one public dataset among `"aml"`, `"bmmc"`, and `"debarcoding"`.
-        version: Name of the `anndata` file (.h5ad) that should be loaded (the name was given when using [scyan.data.add][]).
-        table: Name of the knowledge table that should be loaded (the name was given when using [scyan.data.add][]).
-        reducer: Optional: name of the umap reducer that should be loaded (the name was given when using [scyan.data.add][]).
+        version: Name of the `anndata` file (.h5ad) that should be loaded. The available versions can be listed with `scyan.data.list()`. If `None`, don't return an `adata` object.
+        table: Name of the knowledge table that should be loaded. If `None`, don't return the `table` dataframe.
+        reducer: Name of the umap reducer that should be loaded. If `None`, don't return the `UMAP` reducer.
 
     Returns:
-        `AnnData` instance and the knowledge table. If `reducer` is not None, also return a `UMAP` object.
+        Tuple containing the requested data, i.e. by default a tuple `(adata, table)` is returned (the adata instance and the knowledge table). But, for instance, if `version is None` and `reducer` is provided, then it returns a tuple `(table, reducer)`.
     """
+    assert any(
+        arg is not None for arg in [version, table, reducer]
+    ), "Provide at least one argument that is not `None` among 'version', 'table', and 'reducer'."
+
     data_path = get_data_path()
 
     dataset_path = data_path / dataset_name
     dataset_path.mkdir(parents=True, exist_ok=True)
 
-    adata = get_local_file(dataset_path, dataset_name, version, "h5ad")
-    marker_pop_matrix = get_local_file(dataset_path, dataset_name, table, "csv")
-
-    if reducer is not None:
-        umap_reducer = get_local_file(dataset_path, dataset_name, reducer, "umap")
-        return adata, marker_pop_matrix, umap_reducer
-
-    return adata, marker_pop_matrix
+    return tuple(
+        get_local_file(dataset_path, dataset_name, arg, ext)
+        for arg, ext in [(version, "h5ad"), (table, "csv"), (reducer, "umap")]
+        if arg is not None
+    )

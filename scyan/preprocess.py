@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 def auto_logicle_transform(
     adata: AnnData, q: float = 0.05, m: float = 4.5, quantile_clip: Optional[float] = 1e-5
 ) -> None:
-    """[Logicle transformation](https://pubmed.ncbi.nlm.nih.gov/16604519/), implementation from Charles-Antoine Dutertre.
+    """[Auto-logicle transformation](https://pubmed.ncbi.nlm.nih.gov/16604519/) implementation.
     We recommend it for flow cytometry or spectral flow cytometry data.
 
     Args:
@@ -85,10 +85,10 @@ def inverse_transform(
     obsm_names: Optional[List[str]] = None,
     transformation: Optional[str] = None,
 ) -> np.ndarray:
-    """Inverse the transformation function, i.e. either [scyan.tools.auto_logicle_transform][] or [scyan.tools.asinh_transform][]. It requires to have run have of these before.
+    """Inverses the transformation function, i.e. either [scyan.preprocess.auto_logicle_transform][] or [scyan.preprocess.asinh_transform][]. It requires to have run have of these before.
 
     !!! note
-        If you scaled your data, the complete inverse consists in running [scyan.tools.unscale][] first, and then this function.
+        If you scaled your data, the complete inverse consists in running [scyan.preprocess.unscale][] first, and then this function.
 
     Args:
         adata: An `anndata` object.
@@ -142,17 +142,18 @@ def inverse_transform(
     )
 
 
-def scale(adata: AnnData, max_value: float = 10) -> None:
-    """Tranform the data such as (i) `std=1`, and (ii) either `0` is sent to `-1` (for CyTOF data) or `means=0` (for flow or spectral flow data).
+def scale(adata: AnnData, max_value: float = 10, center: Optional[bool] = None) -> None:
+    """Tranforms the data such as (i) `std=1`, and (ii) either `0` is sent to `-1` (for CyTOF data) or `means=0` (for flow or spectral flow data); except if ` center` is set (which overwrites the default behavior).
 
     Args:
         adata: An `anndata` object.
         max_value: Clip to this value after scaling.
+        center: If `None`, data is only centered for spectral or flow cytometry data (recommended), else, it is centered or not according to the value given.
     """
     stds = adata.X.std(axis=0)
     adata.uns["scyan_scaling_stds"] = stds
 
-    if "scyan_logicle" in adata.uns:
+    if center or (center is None and "scyan_logicle" in adata.uns):
         means = adata.X.mean(axis=0)
         adata.X = ((adata.X - means) / stds).clip(-max_value, max_value)
         adata.uns["scyan_scaling_means"] = means
@@ -163,7 +164,7 @@ def scale(adata: AnnData, max_value: float = 10) -> None:
 def unscale(
     adata: AnnData, obsm: Optional[str] = None, obsm_names: Optional[List[str]] = None
 ) -> np.ndarray:
-    """Reverse standardisation. It requires to have run [scyan.tools.scale][] before.
+    """Reverse standardisation. It requires to have run [scyan.preprocess.scale][] before.
 
     Args:
         adata: An `anndata` object.
@@ -175,7 +176,7 @@ def unscale(
     """
     assert (
         "scyan_scaling_stds" in adata.uns
-    ), "It seems you haven't run 'scyan.tools.scale' before."
+    ), "It seems you haven't run 'scyan.preprocess.scale' before."
 
     X = adata.X if obsm is None else adata.obsm[obsm]
     stds = adata.uns["scyan_scaling_stds"]

@@ -2,9 +2,9 @@
 ### Usage example
 import scyan
 
-adata, marker_pop_matrix = scyan.data.load("aml")
+adata, table = scyan.data.load("aml")
 
-model = scyan.Scyan(adata, marker_pop_matrix)
+model = scyan.Scyan(adata, table)
 model.fit()
 model.predict()
 ```
@@ -15,6 +15,8 @@ model.predict()
 
 ::: scyan.Scyan
     options:
+      heading_level: 3
+      group_by_category: False
       members:
         - __init__
         - fit

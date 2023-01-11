@@ -1,11 +1,11 @@
 import logging
-from typing import List, Optional, Tuple, Union
+from typing import Tuple, Union
 
 import pytorch_lightning as pl
 import torch
 from torch import Tensor, distributions, nn
 
-from . import LossMMD, PriorDistribution, RealNVP
+from . import PriorDistribution, RealNVP
 
 log = logging.getLogger(__name__)
 
@@ -16,7 +16,6 @@ class ScyanModule(pl.LightningModule):
     Attributes:
         real_nvp (RealNVP): The Normalizing Flow (a [RealNVP][scyan.module.RealNVP] object)
         prior (PriorDistribution): The prior $U$ (a [PriorDistribution][scyan.module.PriorDistribution] object)
-        loss_mmd (LossMMD): The MMD loss (a [LossMMD][scyan.module.LossMMD] object)
         pi_logit (Tensor): Logits used to learn the population weights
     """
 
@@ -26,30 +25,24 @@ class ScyanModule(pl.LightningModule):
         self,
         rho: Tensor,
         n_covariates: int,
-        other_batches: List[int],
         hidden_size: int,
         n_hidden_layers: int,
         n_layers: int,
         prior_std: float,
         temperature: float,
-        mmd_max_samples: int,
-        batch_ref_id: Optional[int],
     ):
         """
         Args:
             rho: Tensor $\rho$ representing the knowledge table.
             n_covariates: Number of covariates $M_c$ considered.
-            other_batches: List of batches that are not the reference.
             hidden_size: MLP (`s` and `t`) hidden size.
             n_hidden_layers: Number of hidden layers for the MLP (`s` and `t`).
             n_layers: Number of coupling layers.
             prior_std: Standard deviation $\sigma$ of the cell-specific random variable $H$.
             temperature: Temperature to favour small populations.
-            mmd_max_samples: Maximum number of samples to give to the MMD.
-            batch_ref_id: ID corresponding to the reference batch.
         """
         super().__init__()
-        self.save_hyperparameters(ignore=["rho", "n_covariates", "other_batches"])
+        self.save_hyperparameters(ignore=["rho", "n_covariates"])
 
         self.n_pops, self.n_markers = rho.shape
         self.register_buffer("rho", rho)
@@ -71,9 +64,6 @@ class ScyanModule(pl.LightningModule):
         self.prior = PriorDistribution(
             self.rho, self.rho_mask, self.hparams.prior_std, self.n_markers
         )
-
-        self.other_batches = other_batches
-        self.loss_mmd = LossMMD(self.n_markers, self.hparams.prior_std, self.mean_na)
 
     def forward(self, x: Tensor, covariates: Tensor) -> Tuple[Tensor, Tensor, Tensor]:
         """Forward implementation, going through the complete flow $f_{\phi}$.
@@ -189,28 +179,10 @@ class ScyanModule(pl.LightningModule):
 
         return log_probs, ldj_sum, u
 
-    def batch_correction_mmd(self, u1, pop1, u2, pop2):
-        n_samples = min(len(u1), len(u2), self.hparams.mmd_max_samples)
-
-        if n_samples < 500:
-            log.warn(f"Correcting batch effect with few samples ({n_samples})")
-
-        pop_weights = 1 / self.pi.detach()
-
-        indices1 = torch.multinomial(pop_weights[pop1], n_samples)
-        indices2 = torch.multinomial(pop_weights[pop2], n_samples)
-
-        return self.loss_mmd(u1[indices1], u2[indices2])
-
-    def get_mmd_inputs(self, u: Tensor, batches: Tensor, probs: Tensor, b: int):
-        condition = batches == b
-        return u[condition], probs[condition].argmax(dim=1)
-
-    def losses(
+    def kl(
         self,
         x: Tensor,
         covariates: Tensor,
-        batches: Tensor,
         use_temp: bool,
     ) -> Tuple[Tensor, Tensor]:
         """Compute the module loss for one mini-batch.
@@ -218,28 +190,11 @@ class ScyanModule(pl.LightningModule):
         Args:
             x: Inputs of size $(B, M)$.
             covariates: Covariates of size $(B, M_c)$.
-            batches: Batch information used to correct batch-effect (tensor of size $(B)$)
             use_temp: Whether to consider temperature is the KL term.
 
         Returns:
-            The KL loss term and the MMD loss term.
+            The KL loss term.
         """
-        log_probs, ldj_sum, u = self.compute_probabilities(x, covariates, use_temp)
+        log_probs, ldj_sum, _ = self.compute_probabilities(x, covariates, use_temp)
 
-        kl = -(torch.logsumexp(log_probs, dim=1) + ldj_sum).mean()
-
-        if self.hparams.batch_ref_id is None:
-            return kl, 0
-
-        u_ref, pop_ref = self.get_mmd_inputs(
-            u, batches, log_probs, self.hparams.batch_ref_id
-        )
-
-        mmd = sum(
-            self.batch_correction_mmd(
-                u_ref, pop_ref, *self.get_mmd_inputs(u, batches, log_probs, other)
-            )
-            for other in self.other_batches
-        )
-
-        return kl, mmd
+        return -(torch.logsumexp(log_probs, dim=1) + ldj_sum).mean()

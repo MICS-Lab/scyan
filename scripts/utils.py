@@ -1,15 +1,12 @@
 import logging
-from collections import Counter
 from typing import List, Optional
 
 import hydra
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-import scanpy as sc
 import wandb
 from anndata import AnnData
-from imblearn.over_sampling import SMOTE
 from omegaconf import DictConfig
 from pytorch_lightning import Callback, Trainer
 from pytorch_lightning.loggers import WandbLogger
@@ -23,7 +20,7 @@ log = logging.getLogger(__name__)
 
 def init_and_fit_model(
     adata: AnnData,
-    marker_pop_matrix: pd,
+    table: pd,
     config: DictConfig,
     wandb_logger: Optional[WandbLogger] = None,
 ) -> Scyan:
@@ -32,7 +29,7 @@ def init_and_fit_model(
 
     Args:
         adata: `AnnData` object containing the FCS data.
-        marker_pop_matrix: Dataframe representing the biological knowledge about markers and populations.
+        table: Dataframe representing the biological knowledge about markers and populations.
         config: Hydra generated configuration.
         wandb_logger: Weight & Biases logger.
 
@@ -42,11 +39,10 @@ def init_and_fit_model(
     model: Scyan = hydra.utils.instantiate(
         config.model,
         adata=adata,
-        marker_pop_matrix=marker_pop_matrix,
+        table=table,
         continuous_covariate_keys=config.project.get("continuous_covariate_keys", []),
         categorical_covariate_keys=config.project.get("categorical_covariate_keys", []),
         batch_key=config.project.get("batch_key"),
-        batch_ref=config.project.get("batch_ref"),
         _convert_="partial",
     )
 
@@ -64,7 +60,7 @@ def init_and_fit_model(
     )
 
     model.fit(trainer=trainer)
-    model.predict()
+    model.predict(log_prob_th=-np.inf)  # Prediction on all cells for hyperoptimisation
 
     return model
 
@@ -99,13 +95,14 @@ def compute_metrics(model: Scyan, config: DictConfig, obs_key: str = "scyan_pop"
     """
     if config.project.get("label", None):
         y_true = model.adata.obs[config.project.label]
-        y_pred = model.adata.obs[obs_key]
+        y_pred = model.adata.obs[obs_key].fillna("")
         metrics_dict = classification_metrics(y_true, y_pred)
     else:
         log.info("No label provided. The classification metrics are not computed.")
         metrics_dict = {}
 
-    X, labels = model.x.cpu().numpy(), model.adata.obs[obs_key]
+    X, labels = model.x.numpy(force=True), model.adata.obs[obs_key]
+    X, labels = X[~labels.isna()], labels[~labels.isna()]
 
     n_missing_pop = len(model.pop_names) - len(set(labels.values))
     metrics_dict["Number of missing pop"] = n_missing_pop
@@ -117,12 +114,23 @@ def compute_metrics(model: Scyan, config: DictConfig, obs_key: str = "scyan_pop"
     neg_log_dir = -np.log(p).sum()
     metrics_dict["Neg log Dirichlet"] = neg_log_dir
 
-    metrics_dict["Heuristic"] = (n_missing_pop + 1) * dbs * neg_log_dir
+    if model._corr_mode:
+        from .lisi import compute_lisi
+
+        corr = model.batch_effect_correction()
+        model.adata.obsm["scyan_corrected"] = corr.numpy(force=True)
+        lisi = compute_lisi(model.adata, model.hparams.batch_key, "scyan_corrected")
+
+        metrics_dict["iLISI"] = lisi
+        metrics_dict["Heuristic"] = (n_missing_pop + 1) * dbs * neg_log_dir / lisi
+    else:
+        metrics_dict["Heuristic"] = (n_missing_pop + 1) * dbs * neg_log_dir
 
     print("\n-- Run metrics --")
     for name, value in metrics_dict.items():
         print(f"{name}: {value:.4f}")
-        wandb.run.summary[name] = value
+        if config.wandb.mode != "disabled":
+            wandb.run.summary[name] = value
     print()
 
     return metrics_dict
@@ -167,34 +175,3 @@ def compute_umap(model: Scyan, config: DictConfig, obs_key: str = "scyan_pop") -
                 )
             }
         )
-
-
-def oversample(adata: AnnData, n: int, correction_mode: bool) -> AnnData:
-    """Oversample cells from the AML dataset.
-
-    Args:
-        adata: The AnnData object.
-        n: The number of cells desired.
-        correction_mode: True if correcting batch effect.
-
-    Returns:
-        The anndata object with 'n' cells.
-    """
-    if correction_mode:
-        y = adata.obs.cell_type.astype(str) + adata.obs.subject.astype(str)
-    else:
-        y = adata.obs.cell_type
-
-    sampling_strategy = dict(Counter(np.random.choice(y, n)))
-    sm = SMOTE(sampling_strategy=sampling_strategy, random_state=42)
-
-    X, y = sm.fit_resample(adata.X, y.values)
-    adata = AnnData(X=X, var=adata.var)
-
-    if correction_mode:
-        adata.obs["cell_type"] = [name[:-2] for name in y]
-        adata.obs["subject"] = [name[-2:] for name in y]
-    else:
-        adata.obs["cell_type"] = y
-
-    return adata

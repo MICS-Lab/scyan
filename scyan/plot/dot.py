@@ -7,7 +7,7 @@ import seaborn as sns
 from anndata import AnnData
 
 from .. import Scyan
-from ..utils import _subset
+from ..utils import _get_subset_indices, _has_umap, _subset
 from .utils import check_population, get_palette_others, plot_decorator, select_markers
 
 
@@ -15,7 +15,7 @@ from .utils import check_population, get_palette_others, plot_decorator, select_
 @check_population(return_list=True)
 def scatter(
     adata: AnnData,
-    population: Union[str, List[str]],
+    population: Union[str, List[str], None],
     markers: Optional[List[str]] = None,
     n_markers: Optional[int] = 3,
     obs_key: str = "scyan_pop",
@@ -28,15 +28,24 @@ def scatter(
 
     Args:
         adata: An `anndata` object.
-        population: One population or a list of population to be colored. To be valid, a population name have to be in `adata.obs[obs_key]`.
+        population: One population, or a list of population to be colored, or `None`. If not `None`, the population name(s) has to be in `adata.obs[obs_key]`.
         markers: List of markers to plot. If `None`, the list is chosen automatically.
         n_markers: Number of markers to choose automatically if `markers is None`.
         obs_key: Key to look for populations in `adata.obs`. By default, uses the model predictions.
-        max_obs: Maximum number of cells per population to be displayed.
+        max_obs: Maximum number of cells per population to be displayed. If population is None, then this number is multiplied by 10.
         s: Dot marker size.
         show: Whether or not to display the figure.
     """
     markers = select_markers(adata, markers, n_markers, obs_key, population)
+
+    if population is None:
+        indices = _get_subset_indices(adata.n_obs, max_obs * 10)
+        data = adata[indices, markers].to_df()
+        g = sns.PairGrid(data, corner=True)
+        g.map_offdiag(sns.scatterplot, s=s)
+        g.map_diag(sns.histplot)
+        g.add_legend()
+        return
 
     data = adata[:, markers].to_df()
     keys = adata.obs[obs_key].astype(str)
@@ -57,7 +66,7 @@ def scatter(
 
 def umap(
     adata: AnnData,
-    color: Union[str, List[str]],
+    color: Union[str, List[str]] = None,
     vmax: Union[str, float] = "p95",
     vmin: Union[str, float] = "p05",
     **scanpy_kwargs: int,
@@ -78,14 +87,14 @@ def umap(
         adata, AnnData
     ), f"umap first argument has to be an AnnData object. Received type {type(adata)}."
 
-    assert (
-        "X_umap" in adata.obsm_keys()
-    ), "Before plotting data, UMAP coordinates need to be computed using 'scyan.tools.umap(...)' (see https://mics-lab.github.io/scyan/api/representation/#scyan.tools.umap)"
+    has_umap = _has_umap(adata)
+    if not has_umap.all():
+        adata = adata[has_umap]
 
-    if "has_umap" in adata.obs and not adata.obs.has_umap.all():
-        adata = adata[adata.obs.has_umap]
+    if color is None:
+        return sc.pl.umap(adata, **scanpy_kwargs)
 
-    sc.pl.umap(adata, color=color, vmax=vmax, vmin=vmin, **scanpy_kwargs)
+    return sc.pl.umap(adata, color=color, vmax=vmax, vmin=vmin, **scanpy_kwargs)
 
 
 def pop_level(
@@ -104,19 +113,19 @@ def pop_level(
         obs_key: Key of `adata.obs` to access the model predictions.
     """
     adata = model.adata
-    mpm = model.marker_pop_matrix
+    table = model.table
 
     assert isinstance(
-        mpm.index, pd.MultiIndex
+        table.index, pd.MultiIndex
     ), "To use this function, you need a MultiIndex DataFrame, see: https://mics-lab.github.io/scyan/tutorials/advanced/#hierarchical-population-display"
 
-    level_names = mpm.index.names[1:]
+    level_names = table.index.names[1:]
     assert (
         level_name in level_names
     ), f"Level '{level_name}' unknown. Choose one of: {level_names}"
 
-    base_pops = mpm.index.get_level_values(0)
-    group_pops = mpm.index.get_level_values(level_name)
+    base_pops = table.index.get_level_values(0)
+    group_pops = table.index.get_level_values(level_name)
     assert (
         group_name in group_pops
     ), f"Invalid group name '{group_name}'. It has to be one of: {', '.join(group_pops)}."

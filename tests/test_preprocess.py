@@ -28,30 +28,30 @@ def raw_adata_cytof() -> AnnData:
 
 @pytest.fixture
 def test_asinh(raw_adata_cytof: AnnData):
-    scyan.tools.asinh_transform(raw_adata_cytof)
+    scyan.preprocess.asinh_transform(raw_adata_cytof)
     return raw_adata_cytof
 
 
 @pytest.fixture
 def test_autologicle(raw_adata: AnnData) -> AnnData:
-    scyan.tools.auto_logicle_transform(raw_adata)
+    scyan.preprocess.auto_logicle_transform(raw_adata)
     return raw_adata
 
 
 def test_inverse_asinh(test_asinh: AnnData):
     assert "scyan_asinh" in test_asinh.uns
-    inversed = scyan.tools.inverse_transform(test_asinh)
+    inversed = scyan.preprocess.inverse_transform(test_asinh)
     assert_is_zero(inversed - test_asinh.raw.X, 1e-3)
 
 
 def test_inverse_logicle(test_autologicle: AnnData):
     assert "scyan_logicle" in test_autologicle.uns
-    inversed = scyan.tools.inverse_transform(test_autologicle)
+    inversed = scyan.preprocess.inverse_transform(test_autologicle)
     assert_is_zero(inversed - test_autologicle.raw.X, 1e-2)
 
 
 def test_scale_cytof(test_asinh: AnnData) -> AnnData:
-    scyan.tools.scale(test_asinh)
+    scyan.preprocess.scale(test_asinh)
 
     assert test_asinh.X.min() == -1
 
@@ -60,10 +60,10 @@ def test_scale_unscale(test_autologicle: AnnData) -> AnnData:
     adata = test_autologicle
     adata.raw = adata
 
-    scyan.tools.scale(adata, max_value=np.inf)
+    scyan.preprocess.scale(adata, max_value=np.inf)
 
     assert_is_zero(adata.X.std(axis=0) - 1)
 
-    unscaled = scyan.tools.unscale(adata)
+    unscaled = scyan.preprocess.unscale(adata)
 
     assert_is_zero(adata.raw.X - unscaled)

@@ -12,15 +12,10 @@ from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from torch import Tensor
 from torch.utils.data import DataLoader, TensorDataset
 
+from . import utils
 from .data import AdataDataset, RandomSampler, _prepare_data
 from .module import ScyanModule
-from .utils import (
-    _add_level_predictions,
-    _get_pop_index,
-    _process_pop_sample,
-    _requires_fit,
-    _validate_inputs,
-)
+from .utils import _requires_fit
 
 log = logging.getLogger(__name__)
 
@@ -30,10 +25,11 @@ class Scyan(pl.LightningModule):
     Scyan, a.k.a Single-cell Cytometry Annotation Network.
     It is a wrapper to the ScyanModule that contains the core logic (the loss implementation, the forward function, ...).
     While ScyanModule works on tensors, this class works directly on AnnData objects.
+    To read more about the initialization arguments, read [__init__()][scyan.model.Scyan.__init__].
 
     Attributes:
-        adata (AnnData): The provided `adata`
-        marker_pop_matrix (pd.Dataframe): The table knowledge
+        adata (AnnData): The provided `adata`.
+        table (pd.Dataframe): The knowledge table of $P$ populations x $M$ markers.
         n_pops (int): Number of populations considered, i.e. $P$
         hparams (object): Model hyperparameters
         module (ScyanModule): A [ScyanModule][scyan.module.ScyanModule] object
@@ -42,27 +38,24 @@ class Scyan(pl.LightningModule):
     def __init__(
         self,
         adata: AnnData,
-        marker_pop_matrix: pd.DataFrame,
+        table: pd.DataFrame,
         continuous_covariate_keys: Optional[List[str]] = None,
         categorical_covariate_keys: Optional[List[str]] = None,
         hidden_size: int = 16,
         n_hidden_layers: int = 7,
         n_layers: int = 7,
-        prior_std: float = 0.3,
+        prior_std: float = 0.25,
         lr: float = 1e-3,
         batch_size: int = 16_384,
-        alpha_batch_effect: float = 50.0,
-        temperature: float = 1.0,
-        mmd_max_samples: int = 2048,
+        temperature: float = 0.5,
         modulo_temp: int = 2,
         max_samples: Optional[int] = 200_000,
         batch_key: Optional[str] = None,
-        batch_ref: Union[str, int, None] = None,
     ):
         """
         Args:
-            adata: `AnnData` object containing the FCS data ($N$ cells). **Warning**: it has to be preprocessed (e.g. `asinh` or `logicle`) and standardised.
-            marker_pop_matrix: Dataframe of shape $(P, M)$ representing the biological knowledge about markers and populations.
+            adata: `AnnData` object containing the FCS data of $N$ cells. **Warning**: it has to be preprocessed (e.g. `asinh` or `logicle`) and scaled (see https://mics-lab.github.io/scyan/tutorials/preprocessing/).
+            table: Dataframe of shape $(P, M)$ representing the biological knowledge about markers and populations. The columns names corresponds to marker that must be in `adata.var_names`.
             continuous_covariate_keys: Optional list of keys in `adata.obs` that refers to continuous variables to use during the training.
             categorical_covariate_keys: Optional list of keys in `adata.obs` that refers to categorical variables to use during the training.
             hidden_size: Hidden size of the MLP (`s`, `t`).
@@ -71,19 +64,16 @@ class Scyan(pl.LightningModule):
             prior_std: Standard deviation $\sigma$ of the cell-specific random variable $H$.
             lr: Model learning rate.
             batch_size: Model batch size.
-            alpha_batch_effect: Weight provided to the batch effect correction loss term.
             temperature: Temperature to favor small populations.
-            mmd_max_samples: Maximum number of samples to give to the MMD.
             modulo_temp: At which frequency temperature has to be applied.
             max_samples: Maximum number of samples per epoch.
             batch_key: Key in `adata.obs` referring to the cell batch variable.
-            batch_ref: Batch that will be considered as the reference. By default, choose the batch with the higher number of cells.
         """
         super().__init__()
-        self.adata, self.marker_pop_matrix = _validate_inputs(adata, marker_pop_matrix)
+        self.adata, self.table = utils._validate_inputs(adata, table)
         self.continuous_covariate_keys = continuous_covariate_keys or []
         self.categorical_covariate_keys = categorical_covariate_keys or []
-        self.n_pops = len(self.marker_pop_matrix)
+        self.n_pops = len(self.table)
 
         self._is_fitted = False
         self._num_workers = 0
@@ -91,7 +81,7 @@ class Scyan(pl.LightningModule):
         self.save_hyperparameters(
             ignore=[
                 "adata",
-                "marker_pop_matrix",
+                "table",
                 "continuous_covariate_keys",
                 "categorical_covariate_keys",
             ]
@@ -100,16 +90,13 @@ class Scyan(pl.LightningModule):
         self._prepare_data()
 
         self.module = ScyanModule(
-            torch.tensor(marker_pop_matrix.values, dtype=torch.float32),
+            torch.tensor(table.values, dtype=torch.float32),
             self.covariates.shape[1],
-            self.other_batches,
             hidden_size,
             n_hidden_layers,
             n_layers,
             prior_std,
             temperature,
-            mmd_max_samples,
-            self.batch_ref_id,
         )
 
         log.info(f"Initialized {self}")
@@ -119,28 +106,32 @@ class Scyan(pl.LightningModule):
             cov_repr = "No covariate provided."
         else:
             cov_repr = f"Covariates: {', '.join(self.continuous_covariate_keys + self.categorical_covariate_keys)}"
-        return f"Scyan model with N={self.adata.n_obs} cells, P={self.n_pops} populations and M={len(self.var_names)} markers. {cov_repr}"
+        return f"Scyan model with N={self.adata.n_obs} cells, P={self.n_pops} populations and M={len(self.var_names)} markers.\n   ├── {cov_repr}\n   └── Batch correction mode: {self._corr_mode}"
+
+    @property
+    def _corr_mode(self):
+        return self.hparams.batch_key is not None
 
     @property
     def pop_names(self) -> pd.Index:
         """Name of the populations considered in the knowledge table"""
-        return self.marker_pop_matrix.index.get_level_values(0)
+        return self.table.index.get_level_values(0)
 
     @property
     def var_names(self) -> pd.Index:
         """Name of the markers considered in the knowledge table"""
-        return self.marker_pop_matrix.columns
+        return self.table.columns
 
     @property
     def level_names(self):
         """All population hierarchical level names, if existing."""
-        if not isinstance(self.marker_pop_matrix.index, pd.MultiIndex):
+        if not isinstance(self.table.index, pd.MultiIndex):
             log.warn(
                 "The provided knowledge table has no population hierarchical level. See: https://mics-lab.github.io/scyan/tutorials/advanced/#hierarchical-population-display"
             )
             return []
 
-        return list(self.marker_pop_matrix.index.names[1:])
+        return list(self.table.index.names[1:])
 
     def pops(
         self,
@@ -175,58 +166,41 @@ class Scyan(pl.LightningModule):
                 isinstance(level, int) or level in self.level_names
             ), f"Level has to be one of [{', '.join(self.level_names)}]. Found {level}."
 
-            return set(self.marker_pop_matrix.index.get_level_values(level))
+            return set(self.table.index.get_level_values(level))
 
         name = parent_of or children_of
-        index = _get_pop_index(name, self.marker_pop_matrix)
-        where = self.marker_pop_matrix.index.get_level_values(index) == name
+        index = utils._get_pop_index(name, self.table)
+        where = self.table.index.get_level_values(index) == name
 
         if children_of is not None:
             if index == 0:
                 return set()
-            return set(self.marker_pop_matrix.index.get_level_values(index - 1)[where])
+            return set(self.table.index.get_level_values(index - 1)[where])
 
         assert (
-            index < self.marker_pop_matrix.index.nlevels - 1
+            index < self.table.index.nlevels - 1
         ), "Can not get parent of highest level population."
 
-        return self.marker_pop_matrix.index.get_level_values(index + 1)[where][0]
+        return self.table.index.get_level_values(index + 1)[where][0]
 
     def _prepare_data(self) -> None:
         """Initialize the data and the covariates"""
-        if self.hparams.batch_key is None:
-            assert (
-                self.hparams.batch_ref is None
-            ), "To correct batch effect, please profide a batch_key (received only a batch_ref)."
-        else:
-            batches = self.adata.obs[self.hparams.batch_key]
-
-            if self.hparams.batch_ref is None:
-                self.hparams.batch_ref = batches.value_counts().index[0]
-                log.warn(
-                    f"No batch_ref was provided, using {self.hparams.batch_ref} as reference."
-                )
-
-            assert self.hparams.batch_ref in set(
-                batches
-            ), f"Batch reference '{self.hparams.batch_ref}' is not an existing batch."
-
-        x, covariates, batches, self.other_batches, self.batch_to_id = _prepare_data(
+        x, covariates = _prepare_data(
             self.adata,
             self.var_names,
             self.hparams.batch_key,
-            self.hparams.batch_ref,
             self.categorical_covariate_keys,
             self.continuous_covariate_keys,
         )
 
         self.register_buffer("x", x)
         self.register_buffer("covariates", covariates)
-        self.register_buffer("batches", batches)
 
-    @property
-    def batch_ref_id(self):
-        return self.batch_to_id.get(self.hparams.batch_ref)
+        self._n_samples = (
+            min(self.hparams.max_samples or self.adata.n_obs, self.adata.n_obs)
+            // self.hparams.batch_size
+            * self.hparams.batch_size
+        )
 
     @_requires_fit
     def forward(self, indices: Optional[np.ndarray] = None) -> Tensor:
@@ -249,7 +223,7 @@ class Scyan(pl.LightningModule):
 
         return self.dataset_apply(lambda *batch: self.module(*batch)[0], (x, cov))
 
-    def _repeat_ref_covariates(self, k: Optional[int] = None) -> Tensor:
+    def _repeat_ref_covariates(self, batch_ref: str, k: Optional[int] = None) -> Tensor:
         """Repeat the covariates from the reference batch along axis 0.
 
         Args:
@@ -261,7 +235,7 @@ class Scyan(pl.LightningModule):
         n_repetitions = self.adata.n_obs if k is None else k
 
         ref_covariate = self.covariates[
-            self.adata.obs[self.hparams.batch_key] == self.hparams.batch_ref
+            self.adata.obs[self.hparams.batch_key] == batch_ref
         ][0]
         return ref_covariate.repeat((n_repetitions, 1))
 
@@ -285,7 +259,7 @@ class Scyan(pl.LightningModule):
         Returns:
             Sampled cells expressions and, if `return_z`, the populations associated to these cells.
         """
-        z = _process_pop_sample(self, pop)
+        z = utils._process_pop_sample(self, pop)
 
         if covariates_sample is None:
             if self.hparams.batch_key is None:
@@ -298,50 +272,33 @@ class Scyan(pl.LightningModule):
 
     @torch.no_grad()
     @_requires_fit
-    def batch_effect_correction(self) -> Tensor:
+    def batch_effect_correction(self, batch_ref: Optional[str] = None) -> Tensor:
         """Correct batch effect by going into the latent space, setting the reference covariate to all cells, and then reversing the flow.
 
         !!! warning
-            As we standardised data for training, the resulting tensor is standardised too. You can save the tensor as a numpy layer of `adata` and use [scyan.tools.unscale][] to unscale it.
+            As we standardised data for training, the resulting tensor is standardised too. You can save the tensor as a numpy layer of `adata` and use [scyan.preprocess.unscale][] to unscale it.
+
+        Args:
+            batch_ref: Name of the batch that will be considered as the reference. By default, it chooses the batch with the highest number of cells.
 
         Returns:
-            The corrected marker expressions on the original space.
+            The corrected marker expressions in the original space (a Tensor of shape $N$ cells x $M$ markers).
         """
-        assert (
-            self.hparams.batch_key is not None
-        ), "Scyan model was trained with no batch_key, thus not correcting batch effect"
+        batch_ref = utils._check_batch_arg(self.adata, self.hparams.batch_key, batch_ref)
 
         u = self()
-        ref_covariates = self._repeat_ref_covariates()
+        ref_covariates = self._repeat_ref_covariates(batch_ref)
 
         return self.dataset_apply(self.module.inverse, (u, ref_covariates))
 
     def training_step(self, data, _):
         """PyTorch lightning `training_step` implementation (i.e. returning the loss). See [ScyanModule][scyan.module.ScyanModule] for more details."""
         use_temp = self.current_epoch % self.hparams.modulo_temp > 0
-        kl, mmd = self.module.losses(*data, use_temp)
+        loss = self.module.kl(*data, use_temp)
 
-        mmd = self.hparams.alpha_batch_effect * mmd
-        loss = kl + mmd
-
-        self.log("kl", kl, on_step=True, prog_bar=True)
-        self.log("mmd", mmd, on_step=True, prog_bar=True)
         self.log("loss", loss, on_epoch=True, on_step=True)
 
         return loss
-
-    def predict_step(self, data: Tuple[Tensor], _) -> Tensor:
-        """Compute log probabilities for each population and for each cell. Do not use directly, prefer `predict` or `predict_proba` instead.
-
-        Args:
-            data: One mini-batch of data representing $B$ cells.
-
-        Returns:
-            Log probabilities as a tensor of shape $(B, P)$.
-        """
-        x, cov, _ = data
-        log_probs, *_ = self.module.compute_probabilities(x, cov)
-        return log_probs
 
     @_requires_fit
     @torch.no_grad()
@@ -354,12 +311,12 @@ class Scyan(pl.LightningModule):
         """Model population predictions, i.e. one population is assigned for each cell. Predictions are saved in `adata.obs.scyan_pop` by default.
 
         Args:
-            key_added: Key added to `model.adata.obs` to save the predictions. If `None`, then the predictions will not be saved.
+            key_added: Column name used to save the predictions in `adata.obs`. If `None`, then the predictions will not be saved.
             add_levels: If `True`, and if [hierarchical population names](../../tutorials/advanced/#hierarchical-population-display) were provided, then it also saves the prediction for every population level.
             log_prob_th: If the log-probability of the most probable population for one cell is below this threshold, this cell will not be annotated (`np.nan`).
 
         Returns:
-            Population predictions (pandas `Series` of length $N$).
+            Population predictions (pandas `Series` of length $N$ cells).
         """
         df = self.predict_proba()
         max_log_probs = df.pop("max_log_prob")
@@ -369,8 +326,8 @@ class Scyan(pl.LightningModule):
 
         if key_added is not None:
             self.adata.obs[key_added] = pd.Categorical(populations)
-            if add_levels and isinstance(self.marker_pop_matrix.index, pd.MultiIndex):
-                _add_level_predictions(self, key_added)
+            if add_levels and isinstance(self.table.index, pd.MultiIndex):
+                utils._add_level_predictions(self, key_added)
 
         missing_pops = self.n_pops - len(populations.cat.categories)
         if missing_pops:
@@ -388,13 +345,13 @@ class Scyan(pl.LightningModule):
         Returns:
             Dataframe of shape `(N, P)` with probabilities for each population.
         """
-        log_probs = torch.cat(
-            self.trainer.predict(self, self.predict_dataloader()), dim=0
+        log_probs = self.dataset_apply(
+            lambda *data: self.module.compute_probabilities(*data)[0]
         )
         probs = torch.softmax(log_probs, dim=1)
 
-        df = pd.DataFrame(probs.cpu().numpy(), columns=self.pop_names)
-        df["max_log_prob"] = log_probs.max(1).values.cpu().numpy()
+        df = pd.DataFrame(probs.numpy(force=True), columns=self.pop_names)
+        df["max_log_prob"] = log_probs.max(1).values.numpy(force=True)
 
         return df
 
@@ -404,13 +361,12 @@ class Scyan(pl.LightningModule):
 
     def train_dataloader(self):
         """PyTorch lightning `train_dataloader` implementation"""
-        self.dataset = AdataDataset(self.x, self.covariates, self.batches)
-        sampler = RandomSampler(self.dataset, max_samples=self.hparams.max_samples)
+        self.dataset = AdataDataset(self.x, self.covariates)
 
         return DataLoader(
             self.dataset,
             batch_size=self.hparams.batch_size,
-            sampler=sampler,
+            sampler=RandomSampler(self.adata.n_obs, self._n_samples),
             num_workers=self._num_workers,
         )
 
@@ -437,7 +393,7 @@ class Scyan(pl.LightningModule):
         else:
             from tqdm import tqdm as _tqdm
 
-        if not data:
+        if data is None:
             loader = self.predict_dataloader()
         else:
             loader = DataLoader(

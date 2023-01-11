@@ -45,17 +45,19 @@ def check_population(return_list: bool = False, one: bool = False):
         @wraps(f)
         def wrapper(
             model: Scyan,
-            population: Union[str, List[str]],
+            population: Union[str, List[str], None],
             *args,
             obs_key="scyan_pop",
             **kwargs,
         ):
+            if population is None:
+                return f(model, population, *args, obs_key=obs_key, **kwargs)
             adata = model if isinstance(model, AnnData) else model.adata
             if adata.obs[obs_key].dtype == "category":
                 populations = adata.obs[obs_key].cat.categories.values
             else:
                 populations = set(adata.obs[obs_key].values)
-            if isinstance(population, str):
+            if isinstance(population, str) or isinstance(population, bool):
                 if population not in populations:
                     raise NameError(
                         f"Invalid input population. '{population}' has to be one of {populations}."
@@ -65,7 +67,7 @@ def check_population(return_list: bool = False, one: bool = False):
             else:
                 if one:
                     raise ValueError(
-                        f"Argument 'population' has to be a string. Found {population}."
+                        f"Argument 'population' has to be a string or a bool. Found {population}."
                     )
                 not_found_names = [p for p in population if p not in populations]
                 if not_found_names:
@@ -129,7 +131,16 @@ def select_markers(
     populations: List[str],
     min_markers: int = 2,
 ):
-    MIN_MARKERS_ERROR = f"Provide at least {min_markers} marker(s) to plot or use 'scyan.plot.kde_per_population'"
+    if populations is None:
+        assert (
+            markers is not None
+        ), "If no population is provided, you should choose the list of markers by providing the 'markers' argument."
+        assert len(markers) >= min_markers, MIN_MARKERS_ERROR
+        return markers
+
+    MIN_MARKERS_ERROR = (
+        f"Provide at least {min_markers} marker(s) to plot or use 'scyan.plot.kde'"
+    )
 
     if markers is None:
         assert (

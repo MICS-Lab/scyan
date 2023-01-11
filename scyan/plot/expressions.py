@@ -41,9 +41,11 @@ def pops_expressions(
         figsize: Pair `(width, height)` indicating the size of the figure.
         show: Whether or not to display the figure.
     """
-    indices = _get_subset_indices(model.adata.n_obs, n_cells)
+    not_na = ~model.adata.obs[obs_key].isna()
+    indices = _get_subset_indices(not_na.sum(), n_cells)
+    indices = np.where(not_na)[0][indices]
 
-    x = model(indices).cpu().numpy() if latent else model.adata[indices].X
+    x = model(indices).numpy(force=True) if latent else model.adata[indices].X
     columns = model.var_names if latent else model.adata.var_names
 
     df = pd.DataFrame(x, columns=columns)
@@ -69,6 +71,7 @@ def boxplot_expressions(
     ascending: bool = False,
     figsize: tuple = (10, 5),
     fliersize: float = 0.5,
+    show: bool = True,
 ):
     """Boxplot of expressions for all population (for one marker).
 
@@ -80,6 +83,7 @@ def boxplot_expressions(
         ascending: Whether to sort populations by ascending mean expressions.
         figsize: Figure size. Defaults to (10, 5).
         fliersize: Outlier dot size (see seaborn boxplot).
+        show: Whether or not to display the figure.
     """
     if latent:
         assert (
@@ -87,7 +91,7 @@ def boxplot_expressions(
         ), f"Marker {marker} was not used during the model training, impossible to use 'latent=True'."
 
         u = model()
-        y = u[:, model.var_names.get_loc(marker)].cpu().numpy()
+        y = u[:, model.var_names.get_loc(marker)].numpy(force=True)
     else:
         y = model.adata.obs_vector(marker)
 
@@ -110,6 +114,7 @@ def pop_expressions(
     max_value: float = 1.5,
     num_pieces: int = 100,
     radius: float = 0.05,
+    figsize: Tuple[float] = (2, 6),
     show: bool = True,
 ):
     """Plot latent cell expressions for one population. Contrary to `scyan.plot.pops_expressions`, in displays expressions on a vertical bar, from `Neg` to `Pos`.
@@ -121,11 +126,12 @@ def pop_expressions(
         max_value: Maximum absolute latent value.
         num_pieces: Number of pieces to display the colorbar.
         radius: Radius used to chunk the colorbar. Increase this value if multiple names overlap.
+        figsize: Pair `(width, height)` indicating the size of the figure.
         show: Whether or not to display the figure.
     """
     condition = model.adata.obs[obs_key] == population
     u_mean = model(condition).mean(dim=0)
-    values = u_mean.cpu().numpy().clip(-max_value, max_value)
+    values = u_mean.numpy(force=True).clip(-max_value, max_value)
 
     y = np.linspace(-max_value, max_value, num_pieces + 1)
     cmap = plt.get_cmap("RdBu")
@@ -134,7 +140,7 @@ def pop_expressions(
     y_cmap = 0.5 - np.sign(y) * (y_cmap / y_cmap.max() / 2)
     colors = cmap(y_cmap).clip(0, 0.8)
 
-    plt.figure(figsize=(2, 6), dpi=100)
+    plt.figure(figsize=figsize, dpi=100)
     plt.vlines(np.zeros(num_pieces), y[:-1], y[1:], colors=colors, linewidth=5)
     plt.annotate("Pos", (-0.7, 1), fontsize=15)
     plt.annotate("Neg", (-0.7, -1), fontsize=15)

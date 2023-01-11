@@ -36,7 +36,7 @@ def probs_per_marker(
     u = model(model.adata.obs[obs_key] == population)
 
     log_probs = model.module.prior.log_prob_per_marker(u)
-    mean_log_probs = log_probs.mean(dim=0).cpu().numpy()
+    mean_log_probs = log_probs.mean(dim=0).numpy(force=True)
 
     df_probs = pd.DataFrame(
         mean_log_probs,

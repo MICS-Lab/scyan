@@ -11,13 +11,13 @@ from .utils import check_population, get_palette_others, plot_decorator, select_
 
 @plot_decorator(adata=True)
 @check_population(return_list=True)
-def kde_per_population(
+def kde(
     adata: AnnData,
-    population: Union[str, List[str]],
+    population: Union[str, List[str], None],
     markers: Optional[List[str]] = None,
     obs_key: str = "scyan_pop",
     n_markers: Optional[int] = 3,
-    n_cells: Optional[int] = 100000,
+    n_cells: Optional[int] = 100_000,
     ncols: int = 2,
     var_name: str = "Marker",
     value_name: str = "Expression",
@@ -27,7 +27,7 @@ def kde_per_population(
 
     Args:
         adata: An `anndata` object.
-        population: One population or a list of population to interpret. To be valid, a population name have to be in `adata.obs[obs_key]`.
+        population: One population, or a list of population to be analyzed, or `None`. If not `None`, the population name(s) has to be in `adata.obs[obs_key]`.
         markers: List of markers to plot. If `None`, the list is chosen automatically.
         obs_key: Key to look for populations in `adata.obs`. By default, uses the model predictions.
         n_markers: Number of markers to choose automatically if `markers is None`.
@@ -43,6 +43,25 @@ def kde_per_population(
     markers = select_markers(adata, markers, n_markers, obs_key, population, 1)
 
     df = adata.to_df()
+
+    if population is None:
+        df = pd.melt(
+            df,
+            value_vars=markers,
+            var_name=var_name,
+            value_name=value_name,
+        )
+
+        sns.displot(
+            df,
+            x=value_name,
+            col=var_name,
+            col_wrap=ncols,
+            kind="kde",
+            common_norm=False,
+            facet_kws=dict(sharey=False),
+        )
+        return
 
     keys = adata.obs[obs_key]
     df[obs_key] = np.where(~np.isin(keys, population), "Others", keys)

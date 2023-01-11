@@ -9,6 +9,7 @@ theme:
 nav:
   - Home: index.md
   - Getting Started: getting_started.md
+  - Usage advices: advice.md
   - Tutorials:
     - tutorials/preprocessing.ipynb
     - tutorials/usage.ipynb
@@ -17,10 +18,10 @@ nav:
     - tutorials/debarcoding.ipynb
     - tutorials/post_analysis.ipynb
     - tutorials/advanced.ipynb
-  - Usage advices: advice.md
   - API: 
     - scyan.Scyan: api/model.md
     - IO (read/write): api/io.md
+    - Preprocessing: api/preprocess.md
     - Tools: api/tools.md
     - Plots: api/plots.md
     - Loading/adding datasets: api/datasets.md
@@ -29,10 +30,9 @@ nav:
       - scyan.module.PriorDistribution: api/prior.md
       - scyan.module.RealNVP: api/real_nvp.md
       - scyan.module.CouplingLayer: api/coupling_layer.md
-      - scyan.module.LossMMD: api/loss_mmd.md
   - Advanced usage:
-    - Add your own dataset: advanced/data.md
-    - Selecting parameters: advanced/parameters.md
+    - Save your dataset: advanced/data.md
+    - Hyperparameters: advanced/parameters.md
     - Configuration and monitoring: advanced/hydra_wandb.md
     - CLI/Running scripts: advanced/scripts.md
   - Cite us: cite.md

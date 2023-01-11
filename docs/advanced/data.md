@@ -8,18 +8,18 @@ You must prepare your `cytometry data` and create your `knowledge table` as desc
 
 !!! info
 
-    If needed, you have an example of an `adata` object and a knowledge table (a.k.a `marker_pop_matrix`) if you run:
+    If needed, you have an example of an `adata` object and a knowledge `table` if you run:
 
     ```python
-    adata, marker_pop_matrix = scyan.data.load("aml")
+    adata, table = scyan.data.load("aml")
     ```
 
 ## 2. Save your dataset
 
-Now that you have created an `adata` object and a `marker_pop_matrix` table, you can simply save them (for more details, see [scyan.data.add][]):
+Now that you have created an `adata` object and a `table`, you can simply save them (for more details, see [scyan.data.add][]):
 
 ```python
-scyan.data.add("<your-project-name>", adata, marker_pop_matrix)
+scyan.data.add("<your-project-name>", adata, table)
 ```
 
 ## 3. Load your dataset
@@ -27,5 +27,5 @@ scyan.data.add("<your-project-name>", adata, marker_pop_matrix)
 Congrats, you can now load your dataset (for more details, see [scyan.data.load][]):
 
 ```python
-adata, marker_pop_matrix = scyan.data.load("<your-project-name>")
+adata, table = scyan.data.load("<your-project-name>")
 ```

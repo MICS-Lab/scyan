@@ -65,9 +65,9 @@ poetry install -E 'dev docs discovery'  # poetry installation in editable mode
 ```py
 import scyan
 
-adata, marker_pop_matrix = scyan.data.load("aml")
+adata, table = scyan.data.load("aml")
 
-model = scyan.Scyan(adata, marker_pop_matrix)
+model = scyan.Scyan(adata, table)
 model.fit()
 model.predict()
 ```
