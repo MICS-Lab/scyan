@@ -25,22 +25,16 @@ def main(config: DictConfig) -> None:
 
     ### Instantiate everything
     adata, table = scyan.data.load(config.project.name)
+    n_obs = config.project.get("n_obs", None)
 
-    times, n_samples = [], []
-
-    for n_obs in [4_000_000, 2_000_000, 1_000_000, 500_000, 250_000, 125_000]:
+    if n_obs is not None:
         print(f"Undersampling cells to N={n_obs}...")
         sc.pp.subsample(adata, n_obs=n_obs)
 
-        start = time.perf_counter()
+    start = time.perf_counter()
+    utils.init_and_fit_model(adata, table, config)
 
-        utils.init_and_fit_model(adata, table, config)
-
-        times.append(time.perf_counter() - start)
-        n_samples.append(n_obs)
-
-        print("Num samples:", n_samples)
-        print("Times:", times)
+    print(f"Run in {time.perf_counter() - start} seconds on {adata.n_obs} cells.")
 
 
 if __name__ == "__main__":
