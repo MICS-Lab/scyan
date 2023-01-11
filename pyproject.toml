@@ -23,6 +23,7 @@ packages = [
 [tool.poetry.dependencies]
 python = ">=3.8,<3.11"
 pytorch-lightning = "^1.6.4"
+torch = "^1.13"
 scanpy = "^1.9.1"
 umap-learn = "^0.5.3"
 llvmlite = "^0.38.1"
