@@ -48,8 +48,8 @@ def pops_expressions(
     x = model(indices).numpy(force=True) if latent else model.adata[indices].X
     columns = model.var_names if latent else model.adata.var_names
 
-    df = pd.DataFrame(x, columns=columns)
-    df["Population"] = model.adata[indices].obs[obs_key].values
+    df = pd.DataFrame(x, columns=columns, index=model.adata.obs.index[indices])
+    df["Population"] = model.adata[indices].obs[obs_key]
 
     if cmap is None:
         cmap = "coolwarm" if latent else "viridis"

@@ -325,7 +325,9 @@ class Scyan(pl.LightningModule):
         populations[max_log_probs < log_prob_th] = np.nan
 
         if key_added is not None:
-            self.adata.obs[key_added] = pd.Categorical(populations)
+            self.adata.obs[key_added] = pd.Categorical(
+                populations, categories=self.pop_names
+            )
             if add_levels and isinstance(self.table.index, pd.MultiIndex):
                 utils._add_level_predictions(self, key_added)
 

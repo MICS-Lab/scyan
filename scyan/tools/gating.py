@@ -84,6 +84,12 @@ class PolygonGatingUMAP:
         )
         plt.show()
 
+    def disconnect(self):
+        self.poly.disconnect_events()
+        self.fc[:, -1] = 1
+        self.collection.set_facecolors(self.fc)
+        self.canvas.draw_idle()
+
     def save_selection(self, key_added: str = "scyan_selected"):
         """Save the selected cells in `adata.obs[key_added]`.
 
@@ -95,6 +101,8 @@ class PolygonGatingUMAP:
         self.adata.obs.iloc[
             np.where(self.has_umap)[0][self.selector.ind], col_index
         ] = True
+
+        self.disconnect()
         print(
             f"Selected {len(self.selector.ind)} cells and saved the selection in adata.obs['{key_added}']"
         )

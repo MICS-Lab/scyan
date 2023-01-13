@@ -121,7 +121,10 @@ def _add_level_predictions(model, obs_key: str) -> None:
 
     for i, new_obs_key in enumerate(obs_keys):
         pop_dict = {pop: levels_pops[i] for pop, *levels_pops in mpm.index}
-        adata.obs[new_obs_key] = adata.obs[obs_key].map(pop_dict).astype("category")
+        categories = model.table.index.get_level_values(1 + i).unique()
+        adata.obs[new_obs_key] = pd.Categorical(
+            adata.obs[obs_key].map(pop_dict), categories=categories
+        )
 
 
 def _get_pop_index(pop: str, table: pd.DataFrame):
