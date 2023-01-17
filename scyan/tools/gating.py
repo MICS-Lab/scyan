@@ -96,11 +96,11 @@ class PolygonGatingUMAP:
         Args:
             key_added: Column name used to save the selected cells in `adata.obs`.
         """
-        self.adata.obs[key_added] = False
+        self.adata.obs[key_added] = "unselected"
         col_index = self.adata.obs.columns.get_loc(key_added)
         self.adata.obs.iloc[
             np.where(self.has_umap)[0][self.selector.ind], col_index
-        ] = True
+        ] = "selected"
 
         self.disconnect()
         print(

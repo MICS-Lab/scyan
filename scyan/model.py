@@ -42,11 +42,11 @@ class Scyan(pl.LightningModule):
         continuous_covariate_keys: Optional[List[str]] = None,
         categorical_covariate_keys: Optional[List[str]] = None,
         hidden_size: int = 16,
-        n_hidden_layers: int = 7,
+        n_hidden_layers: int = 6,
         n_layers: int = 7,
         prior_std: float = 0.25,
         lr: float = 1e-3,
-        batch_size: int = 16_384,
+        batch_size: int = 8_192,
         temperature: float = 0.5,
         modulo_temp: int = 2,
         max_samples: Optional[int] = 200_000,
@@ -310,6 +310,9 @@ class Scyan(pl.LightningModule):
     ) -> pd.Series:
         """Model population predictions, i.e. one population is assigned for each cell. Predictions are saved in `adata.obs.scyan_pop` by default.
 
+        !!! note
+            Some cells may not be annotated, if their log probability is lower than `log_prob_th` for all populations. Then, the predicted label will be `np.nan`.
+
         Args:
             key_added: Column name used to save the predictions in `adata.obs`. If `None`, then the predictions will not be saved.
             add_levels: If `True`, and if [hierarchical population names](../../tutorials/advanced/#hierarchical-population-display) were provided, then it also saves the prediction for every population level.
@@ -412,10 +415,11 @@ class Scyan(pl.LightningModule):
         self,
         max_epochs: int = 100,
         min_delta: float = 1,
-        patience: int = 2,
+        patience: int = 4,
         num_workers: int = 0,
         callbacks: Optional[List[pl.Callback]] = None,
         trainer: Optional[pl.Trainer] = None,
+        **trainer_args: int,
     ) -> "Scyan":
         """Train the `Scyan` model. On interactive Python (e.g., Jupyter Notebooks), training can be interrupted at any time without crashing.
 
@@ -429,6 +433,7 @@ class Scyan(pl.LightningModule):
             num_workers: Pytorch DataLoader `num_workers` argument, i.e. how many subprocesses to use for data loading. 0 means that the data will be loaded in the main process.
             callbacks: Additional Pytorch Lightning callbacks.
             trainer: Optional Pytorch Lightning Trainer. **Warning**: it will replace the default Trainer, and every other argument will be unused.
+            **trainer_args: Optional kwargs to provide to the `pytorch_lightning.Trainer` initialization.
 
         Returns:
             The trained model itself.
@@ -447,7 +452,7 @@ class Scyan(pl.LightningModule):
             _callbacks = [esc] + (callbacks or [])
 
             trainer = pl.Trainer(
-                max_epochs=max_epochs, callbacks=_callbacks, log_every_n_steps=10
+                max_epochs=max_epochs, callbacks=_callbacks, log_every_n_steps=10, **trainer_args
             )
 
         self.trainer = trainer
