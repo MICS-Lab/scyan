@@ -34,6 +34,13 @@ class _SelectFromCollection:
         self.collection.set_facecolors(self.fc)
         self.canvas.draw_idle()
 
+    def disconnect(self):
+        self.poly.disconnect_events()
+        # TODO: understand why it crashes
+        # self.fc[:, -1] = 1
+        # self.collection.set_facecolors(self.fc)
+        # self.canvas.draw_idle()
+
 
 class PolygonGatingUMAP:
     """Class used to select cells on a UMAP using polygons.
@@ -43,8 +50,8 @@ class PolygonGatingUMAP:
         We recommend using it on Jupyter Notebooks. To be able to select the cells, you should first run `%matplotlib tk` on a blank jupyter cell. After the selection, you can run `%matplotlib inline` to retrieve the default behavior.
 
     ```py
-    # Usage example (to be run on a jupyter notebook)
-    >>> %matplotlib tk            # required for the cell selection
+    # Usage example (to be run on a jupyter notebook) (`%matplotlib tk` is required for the cell selection)
+    >>> %matplotlib tk
     >>> selector = scyan.tools.PolygonGatingUMAP(adata)
     >>> selector.select()         # select the cells
     >>> selector.save_selection() # save the selected cells in adata.obs
@@ -84,12 +91,6 @@ class PolygonGatingUMAP:
         )
         plt.show()
 
-    def disconnect(self):
-        self.poly.disconnect_events()
-        self.fc[:, -1] = 1
-        self.collection.set_facecolors(self.fc)
-        self.canvas.draw_idle()
-
     def save_selection(self, key_added: str = "scyan_selected"):
         """Save the selected cells in `adata.obs[key_added]`.
 
@@ -102,7 +103,7 @@ class PolygonGatingUMAP:
             np.where(self.has_umap)[0][self.selector.ind], col_index
         ] = "selected"
 
-        self.disconnect()
+        self.selector.disconnect()
         print(
             f"Selected {len(self.selector.ind)} cells and saved the selection in adata.obs['{key_added}']"
         )
