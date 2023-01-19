@@ -25,7 +25,7 @@
 </p>
 
 - Note that the model interprets NA values as "any expression is possible". Thus, a population described with extensive use of NA values (e.g., above 90% of markers, with no discriminative marker provided) can be over-predicted. This is a normal behaviour since few constraints are applied to this population.
-- We enable the usage of intermediate expressions such as "mid" and "low" in the table. For that, choose a value between -1 and 1: for instance, 0 for mid, or 0.5 for low. Yet, we advise using it only to differentiate two similar populations. Overusing these intermediate expressions in the table will challenge you to create the table properly while not improving the results.
+- We enable the usage of intermediate expressions such as "mid" and "low" in the table. For that, choose a value between -1 and 1: for instance, 0 for mid, or -0.5 for low. Yet, we advise using it only to differentiate two similar populations. Overusing these intermediate expressions in the table will challenge you to create the table properly while not improving the results.
 
 ### What should I do if Scyan seems wrong?
 
