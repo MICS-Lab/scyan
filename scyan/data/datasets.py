@@ -1,19 +1,40 @@
 import logging
-import urllib
 from pathlib import Path
 from typing import List, Optional, Tuple, Union
-from urllib import request
 
 import anndata
 import joblib
 import numpy as np
 import pandas as pd
+import tqdm
 import umap
 from anndata import AnnData
 
 from ..utils import _root_path
 
 log = logging.getLogger(__name__)
+
+
+def _download(url, filepath):
+    import requests
+
+    r = requests.get(url, stream=True)
+
+    if r.status_code == 404:
+        raise FileNotFoundError(f"File at url {url} was not found")
+
+    file_size = int(r.headers["Content-Length"])
+    chunk_size = 1024
+    num_bars = file_size // chunk_size
+
+    with open(filepath, "wb") as fp:
+        for chunk in tqdm.tqdm(
+            r.iter_content(chunk_size=chunk_size),
+            total=num_bars,
+            unit="KB",
+            desc=f"Downloading {num_bars // 1024} MB",
+        ):
+            fp.write(chunk)
 
 
 def get_local_file(
@@ -48,18 +69,11 @@ def get_local_file(
         base_url = "https://github.com/MICS-Lab/scyan_data"
         url = f"{base_url}/raw/main/data/{dataset_name}/{filename}"
 
-        try:
-            log.info(
-                f"File not found locally. Trying to load {filename} from dataset {dataset_name} on github. It can take dozens of seconds."
-            )
-            request.urlretrieve(url, filepath)
-            log.info(f"Successfully downloaded and saved locally at {filepath}")
-        except urllib.error.HTTPError as e:
-            if e.code == 404:
-                raise FileNotFoundError(
-                    f"File data/{dataset_name}/{filename} not existing on the repository {base_url}"
-                )
-            raise e
+        log.info(
+            f"File not found locally. Trying to load {filename} from dataset {dataset_name} on github. It can take dozens of seconds."
+        )
+        _download(url, filepath)
+        log.info(f"Successfully downloaded and saved locally at {filepath}")
 
     if kind == "csv":
         df = pd.read_csv(filepath, index_col=0)

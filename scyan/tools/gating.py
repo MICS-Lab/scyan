@@ -102,6 +102,7 @@ class PolygonGatingUMAP:
         self.adata.obs.iloc[
             np.where(self.has_umap)[0][self.selector.ind], col_index
         ] = "selected"
+        self.adata.obs[key_added] = self.adata.obs[key_added].astype("category")
 
         self.selector.disconnect()
         print(

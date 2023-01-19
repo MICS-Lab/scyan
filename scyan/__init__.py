@@ -11,6 +11,6 @@ from . import preprocess
 
 __version__ = importlib.metadata.version("scyan")
 
-logging.basicConfig(level=logging.INFO)
+logging.getLogger().setLevel(logging.INFO)
 sc.set_figure_params(facecolor="white", fontsize=10)
 pl.seed_everything(0)
