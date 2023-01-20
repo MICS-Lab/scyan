@@ -9,3 +9,7 @@
 ::: scyan.data.add
     options:
       show_root_heading: true
+
+::: scyan.data.remove
+    options:
+      show_root_heading: true
