@@ -14,10 +14,8 @@ nav:
     - tutorials/preprocessing.ipynb
     - tutorials/usage.ipynb
     - tutorials/batch_effect_correction.ipynb
-    - tutorials/population_discovery.ipynb
     - tutorials/debarcoding.ipynb
-    - tutorials/post_analysis.ipynb
-    - tutorials/advanced.ipynb
+    - tutorials/population_discovery.ipynb
   - API: 
     - scyan.Scyan: api/model.md
     - IO (read/write): api/io.md
