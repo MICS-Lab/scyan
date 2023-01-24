@@ -3,7 +3,6 @@ from pathlib import Path
 from typing import List, Optional, Tuple, Union
 
 import anndata
-import joblib
 import numpy as np
 import pandas as pd
 import tqdm
@@ -89,6 +88,8 @@ def get_local_file(
     if ext == "h5ad":
         return anndata.read_h5ad(filepath)
 
+    import joblib
+
     return joblib.load(filepath)
 
 
@@ -149,6 +150,8 @@ def add(
         elif isinstance(obj, umap.UMAP):
             path = dataset_path / f"{filename}.umap"
             _check_can_write(path, overwrite)
+            import joblib
+
             joblib.dump(obj, path)
         else:
             raise ValueError(

@@ -1,7 +1,10 @@
+import logging
 from typing import List, Optional, Union
 
 import pandas as pd
 from anndata import AnnData
+
+log = logging.getLogger(__name__)
 
 
 def _get_counts(adata: AnnData, groupby, obs_key, normalize) -> pd.DataFrame:
@@ -60,9 +63,9 @@ def count_cell_populations(
 def mean_intensities(
     adata: AnnData,
     groupby: Union[str, List[str], None] = None,
+    layer: Optional[str] = None,
     obs_key: str = "scyan_pop",
     unstack_join: Optional[str] = " mean intensity on ",
-    layer: Optional[str] = None,
     obsm: Optional[str] = None,
     obsm_names: Optional[List[str]] = None,
 ) -> pd.DataFrame:
@@ -71,10 +74,10 @@ def mean_intensities(
     Args:
         adata: An `AnnData` object.
         groupby: Key(s) of `adata.obs` used to create groups. For instance, `"id"` computes MMI per population for each ID. You can also provide something like `["group", "id"]` to get MMI per group, and per patient inside each group.
+        layer: In which `adata.layers` we get expression intensities. By default, it uses `adata.X`.
         obs_key: Key of `adata.obs` containing the population names.
         unstack_join: If `None`, keep the information grouped. Else, flattens the biomarkers into one series (or one row per group if `groupby` is a list) and uses `unstack_join` to join the names of the multi-level columns. For instance, `' expression on '` can be a good choice.
-        layer: In which `adata.layers` we get fluorescence intensities. By default, it uses `adata.X`.
-        obsm: In which `adata.obsm` we get fluorescence intensities. By default, it uses `adata.X`. If not `None` then `obsm_names` is required too.
+        obsm: In which `adata.obsm` we get expression intensities. By default, it uses `adata.X`. If not `None` then `obsm_names` is required too.
         obsm_names: Ordered list of names in `adata.obsm[obsm]` if `obsm` was provided.
 
     Returns:
@@ -100,6 +103,11 @@ def mean_intensities(
         df[group] = adata.obs[group].values
 
     res = df.groupby(groupby).mean()
+
+    if res.values.min() < 0:
+        log.warn(
+            "The minimum expression value is negative. Are you sure you are using unscaled values? If not, you can use 'scyan.preprocess.unscale' and save the unscaled result in a 'adata.layers' of your choice (then use this layer argument in the current function). If you know what you are doing, or if you use flow cytometry data, you can ignore this warning."
+        )
 
     if unstack_join is None:
         return res

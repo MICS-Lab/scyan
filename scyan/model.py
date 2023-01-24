@@ -48,7 +48,7 @@ class Scyan(pl.LightningModule):
         lr: float = 1e-3,
         batch_size: int = 8_192,
         temperature: float = 0.5,
-        modulo_temp: int = 2,
+        modulo_temp: int = 3,
         max_samples: Optional[int] = 200_000,
         batch_key: Optional[str] = None,
     ):
@@ -452,7 +452,10 @@ class Scyan(pl.LightningModule):
             _callbacks = [esc] + (callbacks or [])
 
             trainer = pl.Trainer(
-                max_epochs=max_epochs, callbacks=_callbacks, log_every_n_steps=10, **trainer_args
+                max_epochs=max_epochs,
+                callbacks=_callbacks,
+                log_every_n_steps=10,
+                **trainer_args,
             )
 
         self.trainer = trainer
