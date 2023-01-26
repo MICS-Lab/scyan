@@ -196,8 +196,8 @@ def list_path(dataset_path: Path) -> None:
         )
 
     for kind, values in zip(["Data versions", "Tables", "UMAP reducers"], names.values()):
-        values = ["None"] if not values else values
-        print(f"    {kind}: {', '.join(list(values))}")
+        if values:
+            print(f"""    {kind}: '{"', '".join(list(values))}'""")
 
 
 def _list(dataset_name: Optional[str] = None) -> None:
