@@ -47,16 +47,16 @@ def check_population(return_list: bool = False, one: bool = False):
             model: Scyan,
             population: Union[str, List[str], None],
             *args,
-            obs_key="scyan_pop",
+            key="scyan_pop",
             **kwargs,
         ):
             if population is None:
-                return f(model, population, *args, obs_key=obs_key, **kwargs)
+                return f(model, population, *args, key=key, **kwargs)
             adata = model if isinstance(model, AnnData) else model.adata
-            if adata.obs[obs_key].dtype == "category":
-                populations = adata.obs[obs_key].cat.categories.values
+            if adata.obs[key].dtype == "category":
+                populations = adata.obs[key].cat.categories.values
             else:
-                populations = set(adata.obs[obs_key].values)
+                populations = set(adata.obs[key].values)
             if isinstance(population, str) or isinstance(population, bool):
                 if population not in populations:
                     raise NameError(
@@ -74,7 +74,7 @@ def check_population(return_list: bool = False, one: bool = False):
                     raise NameError(
                         f"Invalid input population list. {not_found_names} has to be inside {populations}."
                     )
-            return f(model, population, *args, obs_key=obs_key, **kwargs)
+            return f(model, population, *args, key=key, **kwargs)
 
         return wrapper
 
@@ -98,19 +98,17 @@ def get_palette_others(
     return colors
 
 
-def ks_statistics(
-    adata: AnnData, obs_key: str, populations: List[str], max_obs: int = 5000
-):
+def ks_statistics(adata: AnnData, key: str, populations: List[str], max_obs: int = 5000):
     statistics = defaultdict(float)
 
     for pop in populations:
-        adata1 = adata[adata.obs[obs_key] == pop]
+        adata1 = adata[adata.obs[key] == pop]
 
         if len(populations) > 1:
             other_pops = [p for p in populations if p != pop]
-            adata2 = adata[np.isin(adata.obs[obs_key], other_pops)]
+            adata2 = adata[np.isin(adata.obs[key], other_pops)]
         else:
-            adata2 = adata[adata.obs[obs_key] != pop]
+            adata2 = adata[adata.obs[key] != pop]
 
         adata1 = adata1[_get_subset_indices(adata1.n_obs, max_obs)]
         adata2 = adata2[_get_subset_indices(adata2.n_obs, max_obs)]
@@ -127,7 +125,7 @@ def select_markers(
     adata: AnnData,
     markers: Optional[List[str]],
     n_markers: Optional[int],
-    obs_key: str,
+    key: str,
     populations: List[str],
     min_markers: int = 2,
 ):
@@ -148,7 +146,7 @@ def select_markers(
         ), "You need to provide a list of markers or a number of markers to be chosen automatically"
         assert n_markers >= min_markers, MIN_MARKERS_ERROR
 
-        statistics = ks_statistics(adata, obs_key, populations)
+        statistics = ks_statistics(adata, key, populations)
         statistics = sorted(statistics.items(), key=lambda x: x[1], reverse=True)
         markers = [m for m, _ in statistics[:n_markers]]
 

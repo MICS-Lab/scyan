@@ -7,19 +7,19 @@ from anndata import AnnData
 log = logging.getLogger(__name__)
 
 
-def _get_counts(adata: AnnData, groupby, obs_key, normalize) -> pd.DataFrame:
+def _get_counts(adata: AnnData, groupby, key, normalize) -> pd.DataFrame:
     if groupby is None:
-        return adata.obs[[obs_key]].apply(lambda s: s.value_counts(normalize)).T
+        return adata.obs[[key]].apply(lambda s: s.value_counts(normalize)).T
 
     grouped = adata.obs.groupby(groupby)
-    return grouped[obs_key].apply(lambda s: s.value_counts(normalize)).unstack(level=-1)
+    return grouped[key].apply(lambda s: s.value_counts(normalize)).unstack(level=-1)
 
 
 def count_cell_populations(
     adata: AnnData,
     groupby: Union[str, List[str], None] = None,
     normalize: bool = False,
-    obs_key: str = "scyan_pop",
+    key: str = "scyan_pop",
     among: str = None,
 ) -> pd.DataFrame:
     """Count for each patient (or group) the number of cells for each population.
@@ -28,8 +28,8 @@ def count_cell_populations(
         adata: An `AnnData` object.
         groupby: Key(s) of `adata.obs` used to create groups (e.g. the patient ID).
         normalize: If `True`, returns percentage instead of counts.
-        obs_key: Key of `adata.obs` containing the population names (or the values to count).
-        among: Key of `adata.obs` containing the parent population name. For example, if 'T CD4 RM' is found in `adata.obs[obs_key]`, then we may find something like 'T cell' in `adata.obs[among]`. Typically, if using hierarchical populations, you can provide `'scyan_pop_level'` with your level name.
+        key: Key of `adata.obs` containing the population names (or the values to count).
+        among: Key of `adata.obs` containing the parent population name. For example, if 'T CD4 RM' is found in `adata.obs[key]`, then we may find something like 'T cell' in `adata.obs[among]`. Typically, if using hierarchical populations, you can provide `'scyan_pop_level'` with your level name.
 
     Returns:
         A DataFrame of counts (one row per group, one column per population).
@@ -37,7 +37,7 @@ def count_cell_populations(
     normalize = among is not None or normalize
     column_suffix = "percentage" if normalize else "count"
 
-    counts = _get_counts(adata, groupby, obs_key, normalize)
+    counts = _get_counts(adata, groupby, key, normalize)
 
     if among is None:
         counts.columns = [f"{name} {column_suffix}" for name in counts.columns]
@@ -45,12 +45,10 @@ def count_cell_populations(
 
     parents_count = _get_counts(adata, groupby, among, normalize)
 
-    df_parent = (
-        adata.obs.groupby(among)[obs_key].apply(lambda s: s.value_counts()).unstack()
-    )
+    df_parent = adata.obs.groupby(among)[key].apply(lambda s: s.value_counts()).unstack()
     assert (
         (df_parent > 0).sum(0) == 1
-    ).all(), f"Each population from adata.obs['{obs_key}'] should have one and only one parent population in adata.obs['{among}']"
+    ).all(), f"Each population from adata.obs['{key}'] should have one and only one parent population in adata.obs['{among}']"
     to_parent_dict = dict(df_parent.idxmax())
 
     counts /= parents_count[[to_parent_dict[pop] for pop in counts.columns]].values
@@ -64,7 +62,7 @@ def mean_intensities(
     adata: AnnData,
     groupby: Union[str, List[str], None] = None,
     layer: Optional[str] = None,
-    obs_key: str = "scyan_pop",
+    key: str = "scyan_pop",
     unstack_join: Optional[str] = " mean intensity on ",
     obsm: Optional[str] = None,
     obsm_names: Optional[List[str]] = None,
@@ -75,7 +73,7 @@ def mean_intensities(
         adata: An `AnnData` object.
         groupby: Key(s) of `adata.obs` used to create groups. For instance, `"id"` computes MMI per population for each ID. You can also provide something like `["group", "id"]` to get MMI per group, and per patient inside each group.
         layer: In which `adata.layers` we get expression intensities. By default, it uses `adata.X`.
-        obs_key: Key of `adata.obs` containing the population names.
+        key: Key of `adata.obs` containing the population names.
         unstack_join: If `None`, keep the information grouped. Else, flattens the biomarkers into one series (or one row per group if `groupby` is a list) and uses `unstack_join` to join the names of the multi-level columns. For instance, `' expression on '` can be a good choice.
         obsm: In which `adata.obsm` we get expression intensities. By default, it uses `adata.X`. If not `None` then `obsm_names` is required too.
         obsm_names: Ordered list of names in `adata.obsm[obsm]` if `obsm` was provided.
@@ -84,11 +82,11 @@ def mean_intensities(
         A DataFrame of MFI. If `groupby` was a list, it is a multi-index dataframe.
     """
     if groupby is None:
-        groupby = [obs_key]
+        groupby = [key]
     elif isinstance(groupby, str):
-        groupby = [groupby, obs_key]
+        groupby = [groupby, key]
     else:
-        groupby = list(groupby) + [obs_key]
+        groupby = list(groupby) + [key]
 
     if obsm is not None:
         assert (

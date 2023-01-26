@@ -16,7 +16,7 @@ from .utils import check_population, plot_decorator
 def probs_per_marker(
     model: Scyan,
     population: str,
-    obs_key: str = "scyan_pop",
+    key: str = "scyan_pop",
     prob_name: str = "Prob",
     vmin_threshold: int = -100,
     figsize: Tuple[float] = (10, 6),
@@ -26,14 +26,14 @@ def probs_per_marker(
 
     Args:
         model: Scyan model.
-        population: Name of one population to interpret. To be valid, the population name has to be in `adata.obs[obs_key]`.
-        obs_key: Key to look for population in `adata.obs`. By default, uses the model predictions.
+        population: Name of one population to interpret. To be valid, the population name has to be in `adata.obs[key]`.
+        key: Key to look for population in `adata.obs`. By default, uses the model predictions.
         prob_name: Name to display on the plot.
         vmin_threshold: Minimum threshold for the heatmap colorbar.
         figsize: Pair `(width, height)` indicating the size of the figure.
         show: Whether or not to display the figure.
     """
-    u = model(model.adata.obs[obs_key] == population)
+    u = model(model.adata.obs[key] == population)
 
     log_probs = model.module.prior.log_prob_per_marker(u)
     mean_log_probs = log_probs.mean(dim=0).numpy(force=True)

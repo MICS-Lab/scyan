@@ -112,18 +112,18 @@ def _requires_fit(f: Callable) -> Callable:
     return wrapper
 
 
-def _add_level_predictions(model, obs_key: str) -> None:
+def _add_level_predictions(model, key: str) -> None:
     mpm: pd.DataFrame = model.table
     adata: AnnData = model.adata
 
     level_names = mpm.index.names[1:]
-    obs_keys = [f"{obs_key}_{name}" for name in level_names]
+    keys = [f"{key}_{name}" for name in level_names]
 
-    for i, new_obs_key in enumerate(obs_keys):
+    for i, new_key in enumerate(keys):
         pop_dict = {pop: levels_pops[i] for pop, *levels_pops in mpm.index}
         categories = model.table.index.get_level_values(1 + i).unique()
-        adata.obs[new_obs_key] = pd.Categorical(
-            adata.obs[obs_key].map(pop_dict), categories=categories
+        adata.obs[new_key] = pd.Categorical(
+            adata.obs[key].map(pop_dict), categories=categories
         )
 
 

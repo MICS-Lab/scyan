@@ -17,7 +17,7 @@ from .utils import check_population, plot_decorator
 def pops_expressions(
     model: Scyan,
     latent: bool = True,
-    obs_key: str = "scyan_pop",
+    key: str = "scyan_pop",
     n_cells: Optional[int] = 200_000,
     vmax: float = 1.2,
     vmin: float = -1.2,
@@ -33,7 +33,7 @@ def pops_expressions(
     Args:
         model: Scyan model.
         latent: If `True`, displays Scyan's latent expressions, else just the standardized expressions.
-        obs_key: Key to look for populations in `adata.obs`. By default, uses the model predictions.
+        key: Key to look for populations in `adata.obs`. By default, uses the model predictions.
         n_cells: Number of cells to be considered for the heatmap (to accelerate it when $N$ is very high). If `None`, consider all cells.
         vmax: Maximum value on the heatmap.
         vmax: Minimum value on the heatmap.
@@ -41,7 +41,7 @@ def pops_expressions(
         figsize: Pair `(width, height)` indicating the size of the figure.
         show: Whether or not to display the figure.
     """
-    not_na = ~model.adata.obs[obs_key].isna()
+    not_na = ~model.adata.obs[key].isna()
     indices = _get_subset_indices(not_na.sum(), n_cells)
     indices = np.where(not_na)[0][indices]
 
@@ -49,16 +49,14 @@ def pops_expressions(
     columns = model.var_names if latent else model.adata.var_names
 
     df = pd.DataFrame(x, columns=columns, index=model.adata.obs.index[indices])
-    df["Population"] = model.adata[indices].obs[obs_key]
+    df["Population"] = model.adata[indices].obs[key]
 
     if cmap is None:
         cmap = "coolwarm" if latent else "viridis"
 
     plt.figure(figsize=figsize)
     sns.heatmap(df.groupby("Population").mean(), vmax=vmax, vmin=vmin, cmap=cmap)
-    plt.title(
-        f"{'Latent' if latent else 'Standardized'} expressions grouped by {obs_key}"
-    )
+    plt.title(f"{'Latent' if latent else 'Standardized'} expressions grouped by {key}")
 
 
 @torch.no_grad()
@@ -67,7 +65,7 @@ def boxplot_expressions(
     model: Scyan,
     marker: str,
     latent: bool = False,
-    obs_key: str = "scyan_pop",
+    key: str = "scyan_pop",
     ascending: bool = False,
     figsize: tuple = (10, 5),
     fliersize: float = 0.5,
@@ -79,7 +77,7 @@ def boxplot_expressions(
         model: Scyan model.
         marker: Name of the marker whose expressions are to be displayed.
         latent: If `True`, displays Scyan's latent expressions, else just the standardized expressions.
-        obs_key: Key to look for populations in `adata.obs`. By default, uses the model predictions.
+        key: Key to look for populations in `adata.obs`. By default, uses the model predictions.
         ascending: Whether to sort populations by ascending mean expressions.
         figsize: Figure size. Defaults to (10, 5).
         fliersize: Outlier dot size (see seaborn boxplot).
@@ -95,11 +93,11 @@ def boxplot_expressions(
     else:
         y = model.adata.obs_vector(marker)
 
-    df = pd.DataFrame({obs_key: model.adata.obs[obs_key], "y": y})
-    order = df.groupby(obs_key).mean().sort_values("y", ascending=ascending).index
+    df = pd.DataFrame({key: model.adata.obs[key], "y": y})
+    order = df.groupby(key).mean().sort_values("y", ascending=ascending).index
 
     plt.figure(figsize=figsize)
-    sns.boxplot(data=df, x=obs_key, y="y", fliersize=fliersize, order=order)
+    sns.boxplot(data=df, x=key, y="y", fliersize=fliersize, order=order)
     plt.xticks(rotation=90)
     plt.ylabel(f"{marker} {'latent' if latent else 'standardized'} expression")
 
@@ -110,7 +108,7 @@ def boxplot_expressions(
 def pop_expressions(
     model: Scyan,
     population: str,
-    obs_key: str = "scyan_pop",
+    key: str = "scyan_pop",
     max_value: float = 1.5,
     num_pieces: int = 100,
     radius: float = 0.05,
@@ -121,15 +119,15 @@ def pop_expressions(
 
     Args:
         model: Scyan model.
-        population: Name of one population to interpret. To be valid, the population name has to be in `adata.obs[obs_key]`.
-        obs_key: Key to look for populations in `adata.obs`. By default, uses the model predictions.
+        population: Name of one population to interpret. To be valid, the population name has to be in `adata.obs[key]`.
+        key: Key to look for populations in `adata.obs`. By default, uses the model predictions.
         max_value: Maximum absolute latent value.
         num_pieces: Number of pieces to display the colorbar.
         radius: Radius used to chunk the colorbar. Increase this value if multiple names overlap.
         figsize: Pair `(width, height)` indicating the size of the figure.
         show: Whether or not to display the figure.
     """
-    condition = model.adata.obs[obs_key] == population
+    condition = model.adata.obs[key] == population
     u_mean = model(condition).mean(dim=0)
     values = u_mean.numpy(force=True).clip(-max_value, max_value)
 
