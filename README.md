@@ -55,9 +55,10 @@ cd scyan
 Choose one of the following, depending on your needs (it should take at most a few minutes):
 
 ```bash
-pip install .                           # pip minimal installation (library only)
-pip install -e '.[dev,docs,discovery]'  # pip installation in editable mode
-poetry install -E 'dev docs discovery'  # poetry installation in editable mode
+pip install .                            # pip minimal installation (library only)
+pip install -e .                         # pip installation in editable mode
+pip install -e '.[dev,hydra,discovery]'  # pip installation with all the extras
+poetry install -E 'dev hydra discovery'  # poetry installation with all the extras
 ```
 
 ## Basic usage / Demo
