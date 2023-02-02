@@ -13,7 +13,7 @@ from torch import Tensor
 from torch.utils.data import DataLoader, TensorDataset
 
 from . import utils
-from .data import AdataDataset, RandomSampler, _prepare_data
+from .data import RandomSampler, _prepare_data
 from .module import ScyanModule
 from .utils import _requires_fit
 
@@ -370,9 +370,30 @@ class Scyan(pl.LightningModule):
         """PyTorch lightning `configure_optimizers` implementation"""
         return torch.optim.Adam(self.parameters(), lr=self.hparams.lr)
 
+    def save(self, path: str) -> None:
+        """Saves the Scyan model `state_dict` at the provided path.
+
+        Args:
+            path: Path where the parameters will be saved. For instance, `'scyan_state_dict.pt'`.
+        """
+        for submodule in self.modules():
+            if hasattr(submodule, "_trainer"):
+                del submodule._trainer  # Fix error due to pytorch lightning usage
+        torch.save(self.state_dict(), path)
+
+    def load(self, path: str) -> None:
+        """Loads the Scyan model that was saved at the provided path. Note that the model has to be initialized with the same arguments.
+
+        Args:
+            path: Path where the parameters were saved, i.e. the argument of `model.save(path)`.
+        """
+        self.load_state_dict(torch.load(path))
+        self.dataset = TensorDataset(self.x, self.covariates)
+        self._is_fitted = True
+
     def train_dataloader(self):
         """PyTorch lightning `train_dataloader` implementation"""
-        self.dataset = AdataDataset(self.x, self.covariates)
+        self.dataset = TensorDataset(self.x, self.covariates)
 
         return DataLoader(
             self.dataset,
