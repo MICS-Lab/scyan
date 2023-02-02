@@ -106,7 +106,7 @@ def get_data_path() -> Path:
 def _check_can_write(path: Path, overwrite: bool) -> None:
     assert (
         overwrite or not path.exists()
-    ), f"File {path} already exists and 'overwrite' is False. Set 'overwrite' to True to force its creation."
+    ), f"File {path} already exists and 'overwrite' is False. You can either change the 'filename' argument, or set 'overwrite=True' to force its creation."
 
 
 def add(
