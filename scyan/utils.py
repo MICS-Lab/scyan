@@ -2,7 +2,7 @@ import logging
 import warnings
 from functools import wraps
 from pathlib import Path
-from typing import Callable, List, Tuple, Union
+from typing import Callable, List, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -160,7 +160,9 @@ def _check_batch_arg(adata, batch_key, batch_ref):
     return batch_ref
 
 
-def _validate_inputs(adata: AnnData, df: pd.DataFrame):
+def _validate_inputs(
+    adata: AnnData, df: pd.DataFrame, unimodal_markers: Optional[List[str]]
+):
     assert isinstance(
         adata, AnnData
     ), f"The provided adata has to be an AnnData object (https://anndata.readthedocs.io/en/latest/), found {type(adata)}."
@@ -174,6 +176,16 @@ def _validate_inputs(adata: AnnData, df: pd.DataFrame):
     assert (
         not not_found_columns
     ), f"All column names from the marker-population table have to be a known marker from adata.var_names. Missing {not_found_columns}."
+
+    if unimodal_markers is not None:
+        not_found_markers = [c for c in unimodal_markers if c not in df.columns]
+        assert (
+            not not_found_markers
+        ), f"All markers from the list 'unimodal_markers' have to be inside the knowledge table. Missing {not_found_markers}."
+
+        df = df.copy()
+        for marker in unimodal_markers:
+            df[marker] /= 5
 
     if not df.dtypes.apply(is_numeric_dtype).all():
         log.warn(

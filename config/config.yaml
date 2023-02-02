@@ -30,7 +30,7 @@ model:
   n_layers: 7
   n_hidden_layers: 6
   prior_std: 0.3
-  lr: 0.001
+  lr: 0.0005
   batch_size: 8192
   temperature: 0.5
   modulo_temp: 2

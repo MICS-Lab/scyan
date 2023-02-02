@@ -41,11 +41,12 @@ class Scyan(pl.LightningModule):
         table: pd.DataFrame,
         continuous_covariate_keys: Optional[List[str]] = None,
         categorical_covariate_keys: Optional[List[str]] = None,
+        unimodal_markers: Optional[List[str]] = None,
         hidden_size: int = 16,
         n_hidden_layers: int = 6,
         n_layers: int = 7,
-        prior_std: float = 0.25,
-        lr: float = 1e-3,
+        prior_std: float = 0.3,
+        lr: float = 5e-4,
         batch_size: int = 8_192,
         temperature: float = 0.5,
         modulo_temp: int = 3,
@@ -58,6 +59,7 @@ class Scyan(pl.LightningModule):
             table: Dataframe of shape $(P, M)$ representing the biological knowledge about markers and populations. The columns names corresponds to marker that must be in `adata.var_names`.
             continuous_covariate_keys: Optional list of keys in `adata.obs` that refers to continuous variables to use during the training.
             categorical_covariate_keys: Optional list of keys in `adata.obs` that refers to categorical variables to use during the training.
+            unimodal_markers: Optional list of markers from the table whose expression is unimodal (i.e., no clear separation). We advise to use it carefully, and keep values of -1 and 1 in the table.
             hidden_size: Hidden size of the MLP (`s`, `t`).
             n_hidden_layers: Number of hidden layers in the MLP.
             n_layers: Number of coupling layers.
@@ -70,7 +72,7 @@ class Scyan(pl.LightningModule):
             batch_key: Key in `adata.obs` referring to the cell batch variable.
         """
         super().__init__()
-        self.adata, self.table = utils._validate_inputs(adata, table)
+        self.adata, self.table = utils._validate_inputs(adata, table, unimodal_markers)
         self.continuous_covariate_keys = continuous_covariate_keys or []
         self.categorical_covariate_keys = categorical_covariate_keys or []
         self.n_pops = len(self.table)
@@ -138,7 +140,7 @@ class Scyan(pl.LightningModule):
         level: Union[str, int, None] = None,
         parent_of: Optional[str] = None,
         children_of: Optional[str] = None,
-    ) -> Union[set, str]:
+    ) -> Union[List, str]:
         """Get the name of the populations that match a given contraint (only available if a hierarchical populations are provided, see [this tutorial](https://mics-lab.github.io/scyan/tutorials/advanced/#hierarchical-population-display)). If `level` is provided, returns all populations at this level. If `parent_of`, returns the parent of the given pop. If `children_of`, returns the children of the given pop.
 
         !!! note
@@ -150,7 +152,7 @@ class Scyan(pl.LightningModule):
             children_of: name of the population of which we want to get the children populations in the tree.
 
         Returns:
-            Set of all populations that match the contraint, or one name if `parent_of` is not `None`.
+            List of all populations that match the contraint, or one name if `parent_of` is not `None`.
         """
 
         assert (
@@ -166,7 +168,7 @@ class Scyan(pl.LightningModule):
                 isinstance(level, int) or level in self.level_names
             ), f"Level has to be one of [{', '.join(self.level_names)}]. Found {level}."
 
-            return set(self.table.index.get_level_values(level))
+            return list(set(self.table.index.get_level_values(level)))
 
         name = parent_of or children_of
         index = utils._get_pop_index(name, self.table)
@@ -174,8 +176,8 @@ class Scyan(pl.LightningModule):
 
         if children_of is not None:
             if index == 0:
-                return set()
-            return set(self.table.index.get_level_values(index - 1)[where])
+                return []
+            return list(set(self.table.index.get_level_values(index - 1)[where]))
 
         assert (
             index < self.table.index.nlevels - 1
@@ -322,10 +324,9 @@ class Scyan(pl.LightningModule):
             Population predictions (pandas `Series` of length $N$ cells).
         """
         df = self.predict_proba()
-        max_log_probs = df.pop("max_log_prob")
 
-        populations = df.idxmax(axis=1).astype("category")
-        populations[max_log_probs < log_prob_th] = np.nan
+        populations = df.iloc[:, : self.n_pops].idxmax(axis=1).astype("category")
+        populations[df["max_log_prob_u"] < log_prob_th] = np.nan
 
         if key_added is not None:
             self.adata.obs[key_added] = pd.Categorical(
@@ -356,7 +357,12 @@ class Scyan(pl.LightningModule):
         probs = torch.softmax(log_probs, dim=1)
 
         df = pd.DataFrame(probs.numpy(force=True), columns=self.pop_names)
-        df["max_log_prob"] = log_probs.max(1).values.numpy(force=True)
+
+        max_log_probs = log_probs.max(1)
+        df["max_log_prob"] = max_log_probs.values.numpy(force=True)
+
+        log_pi = self.module.log_pi[max_log_probs.indices].numpy(force=True)
+        df["max_log_prob_u"] = df["max_log_prob"] - log_pi
 
         return df
 
