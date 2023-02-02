@@ -82,6 +82,6 @@ def palette_level(
     inner_block_indices = s.groupby(s).cumcount().values
 
     return {
-        pop: color_groups[block_index][inner_index]
+        pop: list(color_groups[block_index][inner_index])
         for pop, block_index, inner_index in zip(pops, block_indices, inner_block_indices)
     }
