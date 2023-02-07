@@ -3,10 +3,10 @@
 </p>
 
 [![PyPI](https://img.shields.io/pypi/v/scyan.svg)](https://pypi.org/project/scyan)
+[![Downloads](https://pepy.tech/badge/scyan)](https://pepy.tech/project/scyan)
 [![Docs](https://img.shields.io/badge/docs-mkdocs-blue)](https://mics-lab.github.io/scyan/)
 ![Build](https://github.com/MICS-Lab/scyan/workflows/ci/badge.svg)
 [![Code Style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/python/black)
-[![Downloads](https://pepy.tech/badge/scyan)](https://pepy.tech/project/scyan)
 [![License](https://img.shields.io/pypi/l/scyan.svg)](https://github.com/MICS-Lab/scyan/blob/master/LICENSE)
 [![Imports: isort](https://img.shields.io/badge/imports-isort-blueviolet)](https://pycqa.github.io/isort/)
 
@@ -80,11 +80,11 @@ For more usage demo, read the [tutorials](https://mics-lab.github.io/scyan/tutor
 
 Scyan is a **Python** library based on:
 
-- _Pytorch_, a deep learning framework
-- _AnnData_, a data library that works nicely with single-cell data
-- _Pytorch Lighning_, for model training
-- _Hydra_, for project configuration (optional)
-- _Weight & Biases_, for model monitoring (optional)
+- [_Pytorch_](https://pytorch.org/), a deep learning framework
+- [_AnnData_](https://anndata.readthedocs.io/en/latest/), a data library that works nicely with single-cell data
+- [_Pytorch Lighning_](https://www.pytorchlightning.ai/), for model training
+- [_Hydra_](https://hydra.cc/docs/intro/), for project configuration (optional)
+- [_Weight & Biases_](https://wandb.ai/site), for model monitoring (optional)
 
 # Project layout
 
@@ -101,14 +101,15 @@ Scyan is a **Python** library based on:
         module/               # Folder containing neural network modules
             coupling_layer.py # Coupling layer
             distribution.py   # Prior distribution (called U in the article)
-            mmd.py            # Maximum Mean Discrepancy implementation
             real_nvp.py       # Normalizing Flow
             scyan_module      # Core module
-        plot/                 # Plotting tools
+        plot/                 # Plots
             ...
         tools/
-            ...               # Preprocessing tools and more
+            ...               # Tools (umap, subclustering, ...)
         model.py              # Scyan model class
+        _io.py                # Input / output functions
+        preprocess.py         # Preprocessing functions
         utils.py              # Misc functions
     .gitattributes
     .gitignore
