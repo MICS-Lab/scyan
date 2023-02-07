@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 def read_fcs(
     path: str, obs_names: Optional[List[str]] = None, channel_suffix: Optional[str] = "S"
 ) -> AnnData:
-    """Read a FCS file and return an AnnData instance.
+    """Read a FCS file and return an AnnData object.
 
     Args:
         path: Path to the FCS file that has to be read.
@@ -22,7 +22,7 @@ def read_fcs(
         channel_suffix: Suffix for the channel naming convention, i.e. `"S"` for "PnS", or `"N"` for "PnN". If `None`, keep the raw names.
 
     Returns:
-        `AnnData` instance containing the FCS data.
+        `AnnData` object containing the FCS data.
     """
     meta, data = fcsparser.parse(path)
 
@@ -51,6 +51,39 @@ def read_fcs(
         obs=data[obs_names],
         dtype=np.float32,
     )
+
+
+def _test_one_marker(name: str, extra_marker_names: List[str]) -> bool:
+    return name in extra_marker_names or any(
+        x in name.lower() for x in ["cd", "hla", "pd", "ccr", "epcam", "cadm", "siglec"]
+    )
+
+
+def read_csv(
+    path: str, extra_marker_names: Optional[List] = None, **pandas_kwargs: int
+) -> AnnData:
+    """Read a CSV file and return an AnnData object.
+
+    !!! note
+        It tries to infer which columns are markers, but you can help it by providing `extra_marker_names`. For only, it only checks which columns contain one of these: CD, HLA, PD, CCR, EPCAM, CADM, SIGLEC.
+
+    Args:
+        path: Path to the CSV file that has to be read.
+        extra_marker_names: List of columns that correspond to marker (among the ones that were not automatically considered as markers).
+
+    Returns:
+        `AnnData` object containing the CSV data.
+    """
+    df = pd.read_csv(path, **pandas_kwargs)
+
+    extra_marker_names = [] if extra_marker_names is None else extra_marker_names
+    missing_markers = [m for m in extra_marker_names if m not in df.columns]
+    assert (
+        not missing_markers
+    ), f"Some of the provided extra_marker_names ({','.join(missing_markers)}) are not in the CSV. Indeed, the columns of the CSV are: {','.join(df.columns)}"
+
+    is_marker = df.columns.map(lambda x: _test_one_marker(x, extra_marker_names))
+    return AnnData(df.loc[:, is_marker], obs=df.loc[:, ~is_marker], dtype=np.float32)
 
 
 def _to_df(adata: AnnData, layer: Optional[str] = None) -> pd.DataFrame:
