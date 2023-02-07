@@ -421,9 +421,9 @@ class Scyan(pl.LightningModule):
             Tensor of concatenated results.
         """
         if importlib.util.find_spec("ipywidgets") is not None:
-            from tqdm.auto import tqdm as _tqdm
+            from tqdm.autonotebook import tqdm
         else:
-            from tqdm import tqdm as _tqdm
+            from tqdm import tqdm
 
         if data is None:
             loader = self.predict_dataloader()
@@ -435,7 +435,7 @@ class Scyan(pl.LightningModule):
             )
 
         return torch.cat(
-            [func(*batch) for batch in _tqdm(loader, desc="DataLoader")], dim=0
+            [func(*batch) for batch in tqdm(loader, desc="DataLoader")], dim=0
         )
 
     def fit(
