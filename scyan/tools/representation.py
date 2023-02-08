@@ -15,7 +15,7 @@ def subcluster(
     adata: AnnData,
     population: str,
     markers: Optional[List[str]] = None,
-    obs_key: str = "scyan_pop",
+    key: str = "scyan_pop",
     resolution: float = 0.2,
     size_ratio_th: float = 0.02,
     min_cells_th: int = 200,
@@ -27,9 +27,9 @@ def subcluster(
 
     Args:
         adata: An `anndata` object.
-        population: Name of the population to target (one of `adata.obs[obs_key]`).
+        population: Name of the population to target (one of `adata.obs[key]`).
         markers: Optional list of markers used to create subclusters. By default, uses the complete panel.
-        obs_key: Key to look for population in `adata.obs`. By default, uses the model predictions, but you can also choose a population level (if any), or other observations.
+        key: Key to look for population in `adata.obs`. By default, uses the model predictions, but you can also choose a population level (if any), or other observations.
         resolution: Resolution used for leiden clustering. Higher resolution leads to more clusters.
         size_ratio_th: (Only used if `population` is `None`): Minimum ratio of cells to be considered as a significant cluster (compared to the parent cluster).
         min_cells_th: (Only used if `population` is `None`): Minimum number of cells to be considered as a significant cluster.
@@ -37,7 +37,7 @@ def subcluster(
     """
     leiden_key = f"leiden_{resolution}_{population}"
     subcluster_key = f"scyan_subcluster_{population}"
-    condition = adata.obs[obs_key] == population
+    condition = adata.obs[key] == population
     markers = list(adata.var_names if markers is None else markers)
 
     if leiden_key in adata.obs and adata.uns.get(leiden_key, []) == markers:
@@ -88,7 +88,7 @@ def subcluster(
 
     adata.uns[leiden_key] = markers
     log.info(
-        f"Subclusters created, you can now use:\n- scyan.plot.umap(adata, color='{subcluster_key}') to show the clusters\n- scyan.plot.pops_expressions(model, obs_key='{subcluster_key}') to plot their expressions"
+        f"Subclusters created, you can now use:\n- scyan.plot.umap(adata, color='{subcluster_key}') to show the clusters\n- scyan.plot.pops_expressions(model, key='{subcluster_key}') to plot their expressions"
     )
 
 
@@ -119,7 +119,7 @@ def umap(
         n_cells: Number of cells to be considered for the UMAP (to accelerate it when $N$ is very high). If `None`, consider all cells.
         min_dist: Min dist UMAP parameter.
         obsm_key: Key for `adata.obsm` to add the embedding.
-        filter: Optional tuple `(obs_key, value)` used to train the UMAP on a set of cells that satisfies a constraint. `obs_key` is the key of `adata.obs` to consider, and `value` the value the cells need to have.
+        filter: Optional tuple `(key, value)` used to train the UMAP on a set of cells that satisfies a constraint. `key` is the key of `adata.obs` to consider, and `value` the value the cells need to have.
         **umap_kwargs: Optional kwargs to provide to the `UMAP` initialization.
 
     Returns:
@@ -141,8 +141,8 @@ def umap(
     if filter is None:
         embedding = reducer.fit_transform(X)
     else:
-        obs_key, value = filter
-        reducer.fit(X[adata[indices].obs[obs_key] == value])
+        key, value = filter
+        reducer.fit(X[adata[indices].obs[key] == value])
         log.info("Transforming...")
         embedding = reducer.transform(X)
 

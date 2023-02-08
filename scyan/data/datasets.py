@@ -1,13 +1,11 @@
 import logging
-import urllib
 from pathlib import Path
 from typing import List, Optional, Tuple, Union
-from urllib import request
 
 import anndata
-import joblib
 import numpy as np
 import pandas as pd
+import tqdm
 import umap
 from anndata import AnnData
 
@@ -16,8 +14,30 @@ from ..utils import _root_path
 log = logging.getLogger(__name__)
 
 
+def _download(url, filepath):
+    import requests
+
+    r = requests.get(url, stream=True)
+
+    if r.status_code == 404:
+        raise FileNotFoundError(f"File at url {url} was not found")
+
+    file_size = int(r.headers["Content-Length"])
+    chunk_size = 1024
+    num_bars = file_size // chunk_size
+
+    with open(filepath, "wb") as fp:
+        for chunk in tqdm.tqdm(
+            r.iter_content(chunk_size=chunk_size),
+            total=num_bars,
+            unit="KB",
+            desc=f"Downloading {num_bars // 1024} MB",
+        ):
+            fp.write(chunk)
+
+
 def get_local_file(
-    dataset_path: Path, dataset_name: str, name: str, kind: str
+    dataset_path: Path, dataset_name: str, name: str, ext: str
 ) -> Union[AnnData, pd.DataFrame, umap.UMAP]:
     """Get an `anndata` or a `csv` file into memory. If the file does not exist locally, it is downloaded from Gitlab.
 
@@ -25,7 +45,7 @@ def get_local_file(
         dataset_path: Local path to the dataset folder.
         dataset_name: Name of the dataset.
         name: Name of the file (without extension).
-        kind: `csv`, `h5ad` or `umap`.
+        ext: `csv`, `h5ad` or `umap`.
 
     Raises:
         FileNotFoundError: If the file does not exist on Gitlab.
@@ -34,7 +54,7 @@ def get_local_file(
     Returns:
         An `anndata` or a `csv` object.
     """
-    filename = f"{name}.{kind}"
+    filename = f"{name}.{ext}"
     filepath = dataset_path / filename
 
     if not filepath.is_file():
@@ -48,28 +68,27 @@ def get_local_file(
         base_url = "https://github.com/MICS-Lab/scyan_data"
         url = f"{base_url}/raw/main/data/{dataset_name}/{filename}"
 
+        log.info(
+            f"File not found locally. Trying to load {filename} from dataset {dataset_name} on github."
+        )
         try:
-            log.info(
-                f"File not found locally. Trying to load {filename} from dataset {dataset_name} on github. It can take dozens of seconds."
-            )
-            request.urlretrieve(url, filepath)
-            log.info(f"Successfully downloaded and saved locally at {filepath}")
-        except urllib.error.HTTPError as e:
-            if e.code == 404:
-                raise FileNotFoundError(
-                    f"File data/{dataset_name}/{filename} not existing on the repository {base_url}"
-                )
+            _download(url, filepath)
+        except KeyboardInterrupt as e:
+            filepath.unlink()
             raise e
+        log.info(f"Successfully downloaded and saved locally at {filepath}")
 
-    if kind == "csv":
+    if ext == "csv":
         df = pd.read_csv(filepath, index_col=0)
         level_indices = np.where(df.columns.str.lower().str.contains("level"))[0]
         if level_indices.size:
             return pd.read_csv(filepath, index_col=[0] + list(1 + level_indices))
         return df
 
-    if kind == "h5ad":
+    if ext == "h5ad":
         return anndata.read_h5ad(filepath)
+
+    import joblib
 
     return joblib.load(filepath)
 
@@ -87,13 +106,13 @@ def get_data_path() -> Path:
 def _check_can_write(path: Path, overwrite: bool) -> None:
     assert (
         overwrite or not path.exists()
-    ), f"File {path} already exists and 'overwrite' is False. Set 'overwrite' to True to force its creation."
+    ), f"File {path} already exists and 'overwrite' is False. You can either change the 'filename' argument, or set 'overwrite=True' to force its creation."
 
 
 def add(
     dataset_name: str,
     *objects: List[Union[AnnData, pd.DataFrame, umap.UMAP]],
-    filenames: Union[str, List[str]] = "default",
+    filename: Union[str, List[str]] = "default",
     overwrite: bool = False,
 ) -> None:
     """Add an object to a dataset (or create it if not existing). Objects can be `AnnData` objects, a knowledge-table (i.e. a `pd.DataFrame`), or a `UMAP` reducer. The provided filenames are the one you use when loading data with [scyan.data.load][].
@@ -104,7 +123,7 @@ def add(
     Args:
         dataset_name: Name of the dataset in which the object will be saved.
         *objects: Object(s) to save.
-        filenames: Name(s) without extension of the file(s) to create. The default value (`"default"`) is the filename loaded by default with `scyan.data.load`. If a list is provided, it should have the length of the number of objects provided and should have the same order. If a string, then use the same name for all objects (but different extensions).
+        filename: Name(s) without extension of the file(s) to create. The default value (`"default"`) is the filename loaded by default with `scyan.data.load`. If a list is provided, it should have the length of the number of objects provided and should have the same order. If a string, then use the same name for all objects (but different extensions).
         overwrite: If `True`, it will overwrite files that already exist.
 
     Raises:
@@ -117,8 +136,7 @@ def add(
         log.info(f"Creating new dataset folder at {dataset_path}")
         dataset_path.mkdir(parents=True)
 
-    if isinstance(filenames, str):
-        filenames = [filenames] * len(objects)
+    filenames = [filename] * len(objects) if isinstance(filename, str) else filename
 
     for obj, filename in zip(objects, filenames):
         if isinstance(obj, AnnData):
@@ -132,6 +150,8 @@ def add(
         elif isinstance(obj, umap.UMAP):
             path = dataset_path / f"{filename}.umap"
             _check_can_write(path, overwrite)
+            import joblib
+
             joblib.dump(obj, path)
         else:
             raise ValueError(
@@ -176,8 +196,8 @@ def list_path(dataset_path: Path) -> None:
         )
 
     for kind, values in zip(["Data versions", "Tables", "UMAP reducers"], names.values()):
-        values = ["None"] if not values else values
-        print(f"    {kind}: {', '.join(list(values))}")
+        if values:
+            print(f"""    {kind}: '{"', '".join(list(values))}'""")
 
 
 def _list(dataset_name: Optional[str] = None) -> None:
@@ -205,6 +225,30 @@ def _list(dataset_name: Optional[str] = None) -> None:
     for dataset_path in dataset_paths:
         if dataset_path.is_dir():
             list_path(dataset_path)
+
+
+def remove(
+    dataset_name: str,
+    version: Optional[str] = None,
+    table: Optional[str] = None,
+    reducer: Optional[str] = None,
+) -> None:
+    """Remove file(s) from a dataset folder.
+
+    Args:
+        dataset_name: Name of the dataset. Use `scyan.data.list()` to see the possible values.
+        version: Name of the `.h5ad` file to remove (don't provide the extension).
+        table: Name of the `.csv` file to remove (don't provide the extension).
+        reducer: Name of the `.umap` file to remove (don't provide the extension).
+    """
+    data_path = get_data_path()
+    dataset_path = data_path / dataset_name
+
+    for arg, ext in [(version, "h5ad"), (table, "csv"), (reducer, "umap")]:
+        if arg is not None:
+            filepath = dataset_path / f"{arg}.{ext}"
+            filepath.unlink()
+            log.info(f"Successfully removed {filepath}")
 
 
 def load(

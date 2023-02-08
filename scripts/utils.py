@@ -82,26 +82,26 @@ def classification_metrics(y_true: npt.ArrayLike, y_pred: npt.ArrayLike) -> dict
     return {"Accuracy": accuracy, "F1-Score": f1, "Balanced Accuracy": balanced_acc}
 
 
-def compute_metrics(model: Scyan, config: DictConfig, obs_key: str = "scyan_pop") -> dict:
+def compute_metrics(model: Scyan, config: DictConfig, key: str = "scyan_pop") -> dict:
     """Compute model metrics.
 
     Args:
         model: Scyan model.
         config: Hydra generated configuration.
-        obs_key: Key in `adata.obs` where predictions are saved.
+        key: Key in `adata.obs` where predictions are saved.
 
     Returns:
         A dict of metrics.
     """
     if config.project.get("label", None):
         y_true = model.adata.obs[config.project.label]
-        y_pred = model.adata.obs[obs_key].fillna("")
+        y_pred = model.adata.obs[key].fillna("")
         metrics_dict = classification_metrics(y_true, y_pred)
     else:
         log.info("No label provided. The classification metrics are not computed.")
         metrics_dict = {}
 
-    X, labels = model.x.numpy(force=True), model.adata.obs[obs_key]
+    X, labels = model.x.numpy(force=True), model.adata.obs[key]
     X, labels = X[~labels.isna()], labels[~labels.isna()]
 
     n_missing_pop = len(model.pop_names) - len(set(labels.values))
@@ -155,13 +155,13 @@ def metric_to_optimize(all_metrics: dict, config: DictConfig) -> float:
     return 0
 
 
-def compute_umap(model: Scyan, config: DictConfig, obs_key: str = "scyan_pop") -> None:
+def compute_umap(model: Scyan, config: DictConfig, key: str = "scyan_pop") -> None:
     """Log a UMAP with Weight & Biases.
 
     Args:
         model: Scyan model.
         config: Hydra generated configuration.
-        obs_key: Key in `adata.obs` where predictions are saved.
+        key: Key in `adata.obs` where predictions are saved.
     """
     palette = model.adata.uns.get("palette", None)  # Get color palette if existing
 
@@ -170,7 +170,7 @@ def compute_umap(model: Scyan, config: DictConfig, obs_key: str = "scyan_pop") -
             {
                 "umap": scyan.utils._wandb_plt_image(
                     lambda: scyan.plot.umap(
-                        model.adata, color=obs_key, show=False, palette=palette
+                        model.adata, color=key, show=False, palette=palette
                     )
                 )
             }

@@ -18,11 +18,11 @@ Scyan is a Bayesian probabilistic model composed of a deep invertible neural net
 
 Scyan is a **Python** library based on:
 
-- _Pytorch_, a deep learning framework
-- _AnnData_, a data library that works nicely with single-cell data
-- _Pytorch Lighning_, for model training
-- _Hydra_, for project configuration (optional)
-- _Weight & Biases_, for model monitoring (optional)
+- [_Pytorch_](https://pytorch.org/), a deep learning framework
+- [_AnnData_](https://anndata.readthedocs.io/en/latest/), a data library that works nicely with single-cell data
+- [_Pytorch Lighning_](https://www.pytorchlightning.ai/), for model training
+- [_Hydra_](https://hydra.cc/docs/intro/), for project configuration (optional)
+- [_Weight & Biases_](https://wandb.ai/site), for model monitoring (optional)
 
 ## Project layout
 
@@ -41,14 +41,15 @@ See [Scyan on Github](https://github.com/MICS-Lab/scyan)
         module/               # Folder containing neural network modules
             coupling_layer.py # Coupling layer
             distribution.py   # Prior distribution (called U in the article)
-            mmd.py            # Maximum Mean Discrepancy implementation
             real_nvp.py       # Normalizing Flow
             scyan_module      # Core module
-        plot/                 # Plotting tools
+        plot/                 # Plots
             ...
         tools/
-            ...               # Preprocessing tools and more
+            ...               # Tools (umap, subclustering, ...)
         model.py              # Scyan model class
+        _io.py                # Input / output functions
+        preprocess.py         # Preprocessing functions
         utils.py              # Misc functions
     .gitattributes
     .gitignore

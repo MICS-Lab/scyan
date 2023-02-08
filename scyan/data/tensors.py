@@ -7,21 +7,6 @@ from anndata import AnnData
 from torch import Tensor
 
 
-class AdataDataset(torch.utils.data.Dataset):
-    """Pyorch Dataset"""
-
-    def __init__(self, x: Tensor, covariates: Tensor):
-        super().__init__()
-        self.x = x
-        self.covariates = covariates
-
-    def __getitem__(self, index):
-        return self.x[index], self.covariates[index]
-
-    def __len__(self):
-        return len(self.x)
-
-
 class RandomSampler(torch.utils.data.Sampler):
     """Random sampling during training. It stops the epoch when we reached `max_samples` samples (if provided)."""
 

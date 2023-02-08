@@ -2,6 +2,10 @@
     options:
       show_root_heading: true
 
+::: scyan.tools.palette_level
+    options:
+      show_root_heading: true
+
 ::: scyan.tools.subcluster
     options:
       show_root_heading: true

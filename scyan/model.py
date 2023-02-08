@@ -13,7 +13,7 @@ from torch import Tensor
 from torch.utils.data import DataLoader, TensorDataset
 
 from . import utils
-from .data import AdataDataset, RandomSampler, _prepare_data
+from .data import RandomSampler, _prepare_data
 from .module import ScyanModule
 from .utils import _requires_fit
 
@@ -41,14 +41,15 @@ class Scyan(pl.LightningModule):
         table: pd.DataFrame,
         continuous_covariate_keys: Optional[List[str]] = None,
         categorical_covariate_keys: Optional[List[str]] = None,
+        unimodal_markers: Optional[List[str]] = None,
         hidden_size: int = 16,
-        n_hidden_layers: int = 7,
+        n_hidden_layers: int = 6,
         n_layers: int = 7,
-        prior_std: float = 0.25,
-        lr: float = 1e-3,
-        batch_size: int = 16_384,
+        prior_std: float = 0.3,
+        lr: float = 5e-4,
+        batch_size: int = 8_192,
         temperature: float = 0.5,
-        modulo_temp: int = 2,
+        modulo_temp: int = 3,
         max_samples: Optional[int] = 200_000,
         batch_key: Optional[str] = None,
     ):
@@ -58,6 +59,7 @@ class Scyan(pl.LightningModule):
             table: Dataframe of shape $(P, M)$ representing the biological knowledge about markers and populations. The columns names corresponds to marker that must be in `adata.var_names`.
             continuous_covariate_keys: Optional list of keys in `adata.obs` that refers to continuous variables to use during the training.
             categorical_covariate_keys: Optional list of keys in `adata.obs` that refers to categorical variables to use during the training.
+            unimodal_markers: Optional list of markers from the table whose expression is unimodal (i.e., no clear separation). We advise to use it carefully, and keep values of -1 and 1 in the table.
             hidden_size: Hidden size of the MLP (`s`, `t`).
             n_hidden_layers: Number of hidden layers in the MLP.
             n_layers: Number of coupling layers.
@@ -70,7 +72,7 @@ class Scyan(pl.LightningModule):
             batch_key: Key in `adata.obs` referring to the cell batch variable.
         """
         super().__init__()
-        self.adata, self.table = utils._validate_inputs(adata, table)
+        self.adata, self.table = utils._validate_inputs(adata, table, unimodal_markers)
         self.continuous_covariate_keys = continuous_covariate_keys or []
         self.categorical_covariate_keys = categorical_covariate_keys or []
         self.n_pops = len(self.table)
@@ -138,7 +140,7 @@ class Scyan(pl.LightningModule):
         level: Union[str, int, None] = None,
         parent_of: Optional[str] = None,
         children_of: Optional[str] = None,
-    ) -> Union[set, str]:
+    ) -> Union[List, str]:
         """Get the name of the populations that match a given contraint (only available if a hierarchical populations are provided, see [this tutorial](https://mics-lab.github.io/scyan/tutorials/advanced/#hierarchical-population-display)). If `level` is provided, returns all populations at this level. If `parent_of`, returns the parent of the given pop. If `children_of`, returns the children of the given pop.
 
         !!! note
@@ -150,7 +152,7 @@ class Scyan(pl.LightningModule):
             children_of: name of the population of which we want to get the children populations in the tree.
 
         Returns:
-            Set of all populations that match the contraint, or one name if `parent_of` is not `None`.
+            List of all populations that match the contraint, or one name if `parent_of` is not `None`.
         """
 
         assert (
@@ -166,7 +168,7 @@ class Scyan(pl.LightningModule):
                 isinstance(level, int) or level in self.level_names
             ), f"Level has to be one of [{', '.join(self.level_names)}]. Found {level}."
 
-            return set(self.table.index.get_level_values(level))
+            return list(set(self.table.index.get_level_values(level)))
 
         name = parent_of or children_of
         index = utils._get_pop_index(name, self.table)
@@ -174,8 +176,8 @@ class Scyan(pl.LightningModule):
 
         if children_of is not None:
             if index == 0:
-                return set()
-            return set(self.table.index.get_level_values(index - 1)[where])
+                return []
+            return list(set(self.table.index.get_level_values(index - 1)[where]))
 
         assert (
             index < self.table.index.nlevels - 1
@@ -310,6 +312,9 @@ class Scyan(pl.LightningModule):
     ) -> pd.Series:
         """Model population predictions, i.e. one population is assigned for each cell. Predictions are saved in `adata.obs.scyan_pop` by default.
 
+        !!! note
+            Some cells may not be annotated, if their log probability is lower than `log_prob_th` for all populations. Then, the predicted label will be `np.nan`.
+
         Args:
             key_added: Column name used to save the predictions in `adata.obs`. If `None`, then the predictions will not be saved.
             add_levels: If `True`, and if [hierarchical population names](../../tutorials/advanced/#hierarchical-population-display) were provided, then it also saves the prediction for every population level.
@@ -319,13 +324,14 @@ class Scyan(pl.LightningModule):
             Population predictions (pandas `Series` of length $N$ cells).
         """
         df = self.predict_proba()
-        max_log_probs = df.pop("max_log_prob")
 
-        populations = df.idxmax(axis=1).astype("category")
-        populations[max_log_probs < log_prob_th] = np.nan
+        populations = df.iloc[:, : self.n_pops].idxmax(axis=1).astype("category")
+        populations[df["max_log_prob_u"] < log_prob_th] = np.nan
 
         if key_added is not None:
-            self.adata.obs[key_added] = pd.Categorical(populations)
+            self.adata.obs[key_added] = pd.Categorical(
+                populations, categories=self.pop_names
+            )
             if add_levels and isinstance(self.table.index, pd.MultiIndex):
                 utils._add_level_predictions(self, key_added)
 
@@ -351,7 +357,12 @@ class Scyan(pl.LightningModule):
         probs = torch.softmax(log_probs, dim=1)
 
         df = pd.DataFrame(probs.numpy(force=True), columns=self.pop_names)
-        df["max_log_prob"] = log_probs.max(1).values.numpy(force=True)
+
+        max_log_probs = log_probs.max(1)
+        df["max_log_prob"] = max_log_probs.values.numpy(force=True)
+
+        log_pi = self.module.log_pi[max_log_probs.indices].numpy(force=True)
+        df["max_log_prob_u"] = df["max_log_prob"] - log_pi
 
         return df
 
@@ -359,9 +370,30 @@ class Scyan(pl.LightningModule):
         """PyTorch lightning `configure_optimizers` implementation"""
         return torch.optim.Adam(self.parameters(), lr=self.hparams.lr)
 
+    def save(self, path: str) -> None:
+        """Saves the Scyan model `state_dict` at the provided path.
+
+        Args:
+            path: Path where the parameters will be saved. For instance, `'scyan_state_dict.pt'`.
+        """
+        for submodule in self.modules():
+            if hasattr(submodule, "_trainer"):
+                del submodule._trainer  # Fix error due to pytorch lightning usage
+        torch.save(self.state_dict(), path)
+
+    def load(self, path: str) -> None:
+        """Loads the Scyan model that was saved at the provided path. Note that the model has to be initialized with the same arguments.
+
+        Args:
+            path: Path where the parameters were saved, i.e. the argument of `model.save(path)`.
+        """
+        self.load_state_dict(torch.load(path))
+        self.dataset = TensorDataset(self.x, self.covariates)
+        self._is_fitted = True
+
     def train_dataloader(self):
         """PyTorch lightning `train_dataloader` implementation"""
-        self.dataset = AdataDataset(self.x, self.covariates)
+        self.dataset = TensorDataset(self.x, self.covariates)
 
         return DataLoader(
             self.dataset,
@@ -389,9 +421,9 @@ class Scyan(pl.LightningModule):
             Tensor of concatenated results.
         """
         if importlib.util.find_spec("ipywidgets") is not None:
-            from tqdm.auto import tqdm as _tqdm
+            from tqdm.autonotebook import tqdm
         else:
-            from tqdm import tqdm as _tqdm
+            from tqdm import tqdm
 
         if data is None:
             loader = self.predict_dataloader()
@@ -403,17 +435,18 @@ class Scyan(pl.LightningModule):
             )
 
         return torch.cat(
-            [func(*batch) for batch in _tqdm(loader, desc="DataLoader")], dim=0
+            [func(*batch) for batch in tqdm(loader, desc="DataLoader")], dim=0
         )
 
     def fit(
         self,
         max_epochs: int = 100,
         min_delta: float = 1,
-        patience: int = 2,
+        patience: int = 4,
         num_workers: int = 0,
         callbacks: Optional[List[pl.Callback]] = None,
         trainer: Optional[pl.Trainer] = None,
+        **trainer_args: int,
     ) -> "Scyan":
         """Train the `Scyan` model. On interactive Python (e.g., Jupyter Notebooks), training can be interrupted at any time without crashing.
 
@@ -427,6 +460,7 @@ class Scyan(pl.LightningModule):
             num_workers: Pytorch DataLoader `num_workers` argument, i.e. how many subprocesses to use for data loading. 0 means that the data will be loaded in the main process.
             callbacks: Additional Pytorch Lightning callbacks.
             trainer: Optional Pytorch Lightning Trainer. **Warning**: it will replace the default Trainer, and every other argument will be unused.
+            **trainer_args: Optional kwargs to provide to the `pytorch_lightning.Trainer` initialization.
 
         Returns:
             The trained model itself.
@@ -445,7 +479,10 @@ class Scyan(pl.LightningModule):
             _callbacks = [esc] + (callbacks or [])
 
             trainer = pl.Trainer(
-                max_epochs=max_epochs, callbacks=_callbacks, log_every_n_steps=10
+                max_epochs=max_epochs,
+                callbacks=_callbacks,
+                log_every_n_steps=10,
+                **trainer_args,
             )
 
         self.trainer = trainer

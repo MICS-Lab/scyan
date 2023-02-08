@@ -28,3 +28,5 @@ model.predict()
         - var_names
         - pops
         - level_names
+        - save
+        - load

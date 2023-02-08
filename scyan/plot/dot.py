@@ -18,7 +18,7 @@ def scatter(
     population: Union[str, List[str], None],
     markers: Optional[List[str]] = None,
     n_markers: Optional[int] = 3,
-    obs_key: str = "scyan_pop",
+    key: str = "scyan_pop",
     max_obs: int = 2000,
     s: float = 1.0,
     show: bool = True,
@@ -28,15 +28,15 @@ def scatter(
 
     Args:
         adata: An `anndata` object.
-        population: One population, or a list of population to be colored, or `None`. If not `None`, the population name(s) has to be in `adata.obs[obs_key]`.
+        population: One population, or a list of population to be colored, or `None`. If not `None`, the population name(s) has to be in `adata.obs[key]`.
         markers: List of markers to plot. If `None`, the list is chosen automatically.
         n_markers: Number of markers to choose automatically if `markers is None`.
-        obs_key: Key to look for populations in `adata.obs`. By default, uses the model predictions.
+        key: Key to look for populations in `adata.obs`. By default, uses the model predictions.
         max_obs: Maximum number of cells per population to be displayed. If population is None, then this number is multiplied by 10.
         s: Dot marker size.
         show: Whether or not to display the figure.
     """
-    markers = select_markers(adata, markers, n_markers, obs_key, population)
+    markers = select_markers(adata, markers, n_markers, key, population)
 
     if population is None:
         indices = _get_subset_indices(adata.n_obs, max_obs * 10)
@@ -48,7 +48,7 @@ def scatter(
         return
 
     data = adata[:, markers].to_df()
-    keys = adata.obs[obs_key].astype(str)
+    keys = adata.obs[key].astype(str)
     data["Population"] = np.where(~np.isin(keys, population), "Others", keys)
 
     pops = list(population) + ["Others"]
@@ -101,7 +101,7 @@ def pop_level(
     model: Scyan,
     group_name: str,
     level_name: str = "level",
-    obs_key: str = "scyan_pop",
+    key: str = "scyan_pop",
     **scanpy_kwargs: int,
 ) -> None:
     """Plot all subpopulations of a group at a certain level on a UMAP (according to the populations levels provided in the knowledge table).
@@ -110,7 +110,7 @@ def pop_level(
         model: Scyan model.
         group_name: The group to look at among the populations of the selected level.
         level_name: Name of the column of the knowledge table containing the names of the grouped populations.
-        obs_key: Key of `adata.obs` to access the model predictions.
+        key: Key of `adata.obs` to access the model predictions.
     """
     adata = model.adata
     table = model.table
@@ -133,9 +133,9 @@ def pop_level(
     valid_populations = [
         pop for pop, group in zip(base_pops, group_pops) if group == group_name
     ]
-    key_name = f"{obs_key}_one_level"
+    key_name = f"{key}_one_level"
     adata.obs[key_name] = pd.Categorical(
-        [pop if pop in valid_populations else np.nan for pop in adata.obs[obs_key]]
+        [pop if pop in valid_populations else np.nan for pop in adata.obs[key]]
     )
     umap(
         adata,
