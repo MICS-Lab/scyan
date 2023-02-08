@@ -16,6 +16,7 @@ nav:
     - tutorials/batch_effect_correction.ipynb
     - tutorials/debarcoding.ipynb
     - tutorials/population_discovery.ipynb
+  - Math background: math.md
   - API: 
     - scyan.Scyan: api/model.md
     - IO (read/write): api/io.md
