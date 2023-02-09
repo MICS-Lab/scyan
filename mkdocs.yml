@@ -17,7 +17,7 @@ nav:
     - tutorials/debarcoding.ipynb
     - tutorials/population_discovery.ipynb
   - Math background: math.md
-  - API: 
+  - API:
     - scyan.Scyan: api/model.md
     - IO (read/write): api/io.md
     - Preprocessing: api/preprocess.md
@@ -53,7 +53,7 @@ markdown_extensions:
   - pymdownx.arithmatex:
       generic: true
   - pymdownx.tabbed:
-      alternate_style: true 
+      alternate_style: true
 
 extra_javascript:
   - javascripts/mathjax.js
