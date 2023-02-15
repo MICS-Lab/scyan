@@ -129,7 +129,7 @@ class Scyan(pl.LightningModule):
         """All population hierarchical level names, if existing."""
         if not isinstance(self.table.index, pd.MultiIndex):
             log.warn(
-                "The provided knowledge table has no population hierarchical level. See: https://mics-lab.github.io/scyan/tutorials/advanced/#hierarchical-population-display"
+                "The provided knowledge table has no population hierarchical level. See: https://mics-lab.github.io/scyan/tutorials/usage/#working-with-hierarchical-populations"
             )
             return []
 
@@ -141,7 +141,7 @@ class Scyan(pl.LightningModule):
         parent_of: Optional[str] = None,
         children_of: Optional[str] = None,
     ) -> Union[List, str]:
-        """Get the name of the populations that match a given contraint (only available if a hierarchical populations are provided, see [this tutorial](https://mics-lab.github.io/scyan/tutorials/advanced/#hierarchical-population-display)). If `level` is provided, returns all populations at this level. If `parent_of`, returns the parent of the given pop. If `children_of`, returns the children of the given pop.
+        """Get the name of the populations that match a given contraint (only available if a hierarchical populations are provided, see [this tutorial](../../tutorials/usage/#working-with-hierarchical-populations)). If `level` is provided, returns all populations at this level. If `parent_of`, returns the parent of the given pop. If `children_of`, returns the children of the given pop.
 
         !!! note
             If you want to get the names of the leaves populations, you can simply use `model.pop_names`, which is equivalent to `model.pops(level=0)`.
@@ -317,7 +317,7 @@ class Scyan(pl.LightningModule):
 
         Args:
             key_added: Column name used to save the predictions in `adata.obs`. If `None`, then the predictions will not be saved.
-            add_levels: If `True`, and if [hierarchical population names](../../tutorials/advanced/#hierarchical-population-display) were provided, then it also saves the prediction for every population level.
+            add_levels: If `True`, and if [hierarchical population names](../../tutorials/usage/#working-with-hierarchical-populations) were provided, then it also saves the prediction for every population level.
             log_prob_th: If the log-probability of the most probable population for one cell is below this threshold, this cell will not be annotated (`np.nan`).
 
         Returns:

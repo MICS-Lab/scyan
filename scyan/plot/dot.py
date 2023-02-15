@@ -117,7 +117,7 @@ def pop_level(
 
     assert isinstance(
         table.index, pd.MultiIndex
-    ), "To use this function, you need a MultiIndex DataFrame, see: https://mics-lab.github.io/scyan/tutorials/advanced/#hierarchical-population-display"
+    ), "To use this function, you need a MultiIndex DataFrame, see: https://mics-lab.github.io/scyan/tutorials/usage/#working-with-hierarchical-populations"
 
     level_names = table.index.names[1:]
     assert (
