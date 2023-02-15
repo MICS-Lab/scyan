@@ -15,10 +15,10 @@ def _get_counts(adata: AnnData, groupby, key, normalize) -> pd.DataFrame:
     return grouped[key].apply(lambda s: s.value_counts(normalize)).unstack(level=-1)
 
 
-def count_cell_populations(
+def cell_type_ratios(
     adata: AnnData,
     groupby: Union[str, List[str], None] = None,
-    normalize: bool = False,
+    normalize: bool = True,
     key: str = "scyan_pop",
     among: str = None,
 ) -> pd.DataFrame:
@@ -27,7 +27,7 @@ def count_cell_populations(
     Args:
         adata: An `AnnData` object.
         groupby: Key(s) of `adata.obs` used to create groups (e.g. the patient ID).
-        normalize: If `True`, returns percentage instead of counts.
+        normalize: If `False`, returns counts instead of percentages.
         key: Key of `adata.obs` containing the population names (or the values to count).
         among: Key of `adata.obs` containing the parent population name. For example, if 'T CD4 RM' is found in `adata.obs[key]`, then we may find something like 'T cell' in `adata.obs[among]`. Typically, if using hierarchical populations, you can provide `'scyan_pop_level'` with your level name.
 
@@ -100,7 +100,7 @@ def mean_intensities(
     for group in groupby:
         df[group] = adata.obs[group].values
 
-    res = df.groupby(groupby).mean()
+    res = df.groupby(groupby).mean().dropna(how="all")
 
     if res.values.min() < 0:
         log.warn(

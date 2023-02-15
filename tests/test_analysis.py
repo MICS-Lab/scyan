@@ -21,8 +21,8 @@ def adata() -> AnnData:
     return AnnData(values, obs=obs, dtype=np.float32)
 
 
-def test_count_cell_populations(adata: AnnData):
-    df = scyan.tools.count_cell_populations(adata)
+def test_count_cell_types(adata: AnnData):
+    df = scyan.tools.cell_type_ratios(adata, normalize=False)
 
     assert all(
         df[f"{pop} count"][0] == count for pop, count in zip(pop_names, [1, 3, 2, 2])
@@ -30,7 +30,7 @@ def test_count_cell_populations(adata: AnnData):
 
 
 def test_normalize_cell_populations(adata: AnnData):
-    df = scyan.tools.count_cell_populations(adata, normalize=True)
+    df = scyan.tools.cell_type_ratios(adata)
 
     assert all(
         df[f"{pop} percentage"][0] == count / 8
@@ -39,7 +39,7 @@ def test_normalize_cell_populations(adata: AnnData):
 
 
 def test_group_cell_populations(adata: AnnData):
-    df = scyan.tools.count_cell_populations(adata, groupby="id")
+    df = scyan.tools.cell_type_ratios(adata, groupby="id", normalize=False)
 
     assert df.loc[1, "c count"] == 1
     assert df.loc[1, "a2 count"] == 3
@@ -47,7 +47,7 @@ def test_group_cell_populations(adata: AnnData):
 
 
 def test_cell_populations_among(adata: AnnData):
-    df = scyan.tools.count_cell_populations(adata, groupby="id", among="scyan_pop_level")
+    df = scyan.tools.cell_type_ratios(adata, groupby="id", among="scyan_pop_level")
 
     assert df.loc[1, "c percentage among C"] == 1
     assert df.loc[1, "a2 percentage among A"] == 0.75

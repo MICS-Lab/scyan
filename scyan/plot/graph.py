@@ -9,7 +9,7 @@ from .utils import plot_decorator
 
 @plot_decorator()
 def pops_hierarchy(model: Scyan, figsize: tuple = (18, 5), show: bool = True) -> None:
-    """Plot populations as a tree, where each level corresponds to more detailed populations. To run this function, your knowledge table need to contain at least one population 'level' (see [this tutorial](../../tutorials/advanced/#hierarchical-population-display)), and you need to install `graphviz`.
+    """Plot populations as a tree, where each level corresponds to more detailed populations. To run this function, your knowledge table need to contain at least one population 'level' (see [this tutorial](../../tutorials/usage/#working-with-hierarchical-populations)), and you need to install `graphviz`.
 
     Args:
         model: Scyan model.
@@ -25,10 +25,12 @@ def pops_hierarchy(model: Scyan, figsize: tuple = (18, 5), show: bool = True) ->
         table.index, pd.MultiIndex
     ), "To plot population hierarchy, you need a MultiIndex DataFrame. See the documentation for more details."
 
-    G = nx.DiGraph()
-    G.add_node(" ")
+    root = "All populations"
 
-    def add_nodes(table, indices, level, parent=" "):
+    G = nx.DiGraph()
+    G.add_node(root)
+
+    def add_nodes(table, indices, level, parent=root):
         if level == -1:
             return
 
@@ -51,4 +53,17 @@ def pops_hierarchy(model: Scyan, figsize: tuple = (18, 5), show: bool = True) ->
 
     plt.figure(figsize=figsize)
     pos = graphviz_layout(G, prog="dot")
-    nx.draw(G, pos, with_labels=True, arrows=False, node_size=0)
+    nx.draw_networkx(G, pos, with_labels=False, arrows=False, node_size=0)
+    for node, (x, y) in pos.items():
+        plt.text(
+            x,
+            y,
+            node,
+            ha="center",
+            va="center",
+            rotation=90,
+            bbox=dict(facecolor="wheat", edgecolor="black", boxstyle="round,pad=0.5"),
+        )
+
+    plt.grid(False)
+    plt.box(False)

@@ -10,7 +10,7 @@
     options:
       show_root_heading: true
 
-::: scyan.tools.count_cell_populations
+::: scyan.tools.cell_type_ratios
     options:
       show_root_heading: true
 

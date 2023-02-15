@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 def read_fcs(
     path: str, obs_names: Optional[List[str]] = None, channel_suffix: Optional[str] = "S"
 ) -> AnnData:
-    """Read a FCS file and return an AnnData object.
+    """Read a FCS file and return an `AnnData` object.
 
     Args:
         path: Path to the FCS file that has to be read.
@@ -53,23 +53,32 @@ def read_fcs(
     )
 
 
-def _test_one_marker(name: str, extra_marker_names: List[str]) -> bool:
+def _test_one_marker(
+    name: str, extra_marker_names: List[str], remove_marker_names: Optional[List[str]]
+) -> bool:
+    if remove_marker_names is not None and name in remove_marker_names:
+        return False
     return name in extra_marker_names or any(
-        x in name.lower() for x in ["cd", "hla", "pd", "ccr", "epcam", "cadm", "siglec"]
+        x in name.lower() for x in ["cd", "hla", "ccr", "epcam", "cadm", "siglec"]
     )
 
 
 def read_csv(
-    path: str, extra_marker_names: Optional[List] = None, **pandas_kwargs: int
+    path: str,
+    extra_marker_names: Optional[List] = None,
+    remove_marker_names: Optional[List] = None,
+    **pandas_kwargs: int,
 ) -> AnnData:
-    """Read a CSV file and return an AnnData object.
+    """Read a CSV file and return an `AnnData` object.
 
     !!! note
-        It tries to infer which columns are markers, but you can help it by providing `extra_marker_names`. For only, it only checks which columns contain one of these: CD, HLA, PD, CCR, EPCAM, CADM, SIGLEC.
+        It tries to infer which columns are markers by checking which columns contain one of these: CD, HLA, CCR, EPCAM, CADM, SIGLEC. Though, if it didn't select the right markers, you can help it by providing `extra_marker_names` or `remove_marker_names`.
 
     Args:
         path: Path to the CSV file that has to be read.
-        extra_marker_names: List of columns that correspond to marker (among the ones that were not automatically considered as markers).
+        extra_marker_names: List of columns that correspond to markers (among the ones that were **not** automatically considered as markers).
+        remove_marker_names: List of columns that **don't** correspond to markers (among the ones that were automatically considered as markers).
+        **pandas_kwargs: Optional kwargs for `pandas.read_csv(...)`.
 
     Returns:
         `AnnData` object containing the CSV data.
@@ -82,7 +91,9 @@ def read_csv(
         not missing_markers
     ), f"Some of the provided extra_marker_names ({','.join(missing_markers)}) are not in the CSV. Indeed, the columns of the CSV are: {','.join(df.columns)}"
 
-    is_marker = df.columns.map(lambda x: _test_one_marker(x, extra_marker_names))
+    is_marker = df.columns.map(
+        lambda x: _test_one_marker(x, extra_marker_names, remove_marker_names)
+    )
     return AnnData(df.loc[:, is_marker], obs=df.loc[:, ~is_marker], dtype=np.float32)
 
 
