@@ -8,8 +8,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: Install poetry
-      run: pipx install poetry
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
     - uses: actions/setup-python@v4
       with:
         python-version: '3.9'
