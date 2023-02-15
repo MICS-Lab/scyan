@@ -1,7 +1,7 @@
 ### General advices
 
 - Make sure your data only contains the population of interest. E.g., if you are interested into the annotation of immune cells, then consider providing only the live cells that are CD45+. If needed, Scyan can be run to first extract the cells of interest before to annotate the different populations.
-- Don't provide overlapping populations in the table. For instance, if you have CD16- NK and CD16+ NK, you don't need to write knowledge about NK cells. Note that, we would actually indirectly annotate NK cells, because they are the union of CD16- NK cells and CD16+ NK cells. You could also provide a [hierarchical description of the populations](../tutorials/advanced/#working-with-hierarchical-populations).
+- Don't provide overlapping populations in the table. For instance, if you have CD16- NK and CD16+ NK, you don't need to write knowledge about NK cells. Note that, we would actually indirectly annotate NK cells, because they are the union of CD16- NK cells and CD16+ NK cells. You could also provide a [hierarchical description of the populations](../tutorials/usage/#working-with-hierarchical-populations).
 - Before to run batch effect correction, check if you really have a significant batch effect (else, you could simply run Scyan without batch-effect correction). You can check that by plotting the batch observation on the umap (see [scyan.plot.umap][]) and see if the different batches overlap or not.
 
 ### Advice for the creation of the table

@@ -26,7 +26,7 @@ Scyan is a **Python** library based on:
 
 ## Project layout
 
-See [Scyan on Github](https://github.com/MICS-Lab/scyan)
+See [Scyan on Github](https://github.com/MICS-Lab/scyan).
 
     .github/      # Github CI and templates
     config/       # Hydra configuration folder (optional use)
