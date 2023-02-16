@@ -21,8 +21,9 @@ from typing import Optional
 
 import numpy as np
 import pandas as pd
-import scanpy as sc
 from sklearn.neighbors import NearestNeighbors
+
+import scyan
 
 
 def compute_lisi(
@@ -53,7 +54,7 @@ def compute_lisi(
     [1]: Korsunsky et al. 2019 doi: 10.1038/s41592-019-0619-0
     """
     # We need at least 3 * n_neigbhors to compute the perplexity
-    adata_ = sc.pp.subsample(adata, n_obs=max_cells, copy=True)
+    adata_ = scyan.preprocess.subsample(adata, n_obs=max_cells, copy=True)
     X = adata_.X if obsm_key is None else adata_.obsm[obsm_key]
 
     knn = NearestNeighbors(n_neighbors=perplexity * 3, algorithm="kd_tree").fit(X)

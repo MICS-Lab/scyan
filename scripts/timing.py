@@ -2,7 +2,6 @@ import time
 
 import hydra
 import pytorch_lightning as pl
-import scanpy as sc
 from omegaconf import DictConfig
 
 import scyan
@@ -25,7 +24,7 @@ def main(config: DictConfig) -> None:
 
     if n_obs is not None:
         print(f"Undersampling cells to N={n_obs}...")
-        sc.pp.subsample(adata, n_obs=n_obs)
+        scyan.preprocess.subsample(adata, n_obs=n_obs)
 
     start = time.perf_counter()
     utils.init_and_fit_model(adata, table, config)

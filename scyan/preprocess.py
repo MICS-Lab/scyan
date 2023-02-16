@@ -6,6 +6,8 @@ import numpy as np
 import scipy
 from anndata import AnnData
 
+from .utils import _subset
+
 log = logging.getLogger(__name__)
 
 
@@ -193,3 +195,17 @@ def unscale(
         return adata.uns["scyan_scaling_means"] + stds * X
 
     return (X + 1) * stds
+
+
+def subsample(adata: AnnData, n_obs: int) -> AnnData:
+    """Subsample an `AnnData` object (cells will be chosen randomly).
+
+    Args:
+        adata: `AnnData` object.
+        n_obs: Number of cell to keep.
+
+    Returns:
+        A view `AnnData` object with `n_obs` cells.
+    """
+    indices = _subset(np.arange(adata.n_obs), n_obs)
+    return adata[indices]
