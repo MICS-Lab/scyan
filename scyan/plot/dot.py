@@ -2,12 +2,12 @@ from typing import List, Optional, Union
 
 import numpy as np
 import pandas as pd
-import scanpy as sc
 import seaborn as sns
 from anndata import AnnData
 
 from .. import Scyan
 from ..utils import _get_subset_indices, _has_umap, _subset
+from ._scanpy_plot import scanpy_pl_umap
 from .utils import check_population, get_palette_others, plot_decorator, select_markers
 
 
@@ -64,11 +64,13 @@ def scatter(
     g.add_legend()
 
 
+@plot_decorator(adata=True)
 def umap(
     adata: AnnData,
     color: Union[str, List[str]] = None,
     vmax: Union[str, float] = "p95",
     vmin: Union[str, float] = "p05",
+    show: bool = True,
     **scanpy_kwargs: int,
 ):
     """Plot a UMAP using scanpy.
@@ -81,6 +83,7 @@ def umap(
         color: Marker(s) or `obs` name(s) to color. It can be either just one string, or a list (it will plot one UMAP per element in the list).
         vmax: `scanpy.pl.umap` vmax argument.
         vmin: `scanpy.pl.umap` vmin argument.
+        show: Whether or not to display the figure.
         **scanpy_kwargs: Optional kwargs provided to `scanpy.pl.umap`.
     """
     assert isinstance(
@@ -92,9 +95,9 @@ def umap(
         adata = adata[has_umap]
 
     if color is None:
-        return sc.pl.umap(adata, **scanpy_kwargs)
+        return scanpy_pl_umap(adata, **scanpy_kwargs)
 
-    return sc.pl.umap(adata, color=color, vmax=vmax, vmin=vmin, **scanpy_kwargs)
+    return scanpy_pl_umap(adata, color=color, vmax=vmax, vmin=vmin, **scanpy_kwargs)
 
 
 def pop_level(

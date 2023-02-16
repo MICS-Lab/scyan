@@ -2,13 +2,35 @@ import logging
 from typing import List, Optional, Tuple
 
 import numpy as np
-import scanpy as sc
+import pandas as pd
 from anndata import AnnData
 from umap import UMAP
 
 from ..utils import _check_is_processed, _get_subset_indices, _has_umap
 
 log = logging.getLogger(__name__)
+
+
+def _leiden(
+    adata: AnnData, resolution: float, key_added: str, n_neighbors: int = 15
+) -> None:
+    import igraph as ig
+    import leidenalg
+    from sklearn.neighbors import kneighbors_graph
+
+    if not "knn_graph" in adata.obsp:
+        graph = kneighbors_graph(
+            adata.X, n_neighbors=n_neighbors, metric="euclidean", include_self=False
+        )
+        graph = ig.Graph.Weighted_Adjacency(graph, mode="UNDIRECTED")
+        adata.obsp["knn_graph"] = graph
+
+    partition = leidenalg.find_partition(
+        adata.obsp["knn_graph"],
+        leidenalg.RBConfigurationVertexPartition,
+        resolution_parameter=resolution,
+    )
+    adata.obs[key_added] = pd.Categorical(partition.membership)
 
 
 def subcluster(
@@ -62,8 +84,8 @@ def subcluster(
                 indices = np.concatenate([indices, indices2])
 
         adata_sub = adata[indices, markers].copy()
-        sc.pp.neighbors(adata_sub)
-        sc.tl.leiden(adata_sub, resolution=resolution, key_added=leiden_key)
+
+        _leiden(adata_sub, resolution, leiden_key)
 
     adata.obs[leiden_key] = np.nan
     leiden_index = adata.obs.columns.get_loc(leiden_key)
