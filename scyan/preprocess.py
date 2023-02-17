@@ -145,7 +145,7 @@ def inverse_transform(
 
 
 def scale(adata: AnnData, max_value: float = 10, center: Optional[bool] = None) -> None:
-    """Tranforms the data such as (i) `std=1`, and (ii) either `0` is sent to `-1` (for CyTOF data) or `means=0` (for flow or spectral flow data); except if ` center` is set (which overwrites the default behavior).
+    """Tranforms the data such as (i) `std=1`, and (ii) either `0` is sent to `-1` (for CyTOF data) or `means=0` (for flow or spectral flow data); except if `center` is set (which overwrites the default behavior).
 
     Args:
         adata: An `anndata` object.
@@ -155,12 +155,12 @@ def scale(adata: AnnData, max_value: float = 10, center: Optional[bool] = None) 
     stds = adata.X.std(axis=0)
     adata.uns["scyan_scaling_stds"] = stds
 
-    if center or (center is None and "scyan_logicle" in adata.uns):
+    if not center or (center is None and "scyan_asinh" in adata.uns):
+        adata.X = (adata.X / stds - 1).clip(-max_value, max_value)
+    else:
         means = adata.X.mean(axis=0)
         adata.X = ((adata.X - means) / stds).clip(-max_value, max_value)
         adata.uns["scyan_scaling_means"] = means
-    else:
-        adata.X = (adata.X / stds - 1).clip(-max_value, max_value)
 
 
 def unscale(
