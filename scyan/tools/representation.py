@@ -14,23 +14,30 @@ log = logging.getLogger(__name__)
 def _leiden(
     adata: AnnData, resolution: float, key_added: str, n_neighbors: int = 15
 ) -> None:
+    try:
+        import leidenalg
+    except:
+        raise ImportError(
+            """To run leiden, you need to have 'leidenalg' installed. You can install the population discovery extra with "pip install 'scyan[discovery]'", or directly install leidenalg with "conda install -c conda-forge leidenalg"."""
+        )
+
     import igraph as ig
-    import leidenalg
     from sklearn.neighbors import kneighbors_graph
 
     if not "knn_graph" in adata.obsp:
-        graph = kneighbors_graph(
+        adata.obsp["knn_graph"] = kneighbors_graph(
             adata.X, n_neighbors=n_neighbors, metric="euclidean", include_self=False
         )
-        graph = ig.Graph.Weighted_Adjacency(graph, mode="UNDIRECTED")
-        adata.obsp["knn_graph"] = graph
+
+    # TODO (improvement): add weights according to euclidean distance
+    graph = ig.Graph.Weighted_Adjacency(adata.obsp["knn_graph"], mode="DIRECTED")
 
     partition = leidenalg.find_partition(
-        adata.obsp["knn_graph"],
+        graph,
         leidenalg.RBConfigurationVertexPartition,
         resolution_parameter=resolution,
     )
-    adata.obs[key_added] = pd.Categorical(partition.membership)
+    adata.obs[key_added] = pd.Categorical([str(x) for x in partition.membership])
 
 
 def subcluster(
@@ -87,9 +94,9 @@ def subcluster(
 
         _leiden(adata_sub, resolution, leiden_key)
 
-    adata.obs[leiden_key] = np.nan
-    leiden_index = adata.obs.columns.get_loc(leiden_key)
-    adata.obs.iloc[indices, leiden_index] = adata_sub.obs[leiden_key]
+    series = pd.Series(index=np.arange(adata.n_obs), dtype=str)
+    series[indices] = adata_sub.obs[leiden_key].values
+    adata.obs[leiden_key] = series.values
     adata.obs[leiden_key] = adata.obs[leiden_key].astype("category")
 
     counts = adata_sub.obs[leiden_key].value_counts()
@@ -103,14 +110,14 @@ def subcluster(
         np.isin(adata_sub.obs[leiden_key], remove[remove].index), leiden_key
     ] = np.nan
 
-    adata.obs[subcluster_key] = np.nan
-    subcluster_index = adata.obs.columns.get_loc(subcluster_key)
-    adata.obs.iloc[indices, subcluster_index] = adata_sub.obs[leiden_key]
+    series = pd.Series(index=np.arange(adata.n_obs), dtype=str)
+    series[indices] = adata_sub.obs[leiden_key].values
+    adata.obs[subcluster_key] = series.values
     adata.obs[subcluster_key] = adata.obs[subcluster_key].astype("category")
 
     adata.uns[leiden_key] = markers
     log.info(
-        f"Subclusters created, you can now use:\n- scyan.plot.umap(adata, color='{subcluster_key}') to show the clusters\n- scyan.plot.pops_expressions(model, key='{subcluster_key}') to plot their expressions"
+        f"Subclusters created, you can now use:\n   - scyan.plot.umap(adata, color='{subcluster_key}') to show the clusters\n   - scyan.plot.pops_expressions(model, key='{subcluster_key}') to plot their expressions"
     )
 
 
