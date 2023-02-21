@@ -444,7 +444,10 @@ class Scyan(pl.LightningModule):
         min_delta: float = 1,
         patience: int = 4,
         num_workers: int = 0,
+        log_every_n_steps: int = 10,
         callbacks: Optional[List[pl.Callback]] = None,
+        logger: Union[bool, "pl.Logger"] = False,
+        enable_checkpointing: bool = False,
         trainer: Optional[pl.Trainer] = None,
         **trainer_args: int,
     ) -> "Scyan":
@@ -458,7 +461,10 @@ class Scyan(pl.LightningModule):
             min_delta: min_delta parameters used for `EarlyStopping`. See Pytorch Lightning docs.
             patience: Number of epochs with no loss improvement before stopping training.
             num_workers: Pytorch DataLoader `num_workers` argument, i.e. how many subprocesses to use for data loading. 0 means that the data will be loaded in the main process.
-            callbacks: Additional Pytorch Lightning callbacks.
+            log_every_n_steps: How often to log within steps (see Pytorch Lightning Trainer API).
+            callbacks: Optional list of Pytorch Lightning callbacks (see their Trainer API). They will be added to our EarlyStopping callback.
+            logger: Pytorch Lightning logger argument (see their Trainer API).
+            enable_checkpointing: If `True`, enables Pytorch Lightning checkpointing.
             trainer: Optional Pytorch Lightning Trainer. **Warning**: it will replace the default Trainer, and every other argument will be unused.
             **trainer_args: Optional kwargs to provide to the `pytorch_lightning.Trainer` initialization.
 
@@ -476,12 +482,16 @@ class Scyan(pl.LightningModule):
                 patience=patience,
                 check_on_train_epoch_end=True,
             )
-            _callbacks = [esc] + (callbacks or [])
 
+            log_every_n_steps = min(
+                log_every_n_steps, len(self.x) // self.hparams.batch_size
+            )
             trainer = pl.Trainer(
                 max_epochs=max_epochs,
-                callbacks=_callbacks,
-                log_every_n_steps=10,
+                callbacks=[esc] + (callbacks or []),
+                log_every_n_steps=log_every_n_steps,
+                enable_checkpointing=enable_checkpointing,
+                logger=logger,
                 **trainer_args,
             )
 
