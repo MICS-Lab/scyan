@@ -292,7 +292,7 @@ def scanpy_pl_umap(
     return_fig: Optional[bool] = None,
     **kwargs,
 ) -> Union[Figure, Axes, None]:
-    adata._sanitize
+    adata.strings_to_categoricals()
 
     basis_values = adata.obsm["X_umap"]
     dimensions = _components_to_dimensions(
