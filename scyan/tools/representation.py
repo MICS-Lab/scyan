@@ -116,7 +116,7 @@ def subcluster(
     adata.obs[subcluster_key] = adata.obs[subcluster_key].astype("category")
 
     adata.uns[leiden_key] = markers
-    log.info(
+    print(
         f"Subclusters created, you can now use:\n   - scyan.plot.umap(adata, color='{subcluster_key}') to show the clusters\n   - scyan.plot.pops_expressions(model, key='{subcluster_key}') to plot their expressions"
     )
 
