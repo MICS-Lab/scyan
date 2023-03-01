@@ -210,11 +210,11 @@ def _list(dataset_name: Optional[str] = None) -> None:
 
     if dataset_name is not None:
         dataset_path = data_path / dataset_name
-        print(f"Listing versions inside {dataset_path}:")
+        log.info(f"Listing versions inside {dataset_path}:")
         list_path(dataset_path)
         return
 
-    print(f"List of existing datasets inside {data_path}:")
+    log.info(f"List of existing datasets inside {data_path}:")
     dataset_paths = set(data_path.iterdir())
 
     for public_dataset in ["aml", "bmmc", "debarcoding"]:
