@@ -128,7 +128,7 @@ class Scyan(pl.LightningModule):
     def level_names(self):
         """All population hierarchical level names, if existing."""
         if not isinstance(self.table.index, pd.MultiIndex):
-            log.warn(
+            log.warning(
                 "The provided knowledge table has no population hierarchical level. See: https://mics-lab.github.io/scyan/tutorials/usage/#working-with-hierarchical-populations"
             )
             return []
@@ -337,7 +337,7 @@ class Scyan(pl.LightningModule):
 
         missing_pops = self.n_pops - len(populations.cat.categories)
         if missing_pops:
-            log.warn(
+            log.warning(
                 f"{missing_pops} population(s) were not predicted. It may be due to:\n  - Errors in the knowledge table (see https://mics-lab.github.io/scyan/advice/#advice-for-the-creation-of-the-table)\n  - The model hyperparameters choice (see https://mics-lab.github.io/scyan/advanced/parameters/)\n  - Or maybe these populations are really absent from this dataset."
             )
 

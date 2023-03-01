@@ -20,6 +20,40 @@ warnings.filterwarnings("ignore", message=r".*No data for colormapping provided[
 warnings.filterwarnings("ignore", message=r".*does not have many workers[\s\S]*")
 
 
+class ColorFormatter(logging.Formatter):
+    grey = "\x1b[38;20m"
+    blue = "\x1b[36;20m"
+    yellow = "\x1b[33;20m"
+    red = "\x1b[31;20m"
+    bold_red = "\x1b[31;1m"
+    reset = "\x1b[0m"
+
+    prefix = "[%(levelname)s] (%(name)s)"
+    suffix = "%(message)s"
+
+    FORMATS = {
+        logging.DEBUG: f"{grey}{prefix}{reset} {suffix}",
+        logging.INFO: f"{blue}{prefix}{reset} {suffix}",
+        logging.WARNING: f"{yellow}{prefix}{reset} {suffix}",
+        logging.ERROR: f"{red}{prefix}{reset} {suffix}",
+        logging.CRITICAL: f"{bold_red}{prefix}{reset} {suffix}",
+    }
+
+    def format(self, record):
+        log_fmt = self.FORMATS.get(record.levelno)
+        formatter = logging.Formatter(log_fmt)
+        return formatter.format(record)
+
+
+def configure_logger(log: logging.Logger):
+    log.setLevel(logging.INFO)
+
+    consoleHandler = logging.StreamHandler()
+    consoleHandler.setFormatter(ColorFormatter())
+
+    log.addHandler(consoleHandler)
+
+
 def _root_path() -> Path:
     """Get the library root path
 
@@ -188,14 +222,14 @@ def _validate_inputs(
             df[marker] /= 5
 
     if not df.dtypes.apply(is_numeric_dtype).all():
-        log.warn(
+        log.warning(
             "Some columns of the marker-population table are not numeric / NaN. Every non-numeric value will be transformed into NaN."
         )
         df = df.apply(pd.to_numeric, errors="coerce")
 
     ratio_nan = df.isna().values.mean()
     if ratio_nan > 0.7:
-        log.warn(
+        log.warning(
             f"Found {ratio_nan:.1%} of NA in the table, which is very high. If this is intended, just ignore the warning."
         )
 
@@ -204,14 +238,14 @@ def _validate_inputs(
     _check_is_processed(X)
 
     if np.abs(X.std(axis=0) - 1).max() > 0.2 or X.min(0).max() >= 0:
-        log.warn(
+        log.warning(
             "It seems that the data is not standardised. We advise using scaling (scyan.preprocess.scale) before initializing the model."
         )
 
     duplicates = df.duplicated()
     if duplicates.any():
         duplicates_names = duplicates[duplicates].index.get_level_values(0)
-        log.warn(
+        log.warning(
             f"Found duplicate populations in the knowledge matrix. We advise updating or removing the following rows: {', '.join(map(str, duplicates_names))}"
         )
 
@@ -222,7 +256,7 @@ def _validate_inputs(
 
     ratio_non_standard = 1 - ((df**2 == 1) | df.isna()).values.mean()
     if ratio_non_standard > 0.15:
-        log.warn(
+        log.warning(
             f"Found a significant proportion ({ratio_non_standard:.1%}) of non-standard values in the knowledge table. Scyan expects to find mostly -1/1/NA in the table, even though any other numerical value is accepted. If this is intended, just ignore the warning, else correct the table using mainly -1, 1 and NA (to denote negative expressions, positive expressions, or not-applicable respectively)."
         )
 

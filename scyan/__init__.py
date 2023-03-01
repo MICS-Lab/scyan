@@ -10,6 +10,9 @@ from . import preprocess
 
 __version__ = importlib.metadata.version("scyan")
 
-logging.getLogger().setLevel(logging.INFO)
+log = logging.getLogger("scyan")
+utils.configure_logger(log)
+
 plot.reset_plot_settings()
-pl.seed_everything(0)
+
+pl.seed_everything(0)  # Set seed to 0 (using pytorch lightning)

@@ -56,7 +56,7 @@ def auto_logicle_transform(
             adata[:, marker] = column.clip(np.quantile(column, quantile_clip))
 
     if markers_failed:
-        log.warn(
+        log.warning(
             f"Auto logicle transformation failed for the following markers (logicle was used instead): {', '.join(markers_failed)}.\nIt can happen when expressions are all positive or all negative."
         )
 

@@ -103,7 +103,7 @@ def mean_intensities(
     res = df.groupby(groupby).mean().dropna(how="all")
 
     if res.values.min() < 0:
-        log.warn(
+        log.warning(
             "The minimum expression value is negative. Are you sure you are using unscaled values? If not, you can use 'scyan.preprocess.unscale' and save the unscaled result in a 'adata.layers' of your choice (then use this layer argument in the current function). If you know what you are doing, or if you use flow cytometry data, you can ignore this warning."
         )
 

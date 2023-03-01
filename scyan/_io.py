@@ -38,7 +38,7 @@ def read_fcs(
             if not f"$P{i + 1}{channel_suffix}" in meta
         ]
     elif not all(c in data.columns for c in obs_names):
-        log.warn(
+        log.warning(
             f"The following observations were not found: {', '.join([c for c in obs_names if not c in data.columns])}"
         )
         obs_names = [c for c in obs_names if c in data.columns]
@@ -155,7 +155,7 @@ def write_fcs(
 
     log.info(f"Found {len(df.columns)} features: {', '.join(df.columns)}.")
     if columns_removed:
-        log.warn(
+        log.warning(
             f"FCS does not support strings, so the following columns where removed: {', '.join(columns_removed)}.\nIf you want to keep these str observations, use the 'columns_to_numeric' argument to encod them."
         )
 
