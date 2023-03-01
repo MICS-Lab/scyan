@@ -155,7 +155,7 @@ def write_fcs(
 
     log.info(f"Found {len(df.columns)} features: {', '.join(df.columns)}.")
     if columns_removed:
-        log.info(
+        log.warn(
             f"FCS does not support strings, so the following columns where removed: {', '.join(columns_removed)}.\nIf you want to keep these str observations, use the 'columns_to_numeric' argument to encod them."
         )
 

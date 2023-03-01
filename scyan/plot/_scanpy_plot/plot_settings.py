@@ -63,7 +63,7 @@ def set_rcParams_scanpy(fontsize):
     rcParams["ytick.labelsize"] = fontsize
 
     # axes grid
-    rcParams["axes.grid"] = True
+    # rcParams["axes.grid"] = True
     rcParams["grid.color"] = ".8"
 
 
