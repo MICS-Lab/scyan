@@ -10,15 +10,32 @@ from pandas.api.types import is_numeric_dtype
 
 log = logging.getLogger(__name__)
 
+DEFAULT_MARKER_REGEX = "^cd|^hla|epcam|^ccr"
+
+
+def _check_exlude_markers(
+    df: pd.DataFrame, exclude_markers: Optional[List[str]]
+) -> List[str]:
+    exclude_markers = exclude_markers if exclude_markers is not None else []
+    if not all(c in df.columns for c in exclude_markers):
+        log.warning(
+            f"Among the marker columns to exclude, the following were not found: {', '.join([c for c in exclude_markers if not c in df.columns])}"
+        )
+    return exclude_markers
+
 
 def read_fcs(
-    path: str, obs_names: Optional[List[str]] = None, channel_suffix: Optional[str] = "S"
+    path: str,
+    marker_regex: str = DEFAULT_MARKER_REGEX,
+    exclude_markers: Optional[List[str]] = None,
+    channel_suffix: Optional[str] = "S",
 ) -> AnnData:
     """Read a FCS file and return an `AnnData` object.
 
     Args:
         path: Path to the FCS file that has to be read.
-        obs_names: Optional list of channel names that has to be considered as an observation (i.e., inside `adata.obs`). By default, choose it automatically.
+        marker_regex: Regex used to find which columns correspond to markers. By default, it targets strings that starts with `CD`, `HLA`, `CCR`, or `EPCAM`. You can add names to the regex by adding the lowercase marker name after a new `|` in the string
+        exclude_markers: Optional list of channel names that has to be considered as an observation (i.e., inside `adata.obs`), among the ones that were automatically classified as markers (i.e., inside `adata.var_names`).
         channel_suffix: Suffix for the channel naming convention, i.e. `"S"` for "PnS", or `"N"` for "PnN". If `None`, keep the raw names.
 
     Returns:
@@ -26,47 +43,29 @@ def read_fcs(
     """
     meta, data = fcsparser.parse(path)
 
-    if channel_suffix is not None:
-        data.columns = [
-            meta.get(f"$P{i + 1}{channel_suffix}", c) for i, c in enumerate(data.columns)
-        ]
+    names = pd.Series(
+        [meta.get(f"$P{i + 1}{channel_suffix}") for i in range(data.shape[1])]
+    )
+    fallback_names = [meta[f"$P{i + 1}N"] for i in range(data.shape[1])]
+    data.columns = np.where(names.isna() | names.duplicated(False), fallback_names, names)
 
-    if obs_names is None:
-        obs_names = [
-            c
-            for i, c in enumerate(data.columns)
-            if not f"$P{i + 1}{channel_suffix}" in meta
-        ]
-    elif not all(c in data.columns for c in obs_names):
-        log.warning(
-            f"The following observations were not found: {', '.join([c for c in obs_names if not c in data.columns])}"
-        )
-        obs_names = [c for c in obs_names if c in data.columns]
-
-    var_names = [c for c in data.columns if not c in obs_names]
-
-    return AnnData(
-        X=data[var_names].values,
-        var=pd.DataFrame(index=var_names),
-        obs=data[obs_names],
-        dtype=np.float32,
+    exclude_markers = _check_exlude_markers(data, exclude_markers)
+    is_marker = data.columns.str.lower().str.contains(marker_regex) & ~np.isin(
+        data.columns, exclude_markers
     )
 
-
-def _test_one_marker(
-    name: str, extra_marker_names: List[str], remove_marker_names: Optional[List[str]]
-) -> bool:
-    if remove_marker_names is not None and name in remove_marker_names:
-        return False
-    return name in extra_marker_names or any(
-        x in name.lower() for x in ["cd", "hla", "ccr", "epcam", "cadm", "siglec"]
+    return AnnData(
+        X=data.loc[:, is_marker].values,
+        var=pd.DataFrame(index=data.columns[is_marker]),
+        obs=data.loc[:, ~is_marker],
+        dtype=np.float32,
     )
 
 
 def read_csv(
     path: str,
-    extra_marker_names: Optional[List] = None,
-    remove_marker_names: Optional[List] = None,
+    marker_regex: str = DEFAULT_MARKER_REGEX,
+    exclude_markers: Optional[List[str]] = None,
     **pandas_kwargs: int,
 ) -> AnnData:
     """Read a CSV file and return an `AnnData` object.
@@ -91,8 +90,9 @@ def read_csv(
         not missing_markers
     ), f"Some of the provided extra_marker_names ({','.join(missing_markers)}) are not in the CSV. Indeed, the columns of the CSV are: {','.join(df.columns)}"
 
-    is_marker = df.columns.map(
-        lambda x: _test_one_marker(x, extra_marker_names, remove_marker_names)
+    exclude_markers = _check_exlude_markers(df, exclude_markers)
+    is_marker = df.columns.str.lower().str.contains(marker_regex) & ~np.isin(
+        df.columns, exclude_markers
     )
     return AnnData(df.loc[:, is_marker], obs=df.loc[:, ~is_marker], dtype=np.float32)
 
