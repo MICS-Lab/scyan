@@ -37,7 +37,7 @@ def _prepare_data(
     continuous_covariate_keys: List[str],
 ) -> Tuple[Tensor, Tensor, Tensor]:
     """Initialize the data and the covariates"""
-    x = torch.tensor(adata[:, markers].X.astype("float32"))
+    x = torch.tensor(adata[:, markers].X, dtype=torch.float32)
 
     if (batch_key is not None) and batch_key not in categorical_covariate_keys:
         categorical_covariate_keys.append(batch_key)

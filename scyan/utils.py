@@ -52,6 +52,7 @@ def configure_logger(log: logging.Logger):
     consoleHandler.setFormatter(ColorFormatter())
 
     log.addHandler(consoleHandler)
+    log.propagate = False
 
 
 def _root_path() -> Path:
@@ -174,11 +175,20 @@ def _check_is_processed(X: np.ndarray) -> None:
     ), "The provided values are very high: have you run preprocessing first? E.g., consider running 'scyan.preprocess.asinh_transform' or 'scyan.preprocess.auto_logicle_transform' (see our tutorial: https://mics-lab.github.io/scyan/tutorials/preprocessing/)"
 
 
-def _check_batch_arg(adata, batch_key, batch_ref):
-    assert (
-        batch_key is not None
-    ), "Scyan model was trained with no batch_key, thus not correcting batch effect"
+def _corr_mode_required(f: Callable) -> Callable:
+    """Make sure the model has been trained"""
 
+    @wraps(f)
+    def wrapper(model, *args, **kwargs):
+        assert (
+            model._corr_mode
+        ), "Scyan model was trained with no batch_key, thus not correcting batch effect"
+        return f(model, *args, **kwargs)
+
+    return wrapper
+
+
+def _check_batch_arg(adata, batch_key, batch_ref):
     batches = adata.obs[batch_key]
 
     if batch_ref is None:
