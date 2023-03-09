@@ -10,8 +10,6 @@ from pandas.api.types import is_numeric_dtype
 
 log = logging.getLogger(__name__)
 
-DEFAULT_MARKER_REGEX = "^cd|^hla|epcam|^ccr"
-
 
 def _check_exlude_markers(
     df: pd.DataFrame, exclude_markers: Optional[List[str]]
@@ -26,7 +24,7 @@ def _check_exlude_markers(
 
 def read_fcs(
     path: str,
-    marker_regex: str = DEFAULT_MARKER_REGEX,
+    marker_regex: str = "^cd|^hla|epcam|^ccr",
     exclude_markers: Optional[List[str]] = None,
     channel_suffix: Optional[str] = "S",
 ) -> AnnData:
@@ -64,7 +62,7 @@ def read_fcs(
 
 def read_csv(
     path: str,
-    marker_regex: str = DEFAULT_MARKER_REGEX,
+    marker_regex: str = "^cd|^hla|epcam|^ccr",
     exclude_markers: Optional[List[str]] = None,
     **pandas_kwargs: int,
 ) -> AnnData:
@@ -75,8 +73,8 @@ def read_csv(
 
     Args:
         path: Path to the CSV file that has to be read.
-        extra_marker_names: List of columns that correspond to markers (among the ones that were **not** automatically considered as markers).
-        remove_marker_names: List of columns that **don't** correspond to markers (among the ones that were automatically considered as markers).
+        marker_regex: Regex used to find which columns correspond to markers. By default, it targets strings that starts with `CD`, `HLA`, `CCR`, or `EPCAM`. You can add names to the regex by adding the lowercase marker name after a new `|` in the string
+        exclude_markers: Optional list of channel names that has to be considered as an observation (i.e., inside `adata.obs`), among the ones that were automatically classified as markers (i.e., inside `adata.var_names`).
         **pandas_kwargs: Optional kwargs for `pandas.read_csv(...)`.
 
     Returns:
