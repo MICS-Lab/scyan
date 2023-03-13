@@ -204,8 +204,27 @@ def _check_batch_arg(adata, batch_key, batch_ref):
     return batch_ref
 
 
+def _default_list(a: Optional[object]) -> List:
+    return [] if a is None else a
+
+
+def grouped_mean(model, key: str) -> Tensor:
+    u = model()  # TODO: Make it faster (not run twice)
+
+    # TODO: do that in pure pytorch
+    df = pd.DataFrame(u.numpy(force=True), columns=model.var_names)
+    df["ct"] = model.adata.obs[key].values
+    df["batch"] = model.adata.obs[model.hparams.batch_key].values
+
+    means = df.groupby(["batch", "ct"]).mean().groupby("ct").mean()
+
+    return torch.tensor(
+        means.loc[model.pop_names, model.var_names].values, dtype=torch.float32
+    )
+
+
 def _validate_inputs(
-    adata: AnnData, df: pd.DataFrame, unimodal_markers: Optional[List[str]]
+    adata: AnnData, df: pd.DataFrame, continuum_markers: Optional[List[str]]
 ):
     assert isinstance(
         adata, AnnData
@@ -215,22 +234,20 @@ def _validate_inputs(
         df, pd.DataFrame
     ), f"The marker-population matrix has to be a pandas DataFrame, found {type(df)}"
 
+    # Sanity check on the table columns
     not_found_columns = [c for c in df.columns if c not in adata.var_names]
-
     assert (
         not not_found_columns
     ), f"All column names from the marker-population table have to be a known marker from adata.var_names. Missing {not_found_columns}."
 
-    if unimodal_markers is not None:
-        not_found_markers = [c for c in unimodal_markers if c not in df.columns]
-        assert (
-            not not_found_markers
-        ), f"All markers from the list 'unimodal_markers' have to be inside the knowledge table. Missing {not_found_markers}."
+    # Sanity check on continuum_markers
+    continuum_markers = _default_list(continuum_markers)
+    not_found_markers = [c for c in continuum_markers if c not in df.columns]
+    assert (
+        not not_found_markers
+    ), f"All markers from the list 'continuum_markers' have to be inside the knowledge table. Missing {not_found_markers}."
 
-        df = df.copy()
-        for marker in unimodal_markers:
-            df[marker] /= 5
-
+    # Sanity check on the table
     if not df.dtypes.apply(is_numeric_dtype).all():
         log.warning(
             "Some columns of the marker-population table are not numeric / NaN. Every non-numeric value will be transformed into NaN."
@@ -270,4 +287,4 @@ def _validate_inputs(
             f"Found a significant proportion ({ratio_non_standard:.1%}) of non-standard values in the knowledge table. Scyan expects to find mostly -1/1/NA in the table, even though any other numerical value is accepted. If this is intended, just ignore the warning, else correct the table using mainly -1, 1 and NA (to denote negative expressions, positive expressions, or not-applicable respectively)."
         )
 
-    return adata, df
+    return adata, df, continuum_markers

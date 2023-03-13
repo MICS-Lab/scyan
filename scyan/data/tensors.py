@@ -42,6 +42,9 @@ def _prepare_data(
     if (batch_key is not None) and batch_key not in categorical_covariate_keys:
         categorical_covariate_keys.append(batch_key)
 
+    for key in list(categorical_covariate_keys) + list(continuous_covariate_keys):
+        assert key in adata.obs, f"Covariate {key} in not an existing column of adata.obs"
+
     for key in categorical_covariate_keys:  # enforce dtype category
         adata.obs[key] = adata.obs[key].astype("category")
 
