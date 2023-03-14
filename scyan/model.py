@@ -452,7 +452,6 @@ class Scyan(pl.LightningModule):
         self,
         patience: int = 10,
         min_delta: float = 0.2,
-        lr_ratio: float = 5,
         key: str = "scyan_pop",
         **fit_kwargs: int,
     ):
@@ -464,7 +463,6 @@ class Scyan(pl.LightningModule):
         Args:
             patience: Number of epochs with no loss improvement before stopping training.
             min_delta: min_delta parameters used for `EarlyStopping`. See Pytorch Lightning docs.
-            lr_ratio: To improve batch effect correction, we divide the curring learning rate by this amount.
             key: Column name used to save the predictions in `adata.obs`.
         """
         assert (
@@ -473,10 +471,8 @@ class Scyan(pl.LightningModule):
 
         if self.module.prior.rho_mask.any():
             log.info(
-                f"Filling {self.module.prior.rho_mask.sum()} NA values in the table, and dividing the learning rate by {lr_ratio}."
+                f"Filling {self.module.prior.rho_mask.sum()} NA values in the table."
             )
-            self.hparams.lr /= lr_ratio
-
             means = utils.grouped_mean(self, key)
             self.module.prior.fill_rho(means)
 
