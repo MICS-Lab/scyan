@@ -82,12 +82,6 @@ def read_csv(
     """
     df = pd.read_csv(path, **pandas_kwargs)
 
-    extra_marker_names = [] if extra_marker_names is None else extra_marker_names
-    missing_markers = [m for m in extra_marker_names if m not in df.columns]
-    assert (
-        not missing_markers
-    ), f"Some of the provided extra_marker_names ({','.join(missing_markers)}) are not in the CSV. Indeed, the columns of the CSV are: {','.join(df.columns)}"
-
     exclude_markers = _check_exlude_markers(df, exclude_markers)
     is_marker = df.columns.str.lower().str.contains(marker_regex) & ~np.isin(
         df.columns, exclude_markers
