@@ -83,7 +83,7 @@ class PriorDistribution(pl.LightningModule):
         Returns:
             Tensor of size $(B, P, M)$ representing differences to all modes.
         """
-        diff = u[:, None, :] / self.factor - self.modes
+        diff = u[:, None, :] - self.modes
 
         diff[:, self.rho_mask] = torch.clamp(
             diff[:, self.rho_mask].abs() - self.uniform_law_radius, min=0
