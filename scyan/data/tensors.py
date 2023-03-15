@@ -33,30 +33,30 @@ def _prepare_data(
     adata: AnnData,
     markers: List[str],
     batch_key: Union[str, int, None],
-    categorical_covariate_keys: List[str],
-    continuous_covariate_keys: List[str],
+    categorical_covariates: List[str],
+    continuous_covariates: List[str],
 ) -> Tuple[Tensor, Tensor, Tensor]:
     """Initialize the data and the covariates"""
     x = torch.tensor(adata[:, markers].X, dtype=torch.float32)
 
-    if (batch_key is not None) and batch_key not in categorical_covariate_keys:
-        categorical_covariate_keys.append(batch_key)
+    if (batch_key is not None) and batch_key not in categorical_covariates:
+        categorical_covariates.append(batch_key)
 
-    for key in list(categorical_covariate_keys) + list(continuous_covariate_keys):
+    for key in list(categorical_covariates) + list(continuous_covariates):
         assert key in adata.obs, f"Covariate {key} in not an existing column of adata.obs"
 
-    for key in categorical_covariate_keys:  # enforce dtype category
+    for key in categorical_covariates:  # enforce dtype category
         adata.obs[key] = adata.obs[key].astype("category")
 
     categorical_covariate_embedding = (
-        pd.get_dummies(adata.obs[categorical_covariate_keys]).values
-        if categorical_covariate_keys
+        pd.get_dummies(adata.obs[categorical_covariates]).values
+        if categorical_covariates
         else np.empty((adata.n_obs, 0))
     )
 
     continuous_covariate_embedding = (
-        adata.obs[continuous_covariate_keys].values
-        if continuous_covariate_keys
+        adata.obs[continuous_covariates].values
+        if continuous_covariates
         else np.empty((adata.n_obs, 0))
     )
 

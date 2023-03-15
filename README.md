@@ -66,7 +66,7 @@ poetry install -E 'dev hydra discovery'  # poetry installation with all the extr
 ```py
 import scyan
 
-adata, table = scyan.data.load("aml")
+adata, table = scyan.data.load("aml") # Automatic loading
 
 model = scyan.Scyan(adata, table)
 model.fit()

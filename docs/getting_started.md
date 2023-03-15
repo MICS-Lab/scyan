@@ -57,7 +57,7 @@ Choose one of the following, depending on your needs (it should take at most a f
 ```py
 import scyan
 
-adata, table = scyan.data.load("aml")
+adata, table = scyan.data.load("aml") # Automatic loading
 
 model = scyan.Scyan(adata, table)
 model.fit()

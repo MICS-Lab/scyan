@@ -39,8 +39,8 @@ class Scyan(pl.LightningModule):
         self,
         adata: AnnData,
         table: pd.DataFrame,
-        continuous_covariate_keys: Optional[List[str]] = None,
-        categorical_covariate_keys: Optional[List[str]] = None,
+        continuous_covariates: Optional[List[str]] = None,
+        categorical_covariates: Optional[List[str]] = None,
         continuum_markers: Optional[List[str]] = None,
         hidden_size: int = 16,
         n_hidden_layers: int = 6,
@@ -57,8 +57,8 @@ class Scyan(pl.LightningModule):
         Args:
             adata: `AnnData` object containing the FCS data of $N$ cells. **Warning**: it has to be preprocessed (e.g. `asinh` or `logicle`) and scaled (see https://mics-lab.github.io/scyan/tutorials/preprocessing/).
             table: Dataframe of shape $(P, M)$ representing the biological knowledge about markers and populations. The columns names corresponds to marker that must be in `adata.var_names`.
-            continuous_covariate_keys: Optional list of keys in `adata.obs` that refers to continuous variables to use during the training.
-            categorical_covariate_keys: Optional list of keys in `adata.obs` that refers to categorical variables to use during the training.
+            continuous_covariates: Optional list of keys in `adata.obs` that refers to continuous variables to use during the training.
+            categorical_covariates: Optional list of keys in `adata.obs` that refers to categorical variables to use during the training.
             continuum_markers: Optional list of markers from the table whose expression is a continuum (for instance, it is often the case for PD1/PDL1). We advise to use it carefully, and keep values of -1 and 1 in the table.
             hidden_size: Hidden size of the MLP (`s`, `t`).
             n_hidden_layers: Number of hidden layers in the MLP.
@@ -75,8 +75,8 @@ class Scyan(pl.LightningModule):
         self.adata, self.table, self.continuum_markers = utils._validate_inputs(
             adata, table, continuum_markers
         )
-        self.continuous_covariate_keys = utils._default_list(continuous_covariate_keys)
-        self.categorical_covariate_keys = utils._default_list(categorical_covariate_keys)
+        self.continuous_covariates = utils._default_list(continuous_covariates)
+        self.categorical_covariates = utils._default_list(categorical_covariates)
         self.n_pops = len(self.table)
 
         self._is_fitted = False
@@ -86,8 +86,8 @@ class Scyan(pl.LightningModule):
             ignore=[
                 "adata",
                 "table",
-                "continuous_covariate_keys",
-                "categorical_covariate_keys",
+                "continuous_covariates",
+                "categorical_covariates",
                 "continuum_markers",
             ]
         )
@@ -108,7 +108,7 @@ class Scyan(pl.LightningModule):
         log.info(f"Initialized {self}")
 
     def __repr__(self) -> str:
-        covs = self.continuous_covariate_keys + self.categorical_covariate_keys
+        covs = self.continuous_covariates + self.categorical_covariates
         return f"Scyan model with N={self.adata.n_obs} cells, P={self.n_pops} populations and M={len(self.var_names)} markers.\n   ├── {'No covariate provided' if not len(covs) else 'Covariates: ' + ', '.join(covs)}\n   ├── {'No continuum-marker provided' if not len(self.continuum_markers) else 'Continuum markers: ' + ', '.join(self.continuum_markers)}\n   └── Batch correction mode: {self._corr_mode}"
 
     @property
@@ -192,8 +192,8 @@ class Scyan(pl.LightningModule):
             self.adata,
             self.var_names,
             self.hparams.batch_key,
-            self.categorical_covariate_keys,
-            self.continuous_covariate_keys,
+            self.categorical_covariates,
+            self.continuous_covariates,
         )
 
         self.register_buffer("x", x)
