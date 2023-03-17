@@ -25,6 +25,7 @@ class ScyanModule(pl.LightningModule):
         self,
         rho: Tensor,
         n_covariates: int,
+        is_continuum_marker: Tensor,
         hidden_size: int,
         n_hidden_layers: int,
         n_layers: int,
@@ -42,14 +43,9 @@ class ScyanModule(pl.LightningModule):
             temperature: Temperature to favour small populations.
         """
         super().__init__()
-        self.save_hyperparameters(ignore=["rho", "n_covariates"])
+        self.save_hyperparameters(ignore=["rho", "n_covariates", "is_continuum_marker"])
 
         self.n_pops, self.n_markers = rho.shape
-        self.register_buffer("rho", rho)
-
-        self.rho_mask = self.rho.isnan()
-        self.rho[self.rho_mask] = 0
-        self.mean_na = self.rho_mask.sum() / self.n_markers
 
         self.pi_logit = nn.Parameter(torch.zeros(self.n_pops))
 
@@ -62,7 +58,7 @@ class ScyanModule(pl.LightningModule):
         )
 
         self.prior = PriorDistribution(
-            self.rho, self.rho_mask, self.hparams.prior_std, self.n_markers
+            rho, is_continuum_marker, self.hparams.prior_std, self.n_markers
         )
 
     def forward(self, x: Tensor, covariates: Tensor) -> Tuple[Tensor, Tensor, Tensor]:

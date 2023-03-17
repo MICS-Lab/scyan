@@ -22,6 +22,7 @@ model.predict()
         - fit
         - predict
         - predict_proba
+        - refine_fit
         - batch_effect_correction
         - sample
         - pop_names

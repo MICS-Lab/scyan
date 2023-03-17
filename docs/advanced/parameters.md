@@ -10,7 +10,7 @@ We provide some help to choose [scyan.Scyan][] initialization parameters. We lis
 - Reducing the `temperature` can help better capture small populations (e.g., `0.25`). If it's not enough, it's also possible to use `modulo_temp = 3`.
 - `batch_ref` is the reference batch we use to align distributions. By default, we use the batch where we have the most cells, but you can choose your own reference. For that, please choose a batch that is representative of the diversity of populations you want to annotate; it can help the batch effect correction.
 - To improve batch effect correction, we recommend to let the model run longer. This can be done by changing the parameters of the `model.fit()` method: for instance, one can increase the `patience` (e.g., 6) and/or decrease the `min_delta` (e.g., 0.5).
-- `continuous_covariate_keys` and `categorical_covariate_keys` can be provided to the model if you have some. For instance, if you changed one antibody, you can add a categorical covariate telling which samples have been measured with which antibody. Any covariate may help the model annotations and batch effect correction.
+- `continuous_covariates` and `categorical_covariates` can be provided to the model if you have some. For instance, if you changed one antibody, you can add a categorical covariate telling which samples have been measured with which antibody. Any covariate may help the model annotations and batch effect correction.
 
 ## Hyperparameter search
 

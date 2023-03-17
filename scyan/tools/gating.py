@@ -1,8 +1,12 @@
+import logging
+
 import matplotlib.pyplot as plt
 import numpy as np
 from anndata import AnnData
 
 from ..utils import _has_umap
+
+log = logging.getLogger(__name__)
 
 
 class _SelectFromCollection:
@@ -86,7 +90,7 @@ class PolygonGatingUMAP:
 
         self.selector = _SelectFromCollection(ax, pts)
 
-        print(
+        log.info(
             f"Enclose cells within a polygon. Helper:\n    - Click on the plot to add a polygon vertex\n    - Press the 'esc' key to start a new polygon\n    - Try holding the 'ctrl' key to move a single vertex\n    - Once the polygon is finished and overlaid in red, you can close the window"
         )
         plt.show()
@@ -105,6 +109,6 @@ class PolygonGatingUMAP:
         self.adata.obs[key_added] = self.adata.obs[key_added].astype("category")
 
         self.selector.disconnect()
-        print(
+        log.info(
             f"Selected {len(self.selector.ind)} cells and saved the selection in adata.obs['{key_added}']"
         )

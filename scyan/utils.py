@@ -20,6 +20,41 @@ warnings.filterwarnings("ignore", message=r".*No data for colormapping provided[
 warnings.filterwarnings("ignore", message=r".*does not have many workers[\s\S]*")
 
 
+class ColorFormatter(logging.Formatter):
+    grey = "\x1b[38;20m"
+    blue = "\x1b[36;20m"
+    yellow = "\x1b[33;20m"
+    red = "\x1b[31;20m"
+    bold_red = "\x1b[31;1m"
+    reset = "\x1b[0m"
+
+    prefix = "[%(levelname)s] (%(name)s)"
+    suffix = "%(message)s"
+
+    FORMATS = {
+        logging.DEBUG: f"{grey}{prefix}{reset} {suffix}",
+        logging.INFO: f"{blue}{prefix}{reset} {suffix}",
+        logging.WARNING: f"{yellow}{prefix}{reset} {suffix}",
+        logging.ERROR: f"{red}{prefix}{reset} {suffix}",
+        logging.CRITICAL: f"{bold_red}{prefix}{reset} {suffix}",
+    }
+
+    def format(self, record):
+        log_fmt = self.FORMATS.get(record.levelno)
+        formatter = logging.Formatter(log_fmt)
+        return formatter.format(record)
+
+
+def configure_logger(log: logging.Logger):
+    log.setLevel(logging.INFO)
+
+    consoleHandler = logging.StreamHandler()
+    consoleHandler.setFormatter(ColorFormatter())
+
+    log.addHandler(consoleHandler)
+    log.propagate = False
+
+
 def _root_path() -> Path:
     """Get the library root path
 
@@ -140,11 +175,20 @@ def _check_is_processed(X: np.ndarray) -> None:
     ), "The provided values are very high: have you run preprocessing first? E.g., consider running 'scyan.preprocess.asinh_transform' or 'scyan.preprocess.auto_logicle_transform' (see our tutorial: https://mics-lab.github.io/scyan/tutorials/preprocessing/)"
 
 
-def _check_batch_arg(adata, batch_key, batch_ref):
-    assert (
-        batch_key is not None
-    ), "Scyan model was trained with no batch_key, thus not correcting batch effect"
+def _corr_mode_required(f: Callable) -> Callable:
+    """Make sure the model has been trained"""
 
+    @wraps(f)
+    def wrapper(model, *args, **kwargs):
+        assert (
+            model._corr_mode
+        ), "Scyan model was trained with no batch_key, thus not correcting batch effect"
+        return f(model, *args, **kwargs)
+
+    return wrapper
+
+
+def _check_batch_arg(adata, batch_key, batch_ref):
     batches = adata.obs[batch_key]
 
     if batch_ref is None:
@@ -160,8 +204,27 @@ def _check_batch_arg(adata, batch_key, batch_ref):
     return batch_ref
 
 
+def _default_list(a: Optional[object]) -> List:
+    return [] if a is None else a
+
+
+def grouped_mean(model, key: str) -> Tensor:
+    u = model()  # TODO: Make it faster (not run twice)
+
+    # TODO: do that in pure pytorch
+    df = pd.DataFrame(u.numpy(force=True), columns=model.var_names)
+    df["ct"] = model.adata.obs[key].values
+    df["batch"] = model.adata.obs[model.hparams.batch_key].values
+
+    means = df.groupby(["batch", "ct"]).mean().groupby("ct").mean()
+
+    return torch.tensor(
+        means.loc[model.pop_names, model.var_names].values, dtype=torch.float32
+    )
+
+
 def _validate_inputs(
-    adata: AnnData, df: pd.DataFrame, unimodal_markers: Optional[List[str]]
+    adata: AnnData, df: pd.DataFrame, continuum_markers: Optional[List[str]]
 ):
     assert isinstance(
         adata, AnnData
@@ -171,31 +234,29 @@ def _validate_inputs(
         df, pd.DataFrame
     ), f"The marker-population matrix has to be a pandas DataFrame, found {type(df)}"
 
+    # Sanity check on the table columns
     not_found_columns = [c for c in df.columns if c not in adata.var_names]
-
     assert (
         not not_found_columns
     ), f"All column names from the marker-population table have to be a known marker from adata.var_names. Missing {not_found_columns}."
 
-    if unimodal_markers is not None:
-        not_found_markers = [c for c in unimodal_markers if c not in df.columns]
-        assert (
-            not not_found_markers
-        ), f"All markers from the list 'unimodal_markers' have to be inside the knowledge table. Missing {not_found_markers}."
+    # Sanity check on continuum_markers
+    continuum_markers = _default_list(continuum_markers)
+    not_found_markers = [c for c in continuum_markers if c not in df.columns]
+    assert (
+        not not_found_markers
+    ), f"All markers from the list 'continuum_markers' have to be inside the knowledge table. Missing {not_found_markers}."
 
-        df = df.copy()
-        for marker in unimodal_markers:
-            df[marker] /= 5
-
+    # Sanity check on the table
     if not df.dtypes.apply(is_numeric_dtype).all():
-        log.warn(
+        log.warning(
             "Some columns of the marker-population table are not numeric / NaN. Every non-numeric value will be transformed into NaN."
         )
         df = df.apply(pd.to_numeric, errors="coerce")
 
     ratio_nan = df.isna().values.mean()
     if ratio_nan > 0.7:
-        log.warn(
+        log.warning(
             f"Found {ratio_nan:.1%} of NA in the table, which is very high. If this is intended, just ignore the warning."
         )
 
@@ -204,14 +265,14 @@ def _validate_inputs(
     _check_is_processed(X)
 
     if np.abs(X.std(axis=0) - 1).max() > 0.2 or X.min(0).max() >= 0:
-        log.warn(
+        log.warning(
             "It seems that the data is not standardised. We advise using scaling (scyan.preprocess.scale) before initializing the model."
         )
 
     duplicates = df.duplicated()
     if duplicates.any():
         duplicates_names = duplicates[duplicates].index.get_level_values(0)
-        log.warn(
+        log.warning(
             f"Found duplicate populations in the knowledge matrix. We advise updating or removing the following rows: {', '.join(map(str, duplicates_names))}"
         )
 
@@ -222,8 +283,8 @@ def _validate_inputs(
 
     ratio_non_standard = 1 - ((df**2 == 1) | df.isna()).values.mean()
     if ratio_non_standard > 0.15:
-        log.warn(
+        log.warning(
             f"Found a significant proportion ({ratio_non_standard:.1%}) of non-standard values in the knowledge table. Scyan expects to find mostly -1/1/NA in the table, even though any other numerical value is accepted. If this is intended, just ignore the warning, else correct the table using mainly -1, 1 and NA (to denote negative expressions, positive expressions, or not-applicable respectively)."
         )
 
-    return adata, df
+    return adata, df, continuum_markers

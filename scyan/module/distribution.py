@@ -6,27 +6,55 @@ from torch import Tensor, distributions
 class PriorDistribution(pl.LightningModule):
     """Prior distribution $U$"""
 
-    def __init__(self, rho: Tensor, rho_mask: Tensor, prior_std: float, n_markers: int):
+    def __init__(
+        self,
+        rho: Tensor,
+        is_continuum_marker: Tensor,
+        prior_std: float,
+        n_markers: int,
+    ):
         """
         Args:
-            rho: Tensor $\rho$ representing the knowledge table
-            rho_mask: Mask telling where $\rho$ is NA
+            rho: Tensor $\rho$ representing the knowledge table (size $P$ x $M$)
+            is_continuum_marker: tensor of size $M$ whose values tell if the marker is a continuum of expressions.
             prior_std: Standard deviation $\sigma$ for $H$.
             n_markers: Number of markers in the table.
         """
         super().__init__()
         self.prior_std = prior_std
         self.n_markers = n_markers
+        self.is_continuum_marker = is_continuum_marker
 
         self.register_buffer("rho", rho)
-        self.register_buffer("rho_mask", rho_mask)
         self.register_buffer("loc", torch.zeros((n_markers)))
         self.register_buffer("cov", torch.eye((n_markers)) * self.prior_std**2)
+        self.set_rho_mask()
 
         self.uniform = distributions.Uniform(-1, 1)
         self.normal = distributions.Normal(0, self.prior_std)
 
+    def set_rho_mask(self) -> None:
+        rho_mask = self.rho.isnan()
+        self.rho[rho_mask] = 0
+        self.register_buffer("rho_mask", rho_mask)
+        self.update()
+
+    def fill_rho(self, means: torch.Tensor) -> None:
+        # TODO: what if one population was not predicted?
+        self.rho[self.rho_mask] = means[self.rho_mask]
+        self.register_buffer("rho_mask", torch.full_like(self.rho, False, dtype=bool))
+        self.update()
+
+    def update(self):
+        self.compute_modes()
         self.compute_constant_terms()
+
+    def compute_modes(self):
+        self.factor = torch.ones(self.n_markers, dtype=torch.float32)
+        self.factor[self.is_continuum_marker] = 5
+        self.factor = self.factor[None, None, :]
+
+        self.modes = self.rho[None, ...] / self.factor
 
     @property
     def prior_h(self) -> distributions.Distribution:
@@ -55,7 +83,7 @@ class PriorDistribution(pl.LightningModule):
         Returns:
             Tensor of size $(B, P, M)$ representing differences to all modes.
         """
-        diff = u[:, None, :] - self.rho[None, ...]
+        diff = u[:, None, :] - self.modes
 
         diff[:, self.rho_mask] = torch.clamp(
             diff[:, self.rho_mask].abs() - self.uniform_law_radius, min=0
@@ -72,7 +100,7 @@ class PriorDistribution(pl.LightningModule):
         Returns:
             Log probabilities tensor of size $(B, P, M)$.
         """
-        diff = self.difference_to_modes(u)  # size N x P x M
+        diff = self.difference_to_modes(u)  # size B x P x M
 
         return self.normal.log_prob(diff) + self.rho_mask * torch.log(self.gamma)
 
@@ -85,7 +113,7 @@ class PriorDistribution(pl.LightningModule):
         Returns:
             Log probabilities tensor of size $(B, P)$.
         """
-        diff = self.difference_to_modes(u)  # size N x P x M
+        diff = self.difference_to_modes(u)  # size B x P x M
 
         return self.prior_h.log_prob(diff) + self.na_constant_term
 

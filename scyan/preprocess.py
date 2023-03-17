@@ -56,7 +56,7 @@ def auto_logicle_transform(
             adata[:, marker] = column.clip(np.quantile(column, quantile_clip))
 
     if markers_failed:
-        log.warn(
+        log.warning(
             f"Auto logicle transformation failed for the following markers (logicle was used instead): {', '.join(markers_failed)}.\nIt can happen when expressions are all positive or all negative."
         )
 
@@ -155,9 +155,15 @@ def scale(adata: AnnData, max_value: float = 10, center: Optional[bool] = None) 
     stds = adata.X.std(axis=0)
     adata.uns["scyan_scaling_stds"] = stds
 
-    if not center or (center is None and "scyan_asinh" in adata.uns):
+    if (center is False) or (center is None and "scyan_asinh" in adata.uns):
+        log.info(
+            "Data will be standardised, and translated so that 0 goes to -1. This is advised only when using CyTOF data (if this is not your case, consider running 'auto_logicle_transform' instead of 'asinh_transform')."
+        )
         adata.X = (adata.X / stds - 1).clip(-max_value, max_value)
     else:
+        log.info(
+            "Data will be centered and standardised. This is advised only when using spectral/flow data (if this is not your case, consider running 'asinh_transform' instead of 'auto_logicle_transform')."
+        )
         means = adata.X.mean(axis=0)
         adata.X = ((adata.X - means) / stds).clip(-max_value, max_value)
         adata.uns["scyan_scaling_means"] = means

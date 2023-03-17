@@ -44,11 +44,17 @@ We assume that the cell expressions come from the generative process below, wher
 
 The latent distribution $\pmb{U}$ is defined on $\mathbb{R}^M$, i.e. the same space as the original marker expressions. Each dimension of the latent space corresponds to one marker. These latent marker expressions are meant to be free of batch effect or any non-biological factor.
 
+We can summarize this generative process with the figure below. $\pmb{U}$ corresponds to the mixture distribution in red (right), while $\pmb{X}$ corresponds to the distribution of cells marker expressions (left). The normalizing flow $f_{\pmb{\phi}}$ is the mapping between these two distributions.
+
+<p align="center">
+  <img src="../assets/overview_b.png" alt="scyan_overview_b" />
+</p>
+
 !!! Interpretation
     In this latent space, all marker expressions share the same scale (close to $[-1, 1]$, but not necessarily inside). For instance, a latent expression close to 1 is a positive expression, close to -1 is negative, while close to 0 would be a mid expression.
 ## Normalizing flow
 
-The normalizing flow is a stack of multiple coupling layers: $f_{\pmb{\phi}} := f^{(L)} \circ f^{(L-1)} \circ \dots \circ f^{(1)}$ with $L$ the number of coupling layers. Each coupling layer $f^{(i)}: (\pmb{x}, \pmb{c}) \mapsto \pmb{y}$ splits both $\pmb{x}$ and $\pmb{y}$ into two components $(\pmb{x^{(1)}}, \pmb{x^{(2)}}), (\pmb{y^{(1)}}, \pmb{y^{(2)}})$ on which distinct transformations are applied. We propose below an extension of the traditional coupling layer to integrate covariates $\pmb{c}$:
+The normalizing flow is a stack of multiple coupling layers: $f_{\pmb{\phi}} := f^{(L)} \circ f^{(L-1)} \circ \dots \circ f^{(1)}$ with $L$ the number of coupling layers. Each coupling layer $f^{(i)}: (\pmb{x}, \pmb{c}) \mapsto \pmb{y}$ splits both $\pmb{x}$ and $\pmb{y}$ into two components $(\pmb{x^{(1)}}, \pmb{x^{(2)}}), (\pmb{y^{(1)}}, \pmb{y^{(2)}})$ on which distinct transformations are applied (the split is different for each layer). We propose below an extension of the traditional coupling layer to integrate covariates $\pmb{c}$:
 
 \[
     \begin{cases}
@@ -57,7 +63,11 @@ The normalizing flow is a stack of multiple coupling layers: $f_{\pmb{\phi}} := 
     \end{cases}  
 \]
 
-On the equation above, $s$ and $t$ are Multi-Layer-Perceptrons (MLPs).
+On the equation above, $s$ and $t$ are Multi-Layer-Perceptrons (MLPs). The coupling layer architecture is illustrated below:
+
+<p align="center">
+  <img src="../assets/overview_c.png" alt="scyan_overview_c" width="25%"/>
+</p>
 
 Overall, the normalizing flow has some interesting properties that help preserve the biological variability as much as possible:
 

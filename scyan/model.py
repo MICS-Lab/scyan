@@ -39,9 +39,9 @@ class Scyan(pl.LightningModule):
         self,
         adata: AnnData,
         table: pd.DataFrame,
-        continuous_covariate_keys: Optional[List[str]] = None,
-        categorical_covariate_keys: Optional[List[str]] = None,
-        unimodal_markers: Optional[List[str]] = None,
+        continuous_covariates: Optional[List[str]] = None,
+        categorical_covariates: Optional[List[str]] = None,
+        continuum_markers: Optional[List[str]] = None,
         hidden_size: int = 16,
         n_hidden_layers: int = 6,
         n_layers: int = 7,
@@ -57,9 +57,9 @@ class Scyan(pl.LightningModule):
         Args:
             adata: `AnnData` object containing the FCS data of $N$ cells. **Warning**: it has to be preprocessed (e.g. `asinh` or `logicle`) and scaled (see https://mics-lab.github.io/scyan/tutorials/preprocessing/).
             table: Dataframe of shape $(P, M)$ representing the biological knowledge about markers and populations. The columns names corresponds to marker that must be in `adata.var_names`.
-            continuous_covariate_keys: Optional list of keys in `adata.obs` that refers to continuous variables to use during the training.
-            categorical_covariate_keys: Optional list of keys in `adata.obs` that refers to categorical variables to use during the training.
-            unimodal_markers: Optional list of markers from the table whose expression is unimodal (i.e., no clear separation). We advise to use it carefully, and keep values of -1 and 1 in the table.
+            continuous_covariates: Optional list of keys in `adata.obs` that refers to continuous variables to use during the training.
+            categorical_covariates: Optional list of keys in `adata.obs` that refers to categorical variables to use during the training.
+            continuum_markers: Optional list of markers from the table whose expression is a continuum (for instance, it is often the case for PD1/PDL1). We advise to use it carefully, and keep values of -1 and 1 in the table.
             hidden_size: Hidden size of the MLP (`s`, `t`).
             n_hidden_layers: Number of hidden layers in the MLP.
             n_layers: Number of coupling layers.
@@ -72,9 +72,11 @@ class Scyan(pl.LightningModule):
             batch_key: Key in `adata.obs` referring to the cell batch variable.
         """
         super().__init__()
-        self.adata, self.table = utils._validate_inputs(adata, table, unimodal_markers)
-        self.continuous_covariate_keys = continuous_covariate_keys or []
-        self.categorical_covariate_keys = categorical_covariate_keys or []
+        self.adata, self.table, self.continuum_markers = utils._validate_inputs(
+            adata, table, continuum_markers
+        )
+        self.continuous_covariates = utils._default_list(continuous_covariates)
+        self.categorical_covariates = utils._default_list(categorical_covariates)
         self.n_pops = len(self.table)
 
         self._is_fitted = False
@@ -84,8 +86,9 @@ class Scyan(pl.LightningModule):
             ignore=[
                 "adata",
                 "table",
-                "continuous_covariate_keys",
-                "categorical_covariate_keys",
+                "continuous_covariates",
+                "categorical_covariates",
+                "continuum_markers",
             ]
         )
 
@@ -94,6 +97,7 @@ class Scyan(pl.LightningModule):
         self.module = ScyanModule(
             torch.tensor(table.values, dtype=torch.float32),
             self.covariates.shape[1],
+            torch.tensor(np.isin(self.var_names, self.continuum_markers)),
             hidden_size,
             n_hidden_layers,
             n_layers,
@@ -104,11 +108,8 @@ class Scyan(pl.LightningModule):
         log.info(f"Initialized {self}")
 
     def __repr__(self) -> str:
-        if not self.continuous_covariate_keys and not self.categorical_covariate_keys:
-            cov_repr = "No covariate provided."
-        else:
-            cov_repr = f"Covariates: {', '.join(self.continuous_covariate_keys + self.categorical_covariate_keys)}"
-        return f"Scyan model with N={self.adata.n_obs} cells, P={self.n_pops} populations and M={len(self.var_names)} markers.\n   ├── {cov_repr}\n   └── Batch correction mode: {self._corr_mode}"
+        covs = self.continuous_covariates + self.categorical_covariates
+        return f"Scyan model with N={self.adata.n_obs} cells, P={self.n_pops} populations and M={len(self.var_names)} markers.\n   ├── {'No covariate provided' if not len(covs) else 'Covariates: ' + ', '.join(covs)}\n   ├── {'No continuum-marker provided' if not len(self.continuum_markers) else 'Continuum markers: ' + ', '.join(self.continuum_markers)}\n   └── Batch correction mode: {self._corr_mode}"
 
     @property
     def _corr_mode(self):
@@ -128,7 +129,7 @@ class Scyan(pl.LightningModule):
     def level_names(self):
         """All population hierarchical level names, if existing."""
         if not isinstance(self.table.index, pd.MultiIndex):
-            log.warn(
+            log.warning(
                 "The provided knowledge table has no population hierarchical level. See: https://mics-lab.github.io/scyan/tutorials/usage/#working-with-hierarchical-populations"
             )
             return []
@@ -191,8 +192,8 @@ class Scyan(pl.LightningModule):
             self.adata,
             self.var_names,
             self.hparams.batch_key,
-            self.categorical_covariate_keys,
-            self.continuous_covariate_keys,
+            self.categorical_covariates,
+            self.continuous_covariates,
         )
 
         self.register_buffer("x", x)
@@ -274,8 +275,12 @@ class Scyan(pl.LightningModule):
 
     @torch.no_grad()
     @_requires_fit
+    @utils._corr_mode_required
     def batch_effect_correction(self, batch_ref: Optional[str] = None) -> Tensor:
         """Correct batch effect by going into the latent space, setting the reference covariate to all cells, and then reversing the flow.
+
+        !!! info
+            To have a better batch effect correction, we advise to run [refine_fit()][scyan.Scyan.refine_fit] first.
 
         !!! warning
             As we standardised data for training, the resulting tensor is standardised too. You can save the tensor as a numpy layer of `adata` and use [scyan.preprocess.unscale][] to unscale it.
@@ -337,7 +342,7 @@ class Scyan(pl.LightningModule):
 
         missing_pops = self.n_pops - len(populations.cat.categories)
         if missing_pops:
-            log.warn(
+            log.warning(
                 f"{missing_pops} population(s) were not predicted. It may be due to:\n  - Errors in the knowledge table (see https://mics-lab.github.io/scyan/advice/#advice-for-the-creation-of-the-table)\n  - The model hyperparameters choice (see https://mics-lab.github.io/scyan/advanced/parameters/)\n  - Or maybe these populations are really absent from this dataset."
             )
 
@@ -376,13 +381,16 @@ class Scyan(pl.LightningModule):
         Args:
             path: Path where the parameters will be saved. For instance, `'scyan_state_dict.pt'`.
         """
-        for submodule in self.modules():
-            if hasattr(submodule, "_trainer"):
-                del submodule._trainer  # Fix error due to pytorch lightning usage
         torch.save(self.state_dict(), path)
 
     def load(self, path: str) -> None:
         """Loads the Scyan model that was saved at the provided path. Note that the model has to be initialized with the same arguments.
+
+        !!! example
+            ```python
+            >>> model = scyan.Scyan(adata, table) # initialize the model
+            >>> model.load('scyan_state_dict.pt')
+            ```
 
         Args:
             path: Path where the parameters were saved, i.e. the argument of `model.save(path)`.
@@ -437,6 +445,38 @@ class Scyan(pl.LightningModule):
         return torch.cat(
             [func(*batch) for batch in tqdm(loader, desc="DataLoader")], dim=0
         )
+
+    @torch.no_grad()
+    @utils._corr_mode_required
+    def refine_fit(
+        self,
+        patience: int = 10,
+        min_delta: float = 0.2,
+        key: str = "scyan_pop",
+        **fit_kwargs: int,
+    ):
+        """Improve training (and also batch effect correction) by filling the NaN values in the table and continue fitting Scyan. Afterwards, you can correct batch effect with [batch_effect_correction()][scyan.Scyan.batch_effect_correction].
+
+        !!! info
+            Run this function only to improve batch effect correction (it is not designed to improve annotation).
+
+        Args:
+            patience: Number of epochs with no loss improvement before stopping training.
+            min_delta: min_delta parameters used for `EarlyStopping`. See Pytorch Lightning docs.
+            key: Column name used to save the predictions in `adata.obs`.
+        """
+        assert (
+            key in self.adata.obs
+        ), f"Column {key} not found in 'adata.obs'. Have you run 'model.predict()' first?"
+
+        if self.module.prior.rho_mask.any():
+            log.info(
+                f"Filling {self.module.prior.rho_mask.sum()} NA values in the table."
+            )
+            means = utils.grouped_mean(self, key)
+            self.module.prior.fill_rho(means)
+
+        self.fit(patience=patience, min_delta=min_delta, **fit_kwargs)
 
     def fit(
         self,
@@ -495,8 +535,7 @@ class Scyan(pl.LightningModule):
                 **trainer_args,
             )
 
-        self.trainer = trainer
-        self.trainer.fit(self)
+        trainer.fit(self)
 
         self._is_fitted = True
         log.info("Successfully ended traning.")

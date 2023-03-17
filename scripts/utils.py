@@ -40,8 +40,8 @@ def init_and_fit_model(
         config.model,
         adata=adata,
         table=table,
-        continuous_covariate_keys=config.project.get("continuous_covariate_keys", []),
-        categorical_covariate_keys=config.project.get("categorical_covariate_keys", []),
+        continuous_covariates=config.project.get("continuous_covariates", []),
+        categorical_covariates=config.project.get("categorical_covariates", []),
         batch_key=config.project.get("batch_key"),
         _convert_="partial",
     )
