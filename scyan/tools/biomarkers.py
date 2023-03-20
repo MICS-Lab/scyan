@@ -22,20 +22,20 @@ def cell_type_ratios(
     key: str = "scyan_pop",
     among: str = None,
 ) -> pd.DataFrame:
-    """Count for each patient (or group) the number of cells for each population.
+    """Computes the ratio of cells per population. This ratio can be provided for each patient (or for any kind of 'group').
 
     Args:
         adata: An `AnnData` object.
         groupby: Key(s) of `adata.obs` used to create groups (e.g. the patient ID).
-        normalize: If `False`, returns counts instead of percentages.
+        normalize: If `False`, returns counts instead of ratios.
         key: Key of `adata.obs` containing the population names (or the values to count).
-        among: Key of `adata.obs` containing the parent population name. For example, if 'T CD4 RM' is found in `adata.obs[key]`, then we may find something like 'T cell' in `adata.obs[among]`. Typically, if using hierarchical populations, you can provide `'scyan_pop_level'` with your level name.
+        among: Key of `adata.obs` containing the parent population name. Typically, if using hierarchical populations, you can provide `'scyan_pop_level'` with your level name. E.g., if the parent of population of "T CD4 RM" is called "T cells" in `adata.obs[among]`, then this function computes the 'T CD4 RM ratio among T cells'.
 
     Returns:
-        A DataFrame of counts (one row per group, one column per population).
+        A DataFrame of ratios or counts (one row per group, one column per population). If `normalize=False`, then each row sums to 1 (for `among=None`).
     """
     normalize = among is not None or normalize
-    column_suffix = "percentage" if normalize else "count"
+    column_suffix = "ratio" if normalize else "count"
 
     counts = _get_counts(adata, groupby, key, normalize)
 
