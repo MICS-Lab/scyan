@@ -23,6 +23,10 @@
     options:
       show_root_heading: true
 
+::: scyan.plot.log_prob_threshold
+    options:
+      show_root_heading: true
+
 ::: scyan.plot.pop_level
     options:
       show_root_heading: true

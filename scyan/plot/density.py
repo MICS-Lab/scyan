@@ -1,5 +1,6 @@
 from typing import List, Optional, Union
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -86,3 +87,28 @@ def kde(
         palette=get_palette_others(df, key),
         hue_order=sorted(df[key].unique(), key="Others".__eq__),
     )
+
+
+@plot_decorator(adata=True)
+def log_prob_threshold(adata: AnnData, show: bool = True):
+    """Plot the number of cells annotated depending on the log probability threshold (below which cells are left non-classified). It can be helpful to determine the best threshold value, i.e. before a significative decrease in term of number of cells annotated.
+
+    !!! note
+        To use this function, you first need to fit a `scyan.Scyan` model and use the `model.predict()` method.
+
+    Args:
+        adata: The `anndata` object used during the model training.
+        show: Whether or not to display the figure.
+    """
+    assert (
+        "scyan_log_probs" in adata.obs
+    ), f"Cannot find 'scyan_log_probs' in adata.obs. Have you run model.predict()?"
+
+    x = np.sort(adata.obs["scyan_log_probs"])
+    y = 1 - np.arange(len(x)) / float(len(x))
+
+    plt.plot(x, y)
+    plt.xlim(-100, x.max())
+    sns.despine(offset=10, trim=True)
+    plt.ylabel("Ratio of predicted cells")
+    plt.xlabel("Log density threshold")

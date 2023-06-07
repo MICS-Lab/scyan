@@ -33,8 +33,7 @@ def test_normalize_cell_populations(adata: AnnData):
     df = scyan.tools.cell_type_ratios(adata)
 
     assert all(
-        df[f"{pop} percentage"][0] == count / 8
-        for pop, count in zip(pop_names, [1, 3, 2, 2])
+        df[f"{pop} ratio"][0] == count / 8 for pop, count in zip(pop_names, [1, 3, 2, 2])
     )
 
 
@@ -49,9 +48,9 @@ def test_group_cell_populations(adata: AnnData):
 def test_cell_populations_among(adata: AnnData):
     df = scyan.tools.cell_type_ratios(adata, groupby="id", among="scyan_pop_level")
 
-    assert df.loc[1, "c percentage among C"] == 1
-    assert df.loc[1, "a2 percentage among A"] == 0.75
-    assert np.isnan(df.loc[2, "a2 percentage among A"])
+    assert df.loc[1, "c ratio among C"] == 1
+    assert df.loc[1, "a2 ratio among A"] == 0.75
+    assert np.isnan(df.loc[2, "a2 ratio among A"])
 
 
 def test_mean_intensities(adata: AnnData):
