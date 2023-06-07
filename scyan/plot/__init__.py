@@ -1,4 +1,4 @@
-from .density import kde
+from .density import kde, log_prob_threshold
 from .heatmap import probs_per_marker
 from .dot import scatter, umap, pop_level
 from .graph import pops_hierarchy

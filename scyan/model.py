@@ -329,6 +329,7 @@ class Scyan(pl.LightningModule):
             Population predictions (pandas `Series` of length $N$ cells).
         """
         df = self.predict_proba()
+        self.adata.obs["scyan_log_probs"] = df["max_log_prob_u"].values
 
         populations = df.iloc[:, : self.n_pops].idxmax(axis=1).astype("category")
         populations[df["max_log_prob_u"] < log_prob_th] = np.nan
