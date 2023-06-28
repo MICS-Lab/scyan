@@ -21,31 +21,37 @@ class PriorDistribution(pl.LightningModule):
             n_markers: Number of markers in the table.
         """
         super().__init__()
-        self.prior_std = prior_std
         self.n_markers = n_markers
         self.is_continuum_marker = is_continuum_marker
 
         self.register_buffer("rho", rho)
         self.register_buffer("loc", torch.zeros((n_markers)))
-        self.register_buffer("cov", torch.eye((n_markers)) * self.prior_std**2)
         self.set_rho_mask()
 
+        self.prior_std = prior_std
         self.uniform = distributions.Uniform(-1, 1)
-        self.normal = distributions.Normal(0, self.prior_std)
+
+    @property
+    def prior_std(self):
+        return self._prior_std
+
+    @prior_std.setter
+    def prior_std(self, std: float) -> None:
+        self._prior_std = std
+        self.register_buffer("cov", torch.eye((self.n_markers)) * std**2)
+        self.normal = distributions.Normal(0, std)
+        self.compute_constant_terms()
 
     def set_rho_mask(self) -> None:
         rho_mask = self.rho.isnan()
         self.rho[rho_mask] = 0
         self.register_buffer("rho_mask", rho_mask)
-        self.update()
+        self.compute_modes()
 
     def fill_rho(self, means: torch.Tensor) -> None:
         # TODO: what if one population was not predicted?
         self.rho[self.rho_mask] = means[self.rho_mask]
         self.register_buffer("rho_mask", torch.full_like(self.rho, False, dtype=bool))
-        self.update()
-
-    def update(self):
         self.compute_modes()
         self.compute_constant_terms()
 

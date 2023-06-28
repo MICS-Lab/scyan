@@ -46,6 +46,7 @@ class Scyan(pl.LightningModule):
         n_hidden_layers: int = 6,
         n_layers: int = 7,
         prior_std: float = 0.3,
+        warm_up: Optional[tuple[float, int]] = (0.35, 4),
         lr: float = 5e-4,
         batch_size: int = 8_192,
         temperature: float = 0.5,
@@ -64,6 +65,7 @@ class Scyan(pl.LightningModule):
             n_hidden_layers: Number of hidden layers in the MLP.
             n_layers: Number of coupling layers.
             prior_std: Standard deviation $\sigma$ of the cell-specific random variable $H$.
+            warm_up: If not `None`, sets the model prior standard deviation to `max(warm_up[0], prior_std)` during the first `warm_up[1]` epochs.
             lr: Model learning rate.
             batch_size: Model batch size.
             temperature: Temperature to favor small populations.
@@ -101,7 +103,7 @@ class Scyan(pl.LightningModule):
             hidden_size,
             n_hidden_layers,
             n_layers,
-            prior_std,
+            max(warm_up[0], prior_std) if warm_up is not None else prior_std,
             temperature,
         )
 
@@ -306,6 +308,14 @@ class Scyan(pl.LightningModule):
         self.log("loss", loss, on_epoch=True, on_step=True)
 
         return loss
+
+    def on_train_epoch_end(self):
+        if (
+            self.hparams.warm_up is not None
+            and self.current_epoch == self.hparams.warm_up[1] - 1
+        ):
+            print("Ended warm up epochs")
+            self.module.prior.prior_std = self.hparams.prior_std
 
     @_requires_fit
     @torch.no_grad()
