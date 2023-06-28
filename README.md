@@ -86,41 +86,6 @@ Scyan is a **Python** library based on:
 - [_Hydra_](https://hydra.cc/docs/intro/), for project configuration (optional)
 - [_Weight & Biases_](https://wandb.ai/site), for model monitoring (optional)
 
-# Project layout
-
-    .github/      # Github CI and templates
-    config/       # Hydra configuration folder (optional use)
-    data/         # Data folder containing adata files and csv tables
-    docs/         # The folder used to build the documentation
-    scripts/      # Scripts to reproduce the results from the article
-    tests/        # Folder containing tests
-    scyan/                    # Library source code
-        data/                 # Folder with data-related functions and classes
-            datasets.py       # Load and save datasets
-            tensors.py        # Pytorch data-related classes for training
-        module/               # Folder containing neural network modules
-            coupling_layer.py # Coupling layer
-            distribution.py   # Prior distribution (called U in the article)
-            real_nvp.py       # Normalizing Flow
-            scyan_module      # Core module
-        plot/                 # Plots
-            ...
-        tools/
-            ...               # Tools (umap, subclustering, ...)
-        model.py              # Scyan model class
-        _io.py                # Input / output functions
-        preprocess.py         # Preprocessing functions
-        utils.py              # Misc functions
-    .gitattributes
-    .gitignore
-    CONTRIBUTING.md   # To read before contributing
-    LICENSE
-    mkdocs.yml        # The docs configuration file
-    poetry.lock
-    pyproject.toml    # Dependencies, project metadata, and more
-    README.md
-    setup.py          # Setup file, see `pyproject.toml`
-
 # Cite us
 
 Our paper is not published yet. Meanwhile, you can [read our preprint on arXiv](https://arxiv.org/abs/2208.05745).
