@@ -50,6 +50,7 @@ def pop_dynamics(
     time_key: str,
     groupby: Union[str, List[str], None] = None,
     key: str = "scyan_pop",
+    among: str = None,
     n_cols: int = 4,
     size_mul: Optional[float] = None,
     figsize: tuple[float, float] = None,
@@ -62,6 +63,7 @@ def pop_dynamics(
         time_key: Key of `adata.obs` containing the timepoints. We recommend to use a categorical series (to use the right timepoint order).
         groupby: Key(s) of `adata.obs` used to create groups (e.g. the patient ID).
         key: Key of `adata.obs` containing the population names (or the values) for which dynamics will be displayed.
+        among: Key of `adata.obs` containing the parent population name. See [scyan.tools.cell_type_ratios][].
         n_cols: Number of figures per row.
         size_mul: Dot size multiplication factor. By default, it is computed using the population counts.
         figsize: matplotlib figure size.
@@ -76,7 +78,7 @@ def pop_dynamics(
     else:
         groupby = ([groupby] if isinstance(groupby, str) else groupby) + [time_key]
 
-    df = cell_type_ratios(adata, groupby=groupby, key=key, normalize="%")
+    df = cell_type_ratios(adata, groupby=groupby, key=key, normalize="%", among=among)
     df_log_count = np.log(
         1 + cell_type_ratios(adata, groupby=groupby, key=key, normalize=False)
     )
