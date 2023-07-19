@@ -549,6 +549,6 @@ class Scyan(pl.LightningModule):
         trainer.fit(self)
 
         self._is_fitted = True
-        log.info("Successfully ended traning.")
+        log.info("Successfully ended training.")
 
         return self
