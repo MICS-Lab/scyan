@@ -39,14 +39,14 @@ def cell_type_ratios(
     ), "If 'among' is `None`, then normalize can't be `False`"
 
     column_suffix = (
-        ("ratio" if normalize is True else "percentage") if normalize else "count"
+        ("percentage" if normalize == "%" else "ratio") if normalize else "count"
     )
 
     counts = _get_counts(adata, groupby, key, normalize)
 
     if among is None:
         counts.columns = [f"{name} {column_suffix}" for name in counts.columns]
-        return counts if normalize is True else counts.mul(100)
+        return counts.mul(100) if normalize == "%" else counts
 
     parents_count = _get_counts(adata, groupby, among, normalize)
 
@@ -60,7 +60,7 @@ def cell_type_ratios(
     counts.columns = [
         f"{pop} {column_suffix} among {to_parent_dict[pop]}" for pop in counts.columns
     ]
-    return counts if normalize is True else counts.mul(100)
+    return counts.mul(100) if normalize == "%" else counts
 
 
 def mean_intensities(
