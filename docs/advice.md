@@ -5,6 +5,7 @@
 - Before to run batch effect correction, check if you really have a significant batch effect (else, you could simply run Scyan without batch-effect correction). You can check that by plotting the batch observation on the umap (see [scyan.plot.umap][]) and see if the different batches overlap or not.
 
 ### Advice for the creation of the table
+> Some table examples can be found [here](https://github.com/MICS-Lab/scyan_data/blob/main/public_tables.md).
 
 !!! important
 
@@ -21,7 +22,7 @@
 - Sometimes, you will have a marker that is expressed by most of the population $A$ cells, but you know a few cells from the same population may not express this marker. In that case, we still advise adding the marker on the table, and **Scyan will be able to catch these exceptions**, as they look like population $A$ cells for most of the other markers of the panel. Consider the image below: let's say this is the manual gating that you did traditionally. Even though some cells of $A$ are `Marker1+`, you should still write that the population $A$ is `Marker1-`, to make a clear distinction with the population $B$. Also, if you are specifically interested in the cells from $A$ that are `Marker1+`, you can still create another population $A_2$ and write that $A_2$ is `Marker1+` while $A$ is `Marker1-`.
 
 <p align="center">
-  <img src="../../assets/example_scatterplot.png" alt="scatterplot" width="350px"/>
+  <img src="../assets/example_scatterplot.png" alt="scatterplot" width="350px"/>
 </p>
 
 - Note that the model interprets NA values as "any expression is possible". Thus, a population described with extensive use of NA values (e.g., above 90% of markers, with no discriminative marker provided) can be over-predicted. This is a normal behaviour since few constraints are applied to this population.

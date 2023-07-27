@@ -18,8 +18,11 @@ Scyan is a Bayesian probabilistic model composed of a deep invertible neural net
 
 Scyan is a **Python** library based on:
 
-- [_Pytorch_](https://pytorch.org/), a deep learning framework
 - [_AnnData_](https://anndata.readthedocs.io/en/latest/), a data library that works nicely with single-cell data
+- [_Pytorch_](https://pytorch.org/), a deep learning framework
 - [_Pytorch Lighning_](https://www.pytorchlightning.ai/), for model training
-- [_Hydra_](https://hydra.cc/docs/intro/), for project configuration (optional)
-- [_Weight & Biases_](https://wandb.ai/site), for model monitoring (optional)
+
+Optionally, it also supports:
+
+- [_Hydra_](https://hydra.cc/docs/intro/), for project configuration
+- [_Weight & Biases_](https://wandb.ai/site), for model monitoring

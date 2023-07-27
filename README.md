@@ -80,12 +80,29 @@ For more usage demo, read the [tutorials](https://mics-lab.github.io/scyan/tutor
 
 Scyan is a **Python** library based on:
 
-- [_Pytorch_](https://pytorch.org/), a deep learning framework
 - [_AnnData_](https://anndata.readthedocs.io/en/latest/), a data library that works nicely with single-cell data
+- [_Pytorch_](https://pytorch.org/), a deep learning framework
 - [_Pytorch Lighning_](https://www.pytorchlightning.ai/), for model training
-- [_Hydra_](https://hydra.cc/docs/intro/), for project configuration (optional)
-- [_Weight & Biases_](https://wandb.ai/site), for model monitoring (optional)
+
+Optionally, it also supports:
+- [_Hydra_](https://hydra.cc/docs/intro/), for project configuration
+- [_Weight & Biases_](https://wandb.ai/site), for model monitoring
 
 # Cite us
 
-Our paper is not published yet. Meanwhile, you can [read our preprint on arXiv](https://arxiv.org/abs/2208.05745).
+Our paper is published in ***Briefings in Bioinformatics*** and is available [here](https://doi.org/10.1093/bib/bbad260).
+```txt
+@article{10.1093/bib/bbad260,
+    author = {Blampey, Quentin and Bercovici, Nadège and Dutertre, Charles-Antoine and Pic, Isabelle and Ribeiro, Joana Mourato and André, Fabrice and Cournède, Paul-Henry},
+    title = "{A biology-driven deep generative model for cell-type annotation in cytometry}",
+    journal = {Briefings in Bioinformatics},
+    pages = {bbad260},
+    year = {2023},
+    month = {07},
+    issn = {1477-4054},
+    doi = {10.1093/bib/bbad260},
+    url = {https://doi.org/10.1093/bib/bbad260},
+    eprint = {https://academic.oup.com/bib/advance-article-pdf/doi/10.1093/bib/bbad260/50973199/bbad260.pdf},
+}
+
+```
