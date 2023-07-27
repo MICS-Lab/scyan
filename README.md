@@ -82,7 +82,7 @@ Scyan is a **Python** library based on:
 
 - [_AnnData_](https://anndata.readthedocs.io/en/latest/), a data library that works nicely with single-cell data
 - [_Pytorch_](https://pytorch.org/), a deep learning framework
-- [_Pytorch Lighning_](https://www.pytorchlightning.ai/), for model training
+- [_Pytorch Lightning_](https://www.pytorchlightning.ai/), for model training
 
 Optionally, it also supports:
 - [_Hydra_](https://hydra.cc/docs/intro/), for project configuration
