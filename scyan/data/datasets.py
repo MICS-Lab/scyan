@@ -182,12 +182,12 @@ def list_path(dataset_path: Path) -> None:
             names,
             "default.csv",
             "default.h5ad",
-            "default.umap",
-            "groups_demo.csv",
             "short.h5ad",
         )
     elif dataset_name == "bmmc":
-        add_remote_names(names, "default.csv", "default.h5ad", "discovery.csv")
+        add_remote_names(names, "default.csv", "default.h5ad")
+    elif dataset_name == "poised":
+        add_remote_names(names, "default.csv", "full.csv", "short.csv", "default.h5ad")
     elif dataset_name == "debarcoding":
         add_remote_names(
             names,
@@ -217,7 +217,7 @@ def _list(dataset_name: Optional[str] = None) -> None:
     log.info(f"List of existing datasets inside {data_path}:")
     dataset_paths = set(data_path.iterdir())
 
-    for public_dataset in ["aml", "bmmc", "debarcoding"]:
+    for public_dataset in ["poised", "aml", "bmmc", "debarcoding"]:
         dataset_path = Path(data_path / public_dataset)
         dataset_path.mkdir(parents=True, exist_ok=True)
         dataset_paths.add(dataset_path)
@@ -257,15 +257,15 @@ def load(
     table: Optional[str] = "default",
     reducer: Optional[str] = None,
 ) -> Tuple[AnnData, pd.DataFrame]:
-    """Load a dataset, i.e. its `AnnData` object and its knowledge table. Public datasets available are `"aml"`, `"bmmc"`, and `"debarcoding"`; note that, if the dataset was not loaded yet, it is automatically downloaded (requires internet connection). Existing dataset names and versions/tables can be listed using [scyan.data.list][].
+    """Load a dataset, i.e. its `AnnData` object and its knowledge table. Public datasets available are `"poised"`, `"aml"`, `"bmmc"`, and `"debarcoding"`; note that, if the dataset was not loaded yet, it is automatically downloaded (requires internet connection). Existing dataset names and versions/tables can be listed using [scyan.data.list][].
 
     !!! note
         If you want to load your own dataset, you first have to [create it](../../advanced/data).
     !!! note
-        If `scyan` repository was cloned, then the data will be saved in the `data` folder of the repository, else at `<home_path>/.scyan_data`
+        The data is saved by default inside `<home_path>/.scyan_data`. Optionally, if `scyan` repository was cloned, you can create `<scyan_repository_path>/data` and use it instead of the default data folder.
 
     Args:
-        dataset_name: Name of the dataset. Either one of your dataset, or one public dataset among `"aml"`, `"bmmc"`, and `"debarcoding"`.
+        dataset_name: Name of the dataset. Either one of your dataset, or one public dataset among `"poised"`, `"aml"`, `"bmmc"`, and `"debarcoding"`.
         version: Name of the `anndata` file (.h5ad) that should be loaded. The available versions can be listed with `scyan.data.list()`. If `None`, don't return an `adata` object.
         table: Name of the knowledge table that should be loaded. If `None`, don't return the `table` dataframe.
         reducer: Name of the umap reducer that should be loaded. If `None`, don't return the `UMAP` reducer.

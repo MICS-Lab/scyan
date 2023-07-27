@@ -27,35 +27,40 @@ def cell_type_ratios(
     Args:
         adata: An `AnnData` object.
         groupby: Key(s) of `adata.obs` used to create groups (e.g. the patient ID).
-        normalize: If `False`, returns counts instead of ratios.
+        normalize: If `False`, returns counts instead of ratios. If `"%"`, use percentage instead of ratios in `[0, 1]`;
         key: Key of `adata.obs` containing the population names (or the values to count).
         among: Key of `adata.obs` containing the parent population name. Typically, if using hierarchical populations, you can provide `'scyan_pop_level'` with your level name. E.g., if the parent of population of "T CD4 RM" is called "T cells" in `adata.obs[among]`, then this function computes the 'T CD4 RM ratio among T cells'.
 
     Returns:
         A DataFrame of ratios or counts (one row per group, one column per population). If `normalize=False`, then each row sums to 1 (for `among=None`).
     """
-    normalize = among is not None or normalize
-    column_suffix = "ratio" if normalize else "count"
+    assert (
+        among is None or normalize
+    ), "If 'among' is `None`, then normalize can't be `False`"
+
+    column_suffix = (
+        ("percentage" if normalize == "%" else "ratio") if normalize else "count"
+    )
 
     counts = _get_counts(adata, groupby, key, normalize)
 
     if among is None:
         counts.columns = [f"{name} {column_suffix}" for name in counts.columns]
-        return counts
+        return counts.mul(100) if normalize == "%" else counts
 
     parents_count = _get_counts(adata, groupby, among, normalize)
 
     df_parent = adata.obs.groupby(among)[key].apply(lambda s: s.value_counts()).unstack()
     assert (
-        (df_parent > 0).sum(0) == 1
-    ).all(), f"Each population from adata.obs['{key}'] should have one and only one parent population in adata.obs['{among}']"
+        (df_parent > 0).sum(0) <= 1
+    ).all(), f"Each population from adata.obs['{key}'] should have only one parent population in adata.obs['{among}']"
     to_parent_dict = dict(df_parent.idxmax())
 
     counts /= parents_count[[to_parent_dict[pop] for pop in counts.columns]].values
     counts.columns = [
         f"{pop} {column_suffix} among {to_parent_dict[pop]}" for pop in counts.columns
     ]
-    return counts
+    return counts.mul(100) if normalize == "%" else counts
 
 
 def mean_intensities(

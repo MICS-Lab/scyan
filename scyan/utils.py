@@ -264,7 +264,7 @@ def _validate_inputs(
 
     _check_is_processed(X)
 
-    if np.abs(X.std(axis=0) - 1).max() > 0.2 or X.min(0).max() >= 0:
+    if np.abs(adata.X.std(axis=0).mean() - 1) > 0.1:
         log.warning(
             "It seems that the data is not standardised. We advise using scaling (scyan.preprocess.scale) before initializing the model."
         )

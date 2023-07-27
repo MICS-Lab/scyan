@@ -6,8 +6,15 @@
     options:
       show_root_heading: true
 
+::: scyan.plot.probs_per_marker
+    options:
+      show_root_heading: true
 
-::: scyan.plot.pops_expressions
+::: scyan.plot.pop_percentage
+    options:
+      show_root_heading: true
+
+::: scyan.plot.pop_dynamics
     options:
       show_root_heading: true
 
@@ -15,7 +22,7 @@
     options:
       show_root_heading: true
 
-::: scyan.plot.probs_per_marker
+::: scyan.plot.pops_expressions
     options:
       show_root_heading: true
 

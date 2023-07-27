@@ -1,6 +1,5 @@
 # Copied from https://github.com/scverse/scanpy (and modified)
 
-import matplotlib_inline.backend_inline
 from cycler import cycler
 from matplotlib import rcParams
 
@@ -71,6 +70,8 @@ def quality_settings():
     import builtins
 
     if getattr(builtins, "__IPYTHON__", False):
+        import matplotlib_inline.backend_inline
+
         matplotlib_inline.backend_inline.set_matplotlib_formats("png2x")
 
 

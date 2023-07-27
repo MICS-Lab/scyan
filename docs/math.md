@@ -1,4 +1,4 @@
-Here we briefly describe the maths behind Scyan. For more details, refer to the article method section.
+Here we briefly describe the maths behind Scyan. For more details, refer to the method section of [our article](https://doi.org/10.1093/bib/bbad260).
 
 ## Notations
 

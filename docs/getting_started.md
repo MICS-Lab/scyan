@@ -73,7 +73,7 @@ This code should run in approximately 40 seconds (once the dataset is loaded).
 
 !!! note "Help to create the `adata` object and the `table`"
 
-    Read the [preprocessing tutorial](../tutorials/preprocessing) if you have an FCS file and want explanations to initialize `Scyan`.
+    Read the [preprocessing tutorial](../tutorials/preprocessing) if you have an FCS file and want explanations to initialize `Scyan`. You can also look at [existing tables](https://github.com/MICS-Lab/scyan_data/blob/main/public_tables.md).
 
 !!! check
 
