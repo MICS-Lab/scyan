@@ -3,7 +3,7 @@
 </p>
 
 [![PyPI](https://img.shields.io/pypi/v/scyan.svg)](https://pypi.org/project/scyan)
-[![Downloads](https://pepy.tech/badge/scyan)](https://pepy.tech/project/scyan)
+[![Downloads](https://static.pepy.tech/badge/scyan)](https://pepy.tech/project/scyan)
 [![Docs](https://img.shields.io/badge/docs-mkdocs-blue)](https://mics-lab.github.io/scyan/)
 ![Build](https://github.com/MICS-Lab/scyan/workflows/ci/badge.svg)
 [![Code Style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/python/black)
