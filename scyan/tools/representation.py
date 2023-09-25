@@ -11,9 +11,20 @@ from ..utils import _check_is_processed, _get_subset_indices, _has_umap
 log = logging.getLogger(__name__)
 
 
-def _leiden(
-    adata: AnnData, resolution: float, key_added: str, n_neighbors: int = 15
+def leiden(
+    adata: AnnData,
+    resolution: float = 1,
+    key_added: str = "leiden",
+    n_neighbors: int = 15,
 ) -> None:
+    """Leiden clustering
+
+    Args:
+        adata: AnnData object.
+        resolution: Resolution of the clustering.
+        key_added: Name of the key of adata.obs where clusters will be saved.
+        n_neighbors: Number of neighbors.
+    """
     try:
         import leidenalg
     except:
@@ -55,7 +66,7 @@ def subcluster(
         After having run this method, you can analyze the results with [scyan.plot.umap][] and [scyan.plot.pops_expressions][].
 
     Args:
-        adata: An `anndata` object.
+        adata: An `AnnData` object.
         population: Name of the population to target (one of `adata.obs[key]`).
         markers: Optional list of markers used to create subclusters. By default, uses the complete panel.
         key: Key to look for population in `adata.obs`. By default, uses the model predictions, but you can also choose a population level (if any), or other observations.
@@ -92,7 +103,7 @@ def subcluster(
 
         adata_sub = adata[indices, markers].copy()
 
-        _leiden(adata_sub, resolution, leiden_key)
+        leiden(adata_sub, resolution, leiden_key)
 
     series = pd.Series(index=np.arange(adata.n_obs), dtype=str)
     series[indices] = adata_sub.obs[leiden_key].values
@@ -142,7 +153,7 @@ def umap(
         To actually plot the UMAP, use [scyan.plot.umap][].
 
     Args:
-        adata: An `anndata` object.
+        adata: An `AnnData` object.
         markers: List marker names. By default, use all the panel markers, i.e., `adata.var_names`.
         obsm: Name of the obsm to consider to train the UMAP. By default, uses `adata.X`.
         n_cells: Number of cells to be considered for the UMAP (to accelerate it when $N$ is very high). If `None`, consider all cells.

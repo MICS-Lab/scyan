@@ -203,8 +203,8 @@ class Scyan(pl.LightningModule):
 
         self._n_samples = (
             min(self.hparams.max_samples or self.adata.n_obs, self.adata.n_obs)
-            // self.hparams.batch_size
-            * self.hparams.batch_size
+            // self._batch_size
+            * self._batch_size
         )
 
     @_requires_fit
@@ -410,13 +410,17 @@ class Scyan(pl.LightningModule):
         self.dataset = TensorDataset(self.x, self.covariates)
         self._is_fitted = True
 
+    @property
+    def _batch_size(self):
+        return min(self.hparams.batch_size, self.adata.n_obs)
+
     def train_dataloader(self):
         """PyTorch lightning `train_dataloader` implementation"""
         self.dataset = TensorDataset(self.x, self.covariates)
 
         return DataLoader(
             self.dataset,
-            batch_size=self.hparams.batch_size,
+            batch_size=self._batch_size,
             sampler=RandomSampler(self.adata.n_obs, self._n_samples),
             num_workers=self._num_workers,
         )
@@ -425,7 +429,7 @@ class Scyan(pl.LightningModule):
         """PyTorch lightning `predict_dataloader` implementation"""
         return DataLoader(
             self.dataset,
-            batch_size=self.hparams.batch_size,
+            batch_size=self._batch_size,
             num_workers=self._num_workers,
         )
 
@@ -449,7 +453,7 @@ class Scyan(pl.LightningModule):
         else:
             loader = DataLoader(
                 TensorDataset(*data),
-                batch_size=self.hparams.batch_size,
+                batch_size=self._batch_size,
                 num_workers=self._num_workers,
             )
 
@@ -534,9 +538,7 @@ class Scyan(pl.LightningModule):
                 check_on_train_epoch_end=True,
             )
 
-            log_every_n_steps = min(
-                log_every_n_steps, len(self.x) // self.hparams.batch_size
-            )
+            log_every_n_steps = min(log_every_n_steps, len(self.x) // self._batch_size)
             trainer = pl.Trainer(
                 max_epochs=max_epochs,
                 callbacks=[esc] + (callbacks or []),

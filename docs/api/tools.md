@@ -2,11 +2,15 @@
     options:
       show_root_heading: true
 
-::: scyan.tools.palette_level
+::: scyan.tools.leiden
     options:
       show_root_heading: true
 
 ::: scyan.tools.subcluster
+    options:
+      show_root_heading: true
+
+::: scyan.tools.palette_level
     options:
       show_root_heading: true
 
@@ -25,3 +29,13 @@
         - __init__
         - select
         - save_selection
+        - extract_adata
+  
+::: scyan.tools.PolygonGatingScatter
+    options:
+      show_root_heading: true
+      members:
+        - __init__
+        - select
+        - save_selection
+        - extract_adata

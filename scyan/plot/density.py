@@ -27,7 +27,7 @@ def kde(
     """Plot Kernel-Density-Estimation for each provided population and for multiple markers.
 
     Args:
-        adata: An `anndata` object.
+        adata: An `AnnData` object.
         population: One population, or a list of population to be analyzed, or `None`. If not `None`, the population name(s) has to be in `adata.obs[key]`.
         markers: List of markers to plot. If `None`, the list is chosen automatically.
         key: Key to look for populations in `adata.obs`. By default, uses the model predictions.
@@ -97,7 +97,7 @@ def log_prob_threshold(adata: AnnData, show: bool = True):
         To use this function, you first need to fit a `scyan.Scyan` model and use the `model.predict()` method.
 
     Args:
-        adata: The `anndata` object used during the model training.
+        adata: The `AnnData` object used during the model training.
         show: Whether or not to display the figure.
     """
     assert (
