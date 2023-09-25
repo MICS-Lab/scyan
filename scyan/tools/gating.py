@@ -122,7 +122,7 @@ class PolygonGatingScatter:
 
     !!! note
 
-        If used on a Jupyter Notebook, you should first run `%matplotlib tk` on a blank jupyter cell. After the selection, you can run `%matplotlib inline` to retrieve the default behavior.
+        If used on a Jupyter Notebook, you should first run `%matplotlib tk`. After the selection, you can run `%matplotlib inline` to retrieve the default behavior.
 
     ```py
     # Usage example (`%matplotlib tk` is required for the cell selection on jupyter notebooks)
