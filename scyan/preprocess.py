@@ -18,7 +18,7 @@ def auto_logicle_transform(
     We recommend it for flow cytometry or spectral flow cytometry data.
 
     Args:
-        adata: An `anndata` object.
+        adata: An `AnnData` object.
         q: See logicle article. Defaults to 0.05.
         m: See logicle article. Defaults to 4.5.
     """
@@ -73,7 +73,7 @@ def asinh_transform(adata: AnnData, translation: float = 0, cofactor: float = 5)
     """Asinh transformation for cell-expressions: $asinh((x - translation)/cofactor)$.
 
     Args:
-        adata: An `anndata` object.
+        adata: An `AnnData` object.
         translation: Constant substracted to the marker expression before division by the cofactor.
         cofactor: Scaling factor before computing the asinh.
     """
@@ -93,7 +93,7 @@ def inverse_transform(
         If you scaled your data, the complete inverse consists in running [scyan.preprocess.unscale][] first, and then this function.
 
     Args:
-        adata: An `anndata` object.
+        adata: An `AnnData` object.
         obsm: Name of the anndata obsm to consider. If `None`, use `adata.X`.
         obsm_names: Names of the ordered markers from obsm. It is required if obsm is not `None`, if there are less markers than in `adata.X`, and if the transformation to reverse is `logicle`. Usually, it corresponds to `model.var_names`.
         transformation: Name of the transformation to inverse: one of `['logicle', 'asinh', None]`. By default, it chooses automatically depending on which transformation was previously run.
@@ -148,7 +148,7 @@ def scale(adata: AnnData, max_value: float = 10, center: Optional[bool] = None) 
     """Tranforms the data such as (i) `std=1`, and (ii) either `0` is sent to `-1` (for CyTOF data) or `means=0` (for flow or spectral flow data); except if `center` is set (which overwrites the default behavior).
 
     Args:
-        adata: An `anndata` object.
+        adata: An `AnnData` object.
         max_value: Clip to this value after scaling.
         center: If `None`, data is only centered for spectral or flow cytometry data (recommended), else, it is centered or not according to the value given.
     """
@@ -175,7 +175,7 @@ def unscale(
     """Reverse standardisation. It requires to have run [scyan.preprocess.scale][] before.
 
     Args:
-        adata: An `anndata` object.
+        adata: An `AnnData` object.
         obsm: Name of the adata obsm to consider. If `None`, use `adata.X`.
         obsm_names: Names of the ordered markers from obsm. It is required if obsm is not `None`, and if there are less markers than in `adata.X`. Usually, it corresponds to `model.var_names`.
 

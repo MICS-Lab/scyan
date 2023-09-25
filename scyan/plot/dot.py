@@ -27,7 +27,7 @@ def scatter(
     One scatter plot is displayed for each pair of markers.
 
     Args:
-        adata: An `anndata` object.
+        adata: An `AnnData` object.
         population: One population, or a list of population to be colored, or `None`. If not `None`, the population name(s) has to be in `adata.obs[key]`.
         markers: List of markers to plot. If `None`, the list is chosen automatically.
         n_markers: Number of markers to choose automatically if `markers is None`.
@@ -79,7 +79,7 @@ def umap(
         If you trained your UMAP with [scyan.tools.umap][] on a subset of cells, it will only display the desired subset of cells.
 
     Args:
-        adata: An `anndata` object.
+        adata: An `AnnData` object.
         color: Marker(s) or `obs` name(s) to color. It can be either just one string, or a list (it will plot one UMAP per element in the list).
         vmax: `scanpy.pl.umap` vmax argument.
         vmin: `scanpy.pl.umap` vmin argument.
