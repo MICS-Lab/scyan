@@ -60,7 +60,7 @@ class PriorDistribution(pl.LightningModule):
         self.factor[self.is_continuum_marker] = 5
         self.factor = self.factor[None, None, :]
 
-        self.modes = self.rho[None, ...] / self.factor
+        self.register_buffer("modes", self.rho[None, ...] / self.factor)
 
     @property
     def prior_h(self) -> distributions.Distribution:
