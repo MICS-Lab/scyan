@@ -19,6 +19,7 @@ def pop_percentage(
     adata: AnnData,
     groupby: Union[str, List[str], None] = None,
     key: str = "scyan_pop",
+    figsize: tuple[float, float] = None,
     show: bool = True,
 ):
     """Show populations percentages. Depending on `groupby`, this is either done globally, or as a stacked bar plot (one bar for each group).
@@ -27,14 +28,15 @@ def pop_percentage(
         adata: An `AnnData` object.
         groupby: Key(s) of `adata.obs` used to create groups (e.g. the patient ID).
         key: Key of `adata.obs` containing the population names (or the values) for which percentage will be displayed.
+        figsize: matplotlib figure size.
         show: Whether or not to display the figure.
     """
     if groupby is None:
-        adata.obs[key].value_counts(normalize=True).mul(100).plot.bar()
+        adata.obs[key].value_counts(normalize=True).mul(100).plot.bar(figsize=figsize)
     else:
         adata.obs.groupby(groupby)[key].value_counts(normalize=True).mul(
             100
-        ).unstack().plot.bar(stacked=True)
+        ).unstack().plot.bar(stacked=True, figsize=figsize)
         plt.legend(
             bbox_to_anchor=(1.04, 0.5), loc="center left", borderaxespad=0, frameon=False
         )
@@ -79,6 +81,7 @@ def pop_dynamics(
         groupby = ([groupby] if isinstance(groupby, str) else groupby) + [time_key]
 
     df = cell_type_ratios(adata, groupby=groupby, key=key, normalize="%", among=among)
+    df.index = df.index.set_levels(df.index.levels[-1].astype(str), level=-1)
     df_log_count = np.log(
         1 + cell_type_ratios(adata, groupby=groupby, key=key, normalize=False)
     )
