@@ -39,7 +39,6 @@ class PriorDistribution(pl.LightningModule):
     def prior_std(self, std: float) -> None:
         self._prior_std = std
         cov = torch.eye((self.n_markers)) * std**2
-        print(self.device)
         self.register_buffer("cov", cov.to(self.device))
         self.normal = distributions.Normal(0, std)
         self.compute_constant_terms()
