@@ -315,6 +315,7 @@ class Scyan(pl.LightningModule):
             and self.current_epoch == self.hparams.warm_up[1] - 1
         ):
             log.info("Ended warm up epochs")
+            print("cov.device", self.module.prior.cov.device)
             self.module.prior.prior_std = self.hparams.prior_std
 
             print("loc.device", self.module.prior.loc.device)
