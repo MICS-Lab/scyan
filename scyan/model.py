@@ -314,7 +314,7 @@ class Scyan(pl.LightningModule):
             self.hparams.warm_up is not None
             and self.current_epoch == self.hparams.warm_up[1] - 1
         ):
-            print("Ended warm up epochs")
+            log.info("Ended warm up epochs")
             self.module.prior.prior_std = self.hparams.prior_std
 
     @_requires_fit
