@@ -314,8 +314,13 @@ class Scyan(pl.LightningModule):
             self.hparams.warm_up is not None
             and self.current_epoch == self.hparams.warm_up[1] - 1
         ):
-            print("Ended warm up epochs")
+            log.info("Ended warm up epochs")
             self.module.prior.prior_std = self.hparams.prior_std
+
+            print("loc.device", self.module.prior.loc.device)
+            print("cov.device", self.module.prior.cov.device)
+            print("na_constant_term.device", self.module.prior.na_constant_term.device)
+            print("prior_h", self.module.prior.prior_h)
 
     @_requires_fit
     @torch.no_grad()
