@@ -50,7 +50,6 @@ class PriorDistribution(pl.LightningModule):
         self.compute_modes()
 
     def fill_rho(self, means: torch.Tensor) -> None:
-        # TODO: what if one population was not predicted?
         self.rho[self.rho_mask] = means[self.rho_mask]
         self.register_buffer("rho_mask", torch.full_like(self.rho, False, dtype=bool))
         self.compute_modes()
