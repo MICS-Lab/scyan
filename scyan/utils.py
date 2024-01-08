@@ -217,6 +217,7 @@ def grouped_mean(model, key: str) -> Tensor:
     df["batch"] = model.adata.obs[model.hparams.batch_key].values
 
     means = df.groupby(["batch", "ct"]).mean().groupby("ct").mean()
+    means = means.fillna(0)  # unpredicted populations: fill NA with 0
 
     return torch.tensor(
         means.loc[model.pop_names, model.var_names].values, dtype=torch.float32
