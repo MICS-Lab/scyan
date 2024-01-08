@@ -1,11 +1,10 @@
-name: ci 
+name: ci
 on:
   push:
-    branches:
-      - master
-      - ci
+    tags:
+      - v*
 jobs:
-  deploy:
+  deploy-doc:
     runs-on: ubuntu-latest
     steps:
       #----------------------------------------------
@@ -17,16 +16,12 @@ jobs:
         id: setup-python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: 3.9
       #----------------------------------------------
-      #  -----  install & configure poetry  -----
+      #         install & configure poetry
       #----------------------------------------------
       - name: Install Poetry
         uses: snok/install-poetry@v1
-        with:
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-          installer-parallel: true
       #----------------------------------------------
       #       load cached venv if cache exists
       #----------------------------------------------
@@ -45,5 +40,17 @@ jobs:
       #----------------------------------------------
       #              run test suite
       #----------------------------------------------
-      - run: poetry run pytest
-      - run: poetry run mkdocs gh-deploy --force
+      - name: Tests
+        run: poetry run pytest
+      - name: Deploy doc
+        run: poetry run mkdocs gh-deploy --force
+  publish:
+    needs: [deploy-doc]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build and publish to pypi
+        uses: JRubics/poetry-publish@v1.17
+        with:
+          python_version: "3.9"
+          pypi_token: ${{ secrets.PYPI_TOKEN }}

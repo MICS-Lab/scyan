@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://github.com/MICS-Lab/scyan/raw/master/docs/assets/logo.png" alt="scyan_logo" width="500"/>
+  <img src="https://github.com/MICS-Lab/scyan/raw/master/docs/assets/logo.png" alt="scyan_logo" width="400"/>
 </p>
 
 [![PyPI](https://img.shields.io/pypi/v/scyan.svg)](https://pypi.org/project/scyan)
