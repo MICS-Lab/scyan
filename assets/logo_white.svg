@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 24.1.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 32 32" style="enable-background:new 0 0 32 32;" xml:space="preserve">
+<style type="text/css">
+	.st0{display:none;}
+	.st1{display:inline;fill:#0E1114;}
+	.st2{display:inline;fill:none;stroke:#00C8C8;stroke-miterlimit:10;}
+	.st3{display:inline;fill:#00C8C8;}
+	.st4{display:inline;}
+	.st5{fill:#00C8C8;}
+	.st6{fill:none;}
+	.st7{display:inline;fill:#415A91;}
+	.st8{display:inline;fill:none;stroke:#00C8C8;stroke-width:60;stroke-miterlimit:10;}
+	.st9{display:inline;fill:none;stroke:#415A91;stroke-width:35;stroke-miterlimit:10;}
+	.st10{fill:#FFFFFF;}
+</style>
+<g id="Calque_5" class="st0">
+	<rect x="-470.66" y="-3.55" class="st1" width="1550.37" height="746.11"/>
+</g>
+<g id="Calque_2" class="st0">
+	<rect x="39" y="109" class="st2" width="192" height="192"/>
+	<rect x="231" y="109" class="st2" width="192" height="192"/>
+</g>
+<g id="Calque_1" class="st0">
+	<circle class="st3" cx="39" cy="109" r="67"/>
+	<path class="st3" d="M77.07,164.14c-36.72,25.35-41.65,77.71-10.31,109.47H11.24c31.34-31.76,26.41-84.12-10.31-109.47H77.07z"/>
+	<circle class="st3" cx="39" cy="301" r="39"/>
+	<circle class="st3" cx="230.73" cy="301.01" r="67"/>
+	<path class="st3" d="M268.79,245.87c-36.72-25.35-41.65-77.71-10.31-109.47h-55.52c31.34,31.76,26.41,84.12-10.31,109.47H268.79z"
+		/>
+	<circle class="st3" cx="230.73" cy="109.01" r="39"/>
+</g>
+<g id="Calque_4" class="st0">
+	<g class="st4">
+		<circle class="st5" cx="-129.9" cy="172.22" r="51.99"/>
+		<path class="st5" d="M-165.71,134.53c37.12-35.28,41.13-93.08,9.22-133.13h53.18c-31.91,40.06-27.9,97.86,9.22,133.13H-165.71z"/>
+		<circle class="st5" cx="-129.9" cy="-19.78" r="33.99"/>
+		<circle class="st5" cx="62.68" cy="-2.23" r="51.99"/>
+		<path class="st5" d="M26.87,35.46C64,70.74,68,128.54,36.1,168.6h53.18c-31.91-40.06-27.9-97.86,9.22-133.13H26.87z"/>
+		<circle class="st5" cx="62.68" cy="189.77" r="33.99"/>
+	</g>
+</g>
+<g id="Calque_3">
+	<rect x="-0.03" class="st6" width="32" height="32"/>
+</g>
+<g id="Calque_6" class="st0">
+	<rect x="-105.39" y="569.1" class="st7" width="116.08" height="116.08"/>
+	<rect x="-181.89" y="492.6" class="st8" width="269.09" height="269.09"/>
+	<rect x="-165.73" y="508.75" class="st9" width="236.78" height="236.78"/>
+</g>
+<g id="Calque_7">
+	<path class="st10" d="M1.64,22.27c3.46-3.46,3.46-9.08,0-12.55H9.7c-3.46,3.46-3.46,9.08,0,12.55H1.64z"/>
+	<circle class="st10" cx="5.67" cy="5.7" r="5.7"/>
+	<circle class="st10" cx="5.67" cy="26.3" r="5.7"/>
+	<path class="st10" d="M9.7,22.27c3.46,3.46,9.08,3.46,12.55,0v8.06c-3.46-3.46-9.08-3.46-12.55,0V22.27z"/>
+	<circle class="st10" cx="26.27" cy="26.3" r="5.7"/>
+	<circle class="st10" cx="26.27" cy="5.7" r="5.7"/>
+</g>
+</svg>
