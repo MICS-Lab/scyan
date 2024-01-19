@@ -81,7 +81,7 @@ def pop_dynamics(
         groupby = ([groupby] if isinstance(groupby, str) else groupby) + [time_key]
 
     df = cell_type_ratios(adata, groupby=groupby, key=key, normalize="%", among=among)
-    df.index = df.index.set_levels(df.index.levels[-1].astype(str), level=-1)
+    df.index = df.index.set_levels(df.index.levels[-1].codes, level=-1)
     df_log_count = np.log(
         1 + cell_type_ratios(adata, groupby=groupby, key=key, normalize=False)
     )
