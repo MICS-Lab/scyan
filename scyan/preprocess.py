@@ -64,9 +64,8 @@ def auto_logicle_transform(
 def _logicle_inverse_one(adata: AnnData, obsm: Optional[str], marker: str) -> np.ndarray:
     column = adata[:, marker].X if obsm is None else adata[:, marker].obsm[obsm]
     column = column.flatten()
-    return flowutils.transforms.logicle_inverse(
-        column, None, *adata.uns["scyan_logicle"][marker]
-    )
+    t, m, w = adata.uns["scyan_logicle"][marker]
+    return flowutils.transforms.logicle_inverse(column, None, t=t, m=m, w=w)
 
 
 def asinh_transform(adata: AnnData, translation: float = 0, cofactor: float = 5) -> None:
@@ -215,3 +214,26 @@ def subsample(adata: AnnData, n_obs: int) -> AnnData:
     """
     indices = _subset(np.arange(adata.n_obs), n_obs)
     return adata[indices]
+
+
+def correct_spillover(adata: AnnData, key_added: Optional[str] = None):
+    """Use the spillover matrix in `adata.varp["spillover_matrix"]` to correct spillover
+
+    Args:
+        adata: An `AnnData` object
+        key_added: Optional key in `adata.layers` information is saved to. By default, saved in `adata.X`
+    """
+    assert "spillover_matrix" in adata.varp, f"No 'spillover_matrix' found in adata.varp"
+
+    if any(
+        name in adata.uns
+        for name in ["scyan_asinh", "scyan_logicle", "scyan_scaling_means"]
+    ):
+        log.warn("It is recommended to apply spillover only on raw data (unprocessed)")
+
+    corrected = adata.X @ adata.varp["spillover_matrix"].T
+
+    if key_added is None:
+        adata.X = corrected
+    else:
+        adata.layers[key_added] = corrected

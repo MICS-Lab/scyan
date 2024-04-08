@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "scyan"
-version = "1.5.4"
+version = "1.6.0"
 description = "Single-cell Cytometry Annotation Network"
 documentation = "https://mics-lab.github.io/scyan/"
 homepage = "https://mics-lab.github.io/scyan/"
@@ -19,33 +19,33 @@ classifiers = [
 packages = [{ include = "scyan" }]
 
 [tool.poetry.dependencies]
-python = ">=3.8,<3.11"
-anndata = "^0.8.0"
-torch = "^1.13"
-pytorch-lightning = "^1.6.4"
-seaborn = "^0.12.2"
-umap-learn = "^0.5.3"
-llvmlite = "^0.38.1"
-FlowUtils = "^1.0.0"
-fcsparser = "^0.2.4"
-fcswrite = "^0.6.2"
+python = ">=3.8,<3.13"
+anndata = ">=0.8.0"
+torch = ">=1.13"
+pytorch-lightning = ">=1.6.4"
+seaborn = ">=0.12.2"
+umap-learn = ">=0.5.3"
+llvmlite = ">=0.38.1"
+FlowUtils = ">=1.0.0"
+fcsparser = ">=0.2.4"
+fcswrite = ">=0.6.2"
 
-wandb = { version = "0.13.7", optional = true }
-hydra-core = { version = "^1.2.0", optional = true }
-hydra-colorlog = { version = "^1.2.0", optional = true }
-hydra-optuna-sweeper = { version = "^1.2.0", optional = true }
+wandb = { version = ">=0.13.7", optional = true }
+hydra-core = { version = ">=1.2.0", optional = true }
+hydra-colorlog = { version = ">=1.2.0", optional = true }
+hydra-optuna-sweeper = { version = ">=1.2.0", optional = true }
 
-pytest = { version = "^7.1.2", optional = true }
-ipykernel = { version = "^6.15.0", optional = true }
-ipywidgets = { version = "^7.7.1", optional = true }
-isort = { version = "^5.10.1", optional = true }
-black = { version = "^22.6.0", optional = true }
-mkdocs-material = { version = "^8.5.0", optional = true }
-mkdocstrings = { version = "^0.19.0", optional = true }
-mkdocstrings-python = { version = "^0.7.1", optional = true }
-mkdocs-jupyter = { version = "^0.21.0", optional = true }
+pytest = { version = ">=7.1.2", optional = true }
+ipykernel = { version = ">=6.15.0", optional = true }
+ipywidgets = { version = ">=7.7.1", optional = true }
+isort = { version = ">=5.10.1", optional = true }
+black = { version = ">=22.6.0", optional = true }
+mkdocs-material = { version = ">=8.5.0", optional = true }
+mkdocstrings = { version = ">=0.19.0", optional = true }
+mkdocstrings-python = { version = ">=0.7.1", optional = true }
+mkdocs-jupyter = { version = ">=0.21.0", optional = true }
 
-leidenalg = { version = "^0.8.10", optional = true }
+leidenalg = { version = ">=0.8.10", optional = true }
 
 [tool.poetry.extras]
 dev = [

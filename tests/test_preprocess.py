@@ -13,7 +13,7 @@ def assert_is_zero(a: np.ndarray, atol=1e-5) -> bool:
 def raw_adata() -> AnnData:
     adata, _ = scyan.data.load("aml", version="short")
     adata = adata.raw.to_adata()
-    adata.raw = adata
+    adata.raw = adata.copy()
     return adata
 
 
@@ -34,7 +34,7 @@ def test_asinh(raw_adata_cytof: AnnData):
 
 @pytest.fixture
 def test_autologicle(raw_adata: AnnData) -> AnnData:
-    scyan.preprocess.auto_logicle_transform(raw_adata)
+    scyan.preprocess.auto_logicle_transform(raw_adata, quantile_clip=None)
     return raw_adata
 
 
