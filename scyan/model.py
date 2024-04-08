@@ -407,7 +407,6 @@ class Scyan(pl.LightningModule):
             path: Path where the parameters were saved, i.e. the argument of `model.save(path)`.
         """
         self.load_state_dict(torch.load(path))
-        self.dataset = TensorDataset(self.x, self.covariates)
         self._is_fitted = True
 
     @property
@@ -416,10 +415,8 @@ class Scyan(pl.LightningModule):
 
     def train_dataloader(self):
         """PyTorch lightning `train_dataloader` implementation"""
-        self.dataset = TensorDataset(self.x, self.covariates)
-
         return DataLoader(
-            self.dataset,
+            TensorDataset(self.x, self.covariates),
             batch_size=self._batch_size,
             sampler=RandomSampler(self.adata.n_obs, self._n_samples),
             num_workers=self._num_workers,
@@ -428,7 +425,7 @@ class Scyan(pl.LightningModule):
     def predict_dataloader(self):
         """PyTorch lightning `predict_dataloader` implementation"""
         return DataLoader(
-            self.dataset,
+            TensorDataset(self.x, self.covariates),
             batch_size=self._batch_size,
             num_workers=self._num_workers,
         )
