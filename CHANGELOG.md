@@ -1,3 +1,7 @@
+## [1.6.1] - 2024-04-08
+
+Rename `correct_spillover` -> `compensate`
+
 ## [1.6.0] - 2024-04-08
 
 ### Changed
