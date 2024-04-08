@@ -18,6 +18,6 @@
     options:
       show_root_heading: true
 
-::: scyan.preprocess.correct_spillover
+::: scyan.preprocess.compensate
     options:
       show_root_heading: true

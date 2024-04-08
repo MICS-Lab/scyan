@@ -216,8 +216,8 @@ def subsample(adata: AnnData, n_obs: int) -> AnnData:
     return adata[indices]
 
 
-def correct_spillover(adata: AnnData, key_added: Optional[str] = None):
-    """Use the spillover matrix in `adata.varp["spillover_matrix"]` to correct spillover
+def compensate(adata: AnnData, key_added: Optional[str] = None):
+    """Use the spillover matrix in `adata.varp["spillover_matrix"]` to correct spillover from `adata.X`
 
     Args:
         adata: An `AnnData` object
@@ -231,7 +231,8 @@ def correct_spillover(adata: AnnData, key_added: Optional[str] = None):
     ):
         log.warn("It is recommended to apply spillover only on raw data (unprocessed)")
 
-    corrected = adata.X @ adata.varp["spillover_matrix"].T
+    S = adata.varp["spillover_matrix"]
+    corrected = np.linalg.solve(S, adata.X.T).T
 
     if key_added is None:
         adata.X = corrected
