@@ -1,3 +1,11 @@
+## [1.6.0] - tbd
+
+### Changed
+- More dependencies version support
+
+### Added
+- Spillover matrix reading + function to apply it in `scyan.preprocess`
+
 ## [1.5.4] - 2024-01-08
 
 ### Added

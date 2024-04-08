@@ -44,7 +44,7 @@ def read_fcs(
     names = pd.Series(
         [meta.get(f"$P{i + 1}{channel_suffix}") for i in range(data.shape[1])]
     )
-    fallback_names = [meta[f"$P{i + 1}N"] for i in range(data.shape[1])]
+    fallback_names = pd.Series([meta[f"$P{i + 1}N"] for i in range(data.shape[1])])
     data.columns = np.where(names.isna() | names.duplicated(False), fallback_names, names)
 
     exclude_markers = _check_exlude_markers(data, exclude_markers)
@@ -52,12 +52,38 @@ def read_fcs(
         data.columns, exclude_markers
     )
 
-    return AnnData(
+    adata = AnnData(
         X=data.loc[:, is_marker].values,
         var=pd.DataFrame(index=data.columns[is_marker]),
         obs=data.loc[:, ~is_marker],
         dtype=np.float32,
     )
+
+    if "$SPILLOVER" in meta:
+        df_spillover = _read_spillover_matrix(meta["$SPILLOVER"])
+        fallback_var_names = fallback_names[is_marker].values
+        is_in = np.isin(fallback_var_names, df_spillover.index)
+        if is_in.all():
+            adata.varp["spillover_matrix"] = df_spillover.loc[
+                fallback_var_names, fallback_var_names
+            ]
+        else:
+            log.warn(
+                f"Missing var names inside spillover matrix: {fallback_var_names[~is_in]}. The spillover matrix will be saved in adata.uns instead of adata.varp"
+            )
+            adata.uns["spillover_matrix"] = df_spillover
+
+    return adata
+
+
+def _read_spillover_matrix(spillover_string):
+    ncol, *elements = spillover_string.split(",")
+    ncol = int(ncol)
+
+    names = elements[:ncol]
+    X = np.array(elements[ncol:]).reshape((-1, ncol)).astype(float)
+
+    return pd.DataFrame(data=X, columns=names, index=names)
 
 
 def read_csv(

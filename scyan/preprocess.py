@@ -215,3 +215,26 @@ def subsample(adata: AnnData, n_obs: int) -> AnnData:
     """
     indices = _subset(np.arange(adata.n_obs), n_obs)
     return adata[indices]
+
+
+def correct_spillover(adata: AnnData, key_added: Optional[str] = None):
+    """Use the spillover matrix in `adata.varp["spillover_matrix"]` to correct spillover
+
+    Args:
+        adata: An `AnnData` object
+        key_added: Optional key in `adata.layers` information is saved to. By default, saved in `adata.X`
+    """
+    assert "spillover_matrix" in adata.varp, f"No 'spillover_matrix' found in adata.varp"
+
+    if any(
+        name in adata.uns
+        for name in ["scyan_asinh", "scyan_logicle", "scyan_scaling_means"]
+    ):
+        log.warn("It is recommended to apply spillover only on raw data (unprocessed)")
+
+    corrected = adata.X @ adata.varp["spillover_matrix"].T
+
+    if key_added is None:
+        adata.X = corrected
+    else:
+        adata.layers[key_added] = corrected
