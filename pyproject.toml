@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "scyan"
-version = "1.5.4"
+version = "1.6.0"
 description = "Single-cell Cytometry Annotation Network"
 documentation = "https://mics-lab.github.io/scyan/"
 homepage = "https://mics-lab.github.io/scyan/"

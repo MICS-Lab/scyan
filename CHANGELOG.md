@@ -1,4 +1,4 @@
-## [1.6.0] - tbd
+## [1.6.0] - 2024-04-08
 
 ### Changed
 - More dependencies version support
