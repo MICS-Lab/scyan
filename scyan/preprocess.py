@@ -64,9 +64,8 @@ def auto_logicle_transform(
 def _logicle_inverse_one(adata: AnnData, obsm: Optional[str], marker: str) -> np.ndarray:
     column = adata[:, marker].X if obsm is None else adata[:, marker].obsm[obsm]
     column = column.flatten()
-    return flowutils.transforms.logicle_inverse(
-        column, None, *adata.uns["scyan_logicle"][marker]
-    )
+    t, m, w = adata.uns["scyan_logicle"][marker]
+    return flowutils.transforms.logicle_inverse(column, None, t=t, m=m, w=w)
 
 
 def asinh_transform(adata: AnnData, translation: float = 0, cofactor: float = 5) -> None:

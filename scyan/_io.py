@@ -53,10 +53,9 @@ def read_fcs(
     )
 
     adata = AnnData(
-        X=data.loc[:, is_marker].values,
+        X=data.loc[:, is_marker].values.astype(np.float32),
         var=pd.DataFrame(index=data.columns[is_marker]),
         obs=data.loc[:, ~is_marker],
-        dtype=np.float32,
     )
 
     if "$SPILLOVER" in meta:
