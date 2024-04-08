@@ -2,9 +2,13 @@
 
 ### Changed
 - More dependencies version support
+- Use `"cpu"` accelerator by default
 
 ### Added
 - Spillover matrix reading + function to apply it in `scyan.preprocess`
+
+### Fixed
+- Issue when running `.predict` after training on GPU (#34)
 
 ## [1.5.4] - 2024-01-08
 

@@ -493,6 +493,7 @@ class Scyan(pl.LightningModule):
     def fit(
         self,
         max_epochs: int = 100,
+        accelerator: str = "cpu",
         min_delta: float = 1,
         patience: int = 4,
         num_workers: int = 0,
@@ -506,10 +507,14 @@ class Scyan(pl.LightningModule):
         """Train the `Scyan` model. On interactive Python (e.g., Jupyter Notebooks), training can be interrupted at any time without crashing.
 
         !!! note
+            The Pytorch Lightning training is used under the hood (see the corresponding API [here](https://lightning.ai/docs/pytorch/stable/common/trainer.html#trainer-class-api))
+
+        !!! note
             Depending on your machine, you may have a warning about some performance issues. You can simply set `num_workers` to the number indicated by the warning.
 
         Args:
             max_epochs: Maximum number of epochs.
+            accelerator: Accelerator used during training. See Pytorch Lightning docs.
             min_delta: min_delta parameters used for `EarlyStopping`. See Pytorch Lightning docs.
             patience: Number of epochs with no loss improvement before stopping training.
             num_workers: Pytorch DataLoader `num_workers` argument, i.e. how many subprocesses to use for data loading. 0 means that the data will be loaded in the main process.
@@ -538,6 +543,7 @@ class Scyan(pl.LightningModule):
             log_every_n_steps = min(log_every_n_steps, len(self.x) // self._batch_size)
             trainer = pl.Trainer(
                 max_epochs=max_epochs,
+                accelerator=accelerator,
                 callbacks=[esc] + (callbacks or []),
                 log_every_n_steps=log_every_n_steps,
                 enable_checkpointing=enable_checkpointing,
