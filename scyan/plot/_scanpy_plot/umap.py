@@ -16,7 +16,6 @@ from matplotlib import colors, patheffects
 from matplotlib import pyplot as pl
 from matplotlib import rcParams
 from matplotlib.axes import Axes
-from matplotlib.cm import get_cmap
 from matplotlib.collections import PatchCollection
 from matplotlib.colors import Colormap, Normalize, is_color_like
 from matplotlib.figure import Figure
@@ -323,7 +322,7 @@ def scanpy_pl_umap(
             raise ValueError("Cannot specify both `color_map` and `cmap`.")
         else:
             cmap = color_map
-    cmap = copy(get_cmap(cmap))
+    cmap = copy(pl.get_cmap(cmap))
     cmap.set_bad(na_color)
     kwargs["cmap"] = cmap
     # Prevents warnings during legend creation
