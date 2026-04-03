@@ -1,6 +1,6 @@
 from collections import defaultdict
+from collections.abc import Callable
 from functools import wraps
-from typing import Callable, List, Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -20,13 +20,13 @@ def plot_decorator(adata: bool = False):
         @wraps(f)
         def wrapper(model, *args, **kwargs):
             if adata:
-                assert isinstance(
-                    model, AnnData
-                ), f"{f.__name__} first argument has to be anndata.AnnData instance. Received type {type(model)}."
+                assert isinstance(model, AnnData), (
+                    f"{f.__name__} first argument has to be anndata.AnnData instance. Received type {type(model)}."
+                )
             else:
-                assert isinstance(
-                    model, Scyan
-                ), f"{f.__name__} first argument has to be scyan.Scyan model. Received type {type(model)}."
+                assert isinstance(model, Scyan), (
+                    f"{f.__name__} first argument has to be scyan.Scyan model. Received type {type(model)}."
+                )
 
             res = f(model, *args, **kwargs)
             if kwargs.get("show", True):
@@ -45,7 +45,7 @@ def check_population(return_list: bool = False, one: bool = False):
         @wraps(f)
         def wrapper(
             model: Scyan,
-            population: Union[str, List[str], None],
+            population: str | list[str] | None,
             *args,
             key="scyan_pop",
             **kwargs,
@@ -57,23 +57,17 @@ def check_population(return_list: bool = False, one: bool = False):
                 populations = adata.obs[key].cat.categories.values
             else:
                 populations = set(adata.obs[key].values)
-            if isinstance(population, str) or isinstance(population, bool):
+            if isinstance(population, (str, bool)):
                 if population not in populations:
-                    raise NameError(
-                        f"Invalid input population. '{population}' has to be one of {populations}."
-                    )
+                    raise NameError(f"Invalid input population. '{population}' has to be one of {populations}.")
                 if return_list:
                     population = [population]
             else:
                 if one:
-                    raise ValueError(
-                        f"Argument 'population' has to be a string or a bool. Found {population}."
-                    )
+                    raise ValueError(f"Argument 'population' has to be a string or a bool. Found {population}.")
                 not_found_names = [p for p in population if p not in populations]
                 if not_found_names:
-                    raise NameError(
-                        f"Invalid input population list. {not_found_names} has to be inside {populations}."
-                    )
+                    raise NameError(f"Invalid input population list. {not_found_names} has to be inside {populations}.")
             return f(model, population, *args, key=key, **kwargs)
 
         return wrapper
@@ -84,7 +78,7 @@ def check_population(return_list: bool = False, one: bool = False):
 def get_palette_others(
     data: pd.DataFrame,
     key: str,
-    palette: str = None,
+    palette: str | None = None,
     others: str = "Others",
     value: float = 0.5,
 ):
@@ -92,13 +86,13 @@ def get_palette_others(
 
     colors = sns.color_palette(palette or "Set1", len(pops))
     colors = dict(zip(pops, colors))
-    if others in colors.keys():
+    if others in colors:
         colors[others] = (value, value, value)
 
     return colors
 
 
-def ks_statistics(adata: AnnData, key: str, populations: List[str], max_obs: int = 5000):
+def ks_statistics(adata: AnnData, key: str, populations: list[str], max_obs: int = 5000):
     statistics = defaultdict(float)
 
     for pop in populations:
@@ -114,36 +108,32 @@ def ks_statistics(adata: AnnData, key: str, populations: List[str], max_obs: int
         adata2 = adata2[_get_subset_indices(adata2.n_obs, max_obs)]
 
         for marker in adata.var_names:
-            statistics[marker] += stats.kstest(
-                adata1[:, marker].X.flatten(), adata2[:, marker].X.flatten()
-            ).statistic
+            statistics[marker] += stats.kstest(adata1[:, marker].X.flatten(), adata2[:, marker].X.flatten()).statistic
 
     return statistics
 
 
 def select_markers(
     adata: AnnData,
-    markers: Optional[List[str]],
-    n_markers: Optional[int],
+    markers: list[str] | None,
+    n_markers: int | None,
     key: str,
-    populations: List[str],
+    populations: list[str],
     min_markers: int = 2,
 ):
+    MIN_MARKERS_ERROR = f"Provide at least {min_markers} marker(s) to plot or use 'scyan.plot.kde'"
+
     if populations is None:
-        assert (
-            markers is not None
-        ), "If no population is provided, you should choose the list of markers by providing the 'markers' argument."
+        assert markers is not None, (
+            "If no population is provided, you should choose the list of markers by providing the 'markers' argument."
+        )
         assert len(markers) >= min_markers, MIN_MARKERS_ERROR
         return markers
 
-    MIN_MARKERS_ERROR = (
-        f"Provide at least {min_markers} marker(s) to plot or use 'scyan.plot.kde'"
-    )
-
     if markers is None:
-        assert (
-            n_markers is not None
-        ), "You need to provide a list of markers or a number of markers to be chosen automatically"
+        assert n_markers is not None, (
+            "You need to provide a list of markers or a number of markers to be chosen automatically"
+        )
         assert n_markers >= min_markers, MIN_MARKERS_ERROR
 
         statistics = ks_statistics(adata, key, populations)

@@ -2,19 +2,18 @@
 
 import collections.abc as cabc
 import logging
+from collections.abc import Collection, Sequence
 from copy import copy
 from functools import partial
 from itertools import combinations, product
 from numbers import Integral
-from typing import Collection, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import pandas as pd
 from anndata import AnnData
 from cycler import Cycler, cycler
-from matplotlib import colors, patheffects
+from matplotlib import colors, patheffects, rcParams
 from matplotlib import pyplot as pl
-from matplotlib import rcParams
 from matplotlib.axes import Axes
 from matplotlib.collections import PatchCollection
 from matplotlib.colors import Colormap, Normalize, is_color_like
@@ -27,9 +26,7 @@ from . import palettes
 log = logging.getLogger(__name__)
 
 
-def circles(
-    x, y, s, ax, marker=None, c="b", vmin=None, vmax=None, scale_factor=1.0, **kwargs
-):
+def circles(x, y, s, ax, marker=None, c="b", vmin=None, vmax=None, scale_factor=1.0, **kwargs):
     """
     Taken from here: https://gist.github.com/syrte/592a062c562cd2a98a83
     Make a scatter plot of circles.
@@ -190,10 +187,7 @@ def _set_colors_for_categorical_obs(adata, value_to_plot, palette):
                     if color in palettes.additional_colors:
                         color = palettes.additional_colors[color]
                     else:
-                        raise ValueError(
-                            "The following color value of the given palette "
-                            f"is not valid: {color}"
-                        )
+                        raise ValueError(f"The following color value of the given palette is not valid: {color}")
                 _color_list.append(color)
 
             palette = cycler(color=_color_list)
@@ -252,51 +246,49 @@ def _set_default_colors_for_categorical_obs(adata, value_to_plot):
     _set_colors_for_categorical_obs(adata, value_to_plot, palette[:length])
 
 
-def scanpy_pl_umap(
+def scanpy_pl_umap(  # noqa: C901
     adata: AnnData,
-    color: Union[str, Sequence[str], None] = None,
-    gene_symbols: Optional[str] = None,
-    use_raw: Optional[bool] = None,
+    color: str | list[str] | None = None,
+    gene_symbols: str | None = None,
+    use_raw: bool | None = None,
     sort_order: bool = True,
-    groups: Optional[str] = None,
-    components: Union[str, Sequence[str]] = None,
-    dimensions: Optional[Union[Tuple[int, int], Sequence[Tuple[int, int]]]] = None,
-    layer: Optional[str] = None,
-    scale_factor: Optional[float] = None,
-    color_map: Union[Colormap, str, None] = None,
-    cmap: Union[Colormap, str, None] = None,
+    groups: str | None = None,
+    components: str | list[str] | None = None,
+    dimensions: tuple[int, int] | list[tuple[int, int]] | None = None,
+    layer: str | None = None,
+    scale_factor: float | None = None,
+    color_map: Colormap | str | None = None,
+    cmap: Colormap | str | None = None,
     palette=None,
     na_color="lightgray",
     na_in_legend: bool = True,
-    size: Union[float, Sequence[float], None] = None,
-    frameon: Optional[bool] = False,
+    size: float | list[float] | None = None,
+    frameon: bool | None = False,
     legend_fontsize=None,
     legend_fontweight="bold",
     legend_loc: str = "right margin",
-    legend_fontoutline: Optional[int] = None,
-    colorbar_loc: Optional[str] = "right",
+    legend_fontoutline: int | None = None,
+    colorbar_loc: str | None = "right",
     vmax=None,
     vmin=None,
     vcenter=None,
-    norm: Union[Normalize, Sequence[Normalize], None] = None,
-    add_outline: Optional[bool] = False,
-    outline_width: Tuple[float, float] = (0.3, 0.05),
-    outline_color: Tuple[str, str] = ("black", "white"),
+    norm: Normalize | Sequence[Normalize] | None = None,
+    add_outline: bool | None = False,
+    outline_width: tuple[float, float] = (0.3, 0.05),
+    outline_color: tuple[str, str] = ("black", "white"),
     ncols: int = 4,
     hspace: float = 0.25,
-    wspace: Optional[float] = None,
-    title: Union[str, Sequence[str], None] = None,
-    show: Optional[bool] = None,
-    ax: Optional[Axes] = None,
-    return_fig: Optional[bool] = None,
+    wspace: float | None = None,
+    title: str | Sequence[str] | None = None,
+    show: bool | None = None,
+    ax: Axes | None = None,
+    return_fig: bool | None = None,
     **kwargs,
-) -> Union[Figure, Axes, None]:
+) -> Figure | Axes | None:
     adata.strings_to_categoricals()
 
     basis_values = adata.obsm["X_umap"]
-    dimensions = _components_to_dimensions(
-        components, dimensions, total_dims=basis_values.shape[1]
-    )
+    dimensions = _components_to_dimensions(components, dimensions, total_dims=basis_values.shape[1])
 
     # Figure out if we're using raw
     if use_raw is None:
@@ -304,14 +296,10 @@ def scanpy_pl_umap(
         use_raw = layer is None and adata.raw is not None
     if use_raw and layer is not None:
         raise ValueError(
-            "Cannot use both a layer and the raw representation. Was passed:"
-            f"use_raw={use_raw}, layer={layer}."
+            f"Cannot use both a layer and the raw representation. Was passed:use_raw={use_raw}, layer={layer}."
         )
     if use_raw and adata.raw is None:
-        raise ValueError(
-            "`use_raw` is set to True but AnnData object does not have raw. "
-            "Please check."
-        )
+        raise ValueError("`use_raw` is set to True but AnnData object does not have raw. Please check.")
 
     if isinstance(groups, str):
         groups = [groups]
@@ -385,14 +373,9 @@ def scanpy_pl_umap(
     # 'color' is a list of names that want to be plotted.
     # Eg. ['Gene1', 'louvain', 'Gene2'].
     # component_list is a list of components [[0,1], [1,2]]
-    if (
-        not isinstance(color, str) and isinstance(color, cabc.Sequence) and len(color) > 1
-    ) or len(dimensions) > 1:
+    if (not isinstance(color, str) and isinstance(color, cabc.Sequence) and len(color) > 1) or len(dimensions) > 1:
         if ax is not None:
-            raise ValueError(
-                "Cannot specify `ax` when plotting multiple panels "
-                "(each for a given value of 'color')."
-            )
+            raise ValueError("Cannot specify `ax` when plotting multiple panels (each for a given value of 'color').")
 
         # each plot needs to be its own panel
         fig, grid = _panel_grid(hspace, wspace, ncols, len(color))
@@ -462,8 +445,7 @@ def scanpy_pl_umap(
                 ax.set_title(title[count])
             except IndexError:
                 log.warning(
-                    "The title list is shorter than the number of panels. "
-                    "Using 'color' value instead for some plots."
+                    "The title list is shorter than the number of panels. Using 'color' value instead for some plots."
                 )
                 ax.set_title(value_to_plot)
 
@@ -483,9 +465,7 @@ def scanpy_pl_umap(
         scatter = (
             partial(ax.scatter, s=size, plotnonfinite=True)
             if scale_factor is None
-            else partial(
-                circles, s=size, ax=ax, scale_factor=scale_factor
-            )  # size in circles is radius
+            else partial(circles, s=size, ax=ax, scale_factor=scale_factor)  # size in circles is radius
         )
 
         if add_outline:
@@ -563,9 +543,7 @@ def scanpy_pl_umap(
             continue
 
         if legend_fontoutline is not None:
-            path_effect = [
-                patheffects.withStroke(linewidth=legend_fontoutline, foreground="w")
-            ]
+            path_effect = [patheffects.withStroke(linewidth=legend_fontoutline, foreground="w")]
         else:
             path_effect = None
 
@@ -585,9 +563,7 @@ def scanpy_pl_umap(
                 multi_panel=bool(grid),
             )
         elif colorbar_loc is not None:
-            pl.colorbar(
-                cax, ax=ax, pad=0.01, fraction=0.08, aspect=30, location=colorbar_loc
-            )
+            pl.colorbar(cax, ax=ax, pad=0.01, fraction=0.08, aspect=30, location=colorbar_loc)
 
     if return_fig is True:
         return fig
@@ -630,7 +606,7 @@ def _get_vboundnorm(
     norm: Sequence[Normalize],
     index: int,
     color_vector: Sequence[float],
-) -> Tuple[Union[float, None], Union[float, None]]:
+) -> tuple[float | None, float | None]:
     """
     Evaluates the value of vmin, vmax and vcenter, which could be a
     str in which case is interpreted as a percentile and should
@@ -649,7 +625,7 @@ def _get_vboundnorm(
     index
         This index of the plot
     color_vector
-        List or values for the plot
+        list or values for the plot
 
     Returns
     -------
@@ -669,7 +645,7 @@ def _get_vboundnorm(
             try:
                 v_value = v[index]
             except IndexError:
-                log.error(
+                log.exception(
                     f"The parameter {v_name} is not valid. If setting multiple {v_name} values,"
                     f"check that the length of the {v_name} list is equal to the number "
                     "of plots. "
@@ -681,7 +657,7 @@ def _get_vboundnorm(
                 try:
                     float(v_value[1:])
                 except ValueError:
-                    log.error(
+                    log.exception(
                         f"The parameter {v_name}={v_value} for plot number {index + 1} is not valid. "
                         f"Please check the correct format for percentiles."
                     )
@@ -700,7 +676,7 @@ def _get_vboundnorm(
                 try:
                     float(v_value)
                 except ValueError:
-                    log.error(
+                    log.exception(
                         f"The given {v_name}={v_value} for plot number {index + 1} is not valid. "
                         f"Please check that the value given is a valid number, a string "
                         f"starting with 'p' for percentiles or a valid function."
@@ -712,11 +688,11 @@ def _get_vboundnorm(
 
 
 def _components_to_dimensions(
-    components: Optional[Union[str, Collection[str]]],
-    dimensions: Optional[Union[Collection[int], Collection[Collection[int]]]],
+    components: str | list[str] | None,
+    dimensions: tuple[int, int] | list[tuple[int, int]] | None,
     *,
     total_dims: int,
-) -> List[Collection[int]]:
+) -> list[Collection[int]]:
     """Normalize components/ dimensions args for embedding plots."""
     # TODO: Deprecate components kwarg
     ndims = 2
@@ -761,9 +737,7 @@ def _add_categorical_legend(
     """Add a legend to the passed Axes."""
     if na_in_legend and pd.isnull(color_source_vector).any():
         if "NA" in color_source_vector:
-            raise NotImplementedError(
-                "No fallback for null labels has been defined if NA already in categories."
-            )
+            raise NotImplementedError("No fallback for null labels has been defined if NA already in categories.")
         color_source_vector = color_source_vector.add_categories("NA").fillna("NA")
         palette = palette.copy()
         palette["NA"] = na_color
@@ -811,9 +785,7 @@ def _add_categorical_legend(
             )
 
 
-def _get_color_source_vector(
-    adata, value_to_plot, use_raw=False, gene_symbols=None, layer=None, groups=None
-):
+def _get_color_source_vector(adata, value_to_plot, use_raw=False, gene_symbols=None, layer=None, groups=None):
     """
     Get array from adata that colors will be based on.
     """
@@ -823,11 +795,7 @@ def _get_color_source_vector(
         # _color_vector handles this.
         # https://github.com/matplotlib/matplotlib/issues/18294
         return np.broadcast_to(np.nan, adata.n_obs)
-    if (
-        gene_symbols is not None
-        and value_to_plot not in adata.obs.columns
-        and value_to_plot not in adata.var_names
-    ):
+    if gene_symbols is not None and value_to_plot not in adata.obs.columns and value_to_plot not in adata.var_names:
         # We should probably just make an index for this, and share it over runs
         value_to_plot = adata.var.index[adata.var[gene_symbols] == value_to_plot][
             0
@@ -854,9 +822,7 @@ def _get_palette(adata, values_key: str, palette=None):
     return dict(zip(values.categories, adata.uns[color_key]))
 
 
-def _color_vector(
-    adata, values_key: str, values, palette, na_color="lightgray"
-) -> Tuple[np.ndarray, bool]:
+def _color_vector(adata, values_key: str, values, palette, na_color="lightgray") -> tuple[np.ndarray, bool]:
     """
     Map array of values to array of hex (plus alpha) codes.
 
@@ -875,10 +841,7 @@ def _color_vector(
     if not is_categorical_dtype(values):
         return values, False
     else:  # is_categorical_dtype(values)
-        color_map = {
-            k: to_hex(v)
-            for k, v in _get_palette(adata, values_key, palette=palette).items()
-        }
+        color_map = {k: to_hex(v) for k, v in _get_palette(adata, values_key, palette=palette).items()}
         # If color_map does not have unique values, this can be slow as the
         # result is not categorical
         color_vector = pd.Categorical(values.map(color_map))
@@ -892,12 +855,9 @@ def _color_vector(
 
 def _broadcast_args(*args):
     """Broadcasts arguments to a common length."""
-    from itertools import repeat
 
     lens = [len(arg) for arg in args]
     longest = max(lens)
     if not (set(lens) == {1, longest} or set(lens) == {longest}):
         raise ValueError(f"Could not broadast together arguments with shapes: {lens}.")
-    return list(
-        [[arg[0] for _ in range(longest)] if len(arg) == 1 else arg for arg in args]
-    )
+    return [[arg[0] for _ in range(longest)] if len(arg) == 1 else arg for arg in args]

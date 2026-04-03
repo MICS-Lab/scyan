@@ -26,9 +26,7 @@ Scyan is a Bayesian probabilistic model composed of a deep invertible neural net
 
 # Getting started
 
-Scyan can be installed on every OS with `pip` or [`poetry`](https://python-poetry.org/docs/).
-
-On macOS / Linux, `python>=3.8,<3.11` is required, while `python>=3.8,<3.10` is required on Windows. The preferred Python version is `3.9`.
+Scyan can be installed on every OS with `pip` for `python>=3.11`.
 
 ## Install from PyPI (recommended)
 
@@ -41,7 +39,7 @@ pip install scyan
 > Advice (optional): We advise creating a new environment via a package manager (except if you use Poetry, which will automatically create the environment). For instance, you can create a new `conda` environment:
 >
 > ```bash
-> conda create --name scyan python=3.9
+> conda create --name scyan python=12
 > conda activate scyan
 > ```
 
@@ -58,7 +56,6 @@ Choose one of the following, depending on your needs (it should take at most a f
 pip install .                            # pip minimal installation (library only)
 pip install -e .                         # pip installation in editable mode
 pip install -e '.[dev,hydra,discovery]'  # pip installation with all the extras
-poetry install -E 'dev hydra discovery'  # poetry installation with all the extras
 ```
 
 ## Basic usage / Demo
@@ -104,5 +101,4 @@ Our paper is published in ***Briefings in Bioinformatics*** and is available [he
     url = {https://doi.org/10.1093/bib/bbad260},
     eprint = {https://academic.oup.com/bib/advance-article-pdf/doi/10.1093/bib/bbad260/50973199/bbad260.pdf},
 }
-
 ```

@@ -1,13 +1,11 @@
-[tool.poetry]
+[project]
 name = "scyan"
 version = "1.6.2"
 description = "Single-cell Cytometry Annotation Network"
-documentation = "https://mics-lab.github.io/scyan/"
-homepage = "https://mics-lab.github.io/scyan/"
-repository = "https://github.com/MICS-Lab/scyan"
-authors = ["Blampey Quentin <quentin.blampey@gmail.com>"]
-license = "BSD-3-Clause"
+authors = [{ name = "Blampey Quentin", email = "quentin.blampey@gmail.com" }]
+requires-python = ">=3.11"
 readme = "README.md"
+license = "BSD-3-Clause"
 classifiers = [
   "License :: OSI Approved :: BSD License",
   "Operating System :: MacOS :: MacOS X",
@@ -15,85 +13,121 @@ classifiers = [
   "Operating System :: Microsoft :: Windows",
   "Programming Language :: Python :: 3",
   "Topic :: Scientific/Engineering",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
 ]
-packages = [{ include = "scyan" }]
+dependencies = [
+  "anndata>=0.12.0",
+  "torch>=2.2.0",
+  "lightning>=2.2.0",
+  "seaborn>=0.12.2",
+  "umap-learn>=0.5.3",
+  "llvmlite>=0.38.1",
+  "FlowUtils>=1.2.0",
+  "fcsparser>=0.2.4",
+  "fcswrite>=0.6.2",
+]
 
-[tool.poetry.dependencies]
-python = ">=3.8,<3.13"
-anndata = ">=0.8.0"
-torch = ">=1.13"
-pytorch-lightning = ">=1.6.4"
-seaborn = ">=0.12.2"
-umap-learn = ">=0.5.3"
-llvmlite = ">=0.38.1"
-FlowUtils = ">=1.0.0"
-fcsparser = ">=0.2.4"
-fcswrite = ">=0.6.2"
-
-wandb = { version = ">=0.13.7", optional = true }
-hydra-core = { version = ">=1.2.0", optional = true }
-hydra-colorlog = { version = ">=1.2.0", optional = true }
-hydra-optuna-sweeper = { version = ">=1.2.0", optional = true }
-
-pytest = { version = ">=7.1.2", optional = true }
-ipykernel = { version = ">=6.15.0", optional = true }
-ipywidgets = { version = ">=7.7.1", optional = true }
-isort = { version = ">=5.10.1", optional = true }
-black = { version = ">=22.6.0", optional = true }
-mkdocs-material = { version = ">=8.5.0", optional = true }
-mkdocstrings = { version = ">=0.19.0", optional = true }
-mkdocstrings-python = { version = ">=0.7.1", optional = true }
-mkdocs-jupyter = { version = ">=0.21.0", optional = true }
-
-leidenalg = { version = ">=0.8.10", optional = true }
-
-[tool.poetry.extras]
+[project.optional-dependencies]
 dev = [
-  "pytest",
-  "ipykernel",
-  "ipywidgets",
-  "isort",
-  "black",
-  "mkdocs-material",
-  "mkdocstrings",
-  "mkdocstrings-python",
-  "mkdocs-jupyter",
+  "ruff>=0.11.4",
+  "pre-commit>=3.8.0",
+  "pytest>=7.1.2",
+  "ipykernel>=6.15.0",
+  "ipywidgets>=7.7.1",
+  "mkdocs-material>=8.5.0",
+  "mkdocstrings>=0.19.0",
+  "mkdocstrings-python>=0.7.1",
+  "mkdocs-jupyter>=0.21.0",
 ]
-hydra = ["wandb", "hydra-core", "hydra-colorlog", "hydra-optuna-sweeper"]
-discovery = ["leidenalg"]
+hydra = [
+  "wandb>=0.13.7",
+  "hydra-core>=1.2.0",
+  "hydra-colorlog>=1.2.0",
+  "hydra-optuna-sweeper>=1.2.0",
+]
+discovery = ["leidenalg>=0.8.10"]
+
+[project.urls]
+Homepage = "https://mics-lab.github.io/scyan/"
+Repository = "https://github.com/MICS-Lab/scyan"
+Documentation = "https://mics-lab.github.io/scyan/"
+
+[tool.hatch.build.targets.sdist]
+include = ["scyan"]
+
+[tool.hatch.build.targets.wheel]
+include = ["scyan"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
-
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = "test_*.py"
-filterwarnings = [
-  "ignore::DeprecationWarning",
-  "ignore::UserWarning",
-  "ignore:::.*anndata*",
+
+[tool.ruff]
+target-version = "py39"
+line-length = 120
+fix = true
+
+[tool.ruff.lint]
+select = [
+  # flake8-2020
+  "YTT",
+  # flake8-bandit
+  "S",
+  # flake8-bugbear
+  "B",
+  # flake8-builtins
+  "A",
+  # flake8-comprehensions
+  "C4",
+  # flake8-debugger
+  "T10",
+  # flake8-simplify
+  "SIM",
+  # isort
+  "I",
+  # mccabe
+  "C90",
+  # pycodestyle
+  "E",
+  "W",
+  # pyflakes
+  "F",
+  # pygrep-hooks
+  "PGH",
+  # pyupgrade
+  "UP",
+  # ruff
+  "RUF",
+  # tryceratops
+  "TRY",
+]
+ignore = [
+  # LineTooLong
+  "E501",
+  # DoNotAssignLambda
+  "E731",
+  # DoNotUseAssert
+  "S101",
+  "TRY003",
+  "RUF012",
+  "B904",
+  "E722",
 ]
 
-[tool.black]
-line-length = 90
-include = '\.pyi?$'
-exclude = '''
-/(
-      \.eggs         # exclude a few common directories in the
-    | \.git          # root of the project
-    | \.hg
-    | \.mypy_cache
-    | \.tox
-    | \.venv
-    | _build
-    | buck-out
-    | build
-    | dist
-  )/
-'''
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101"]
+"__init__.py" = ["F401", "I001"]
+"*.ipynb" = ["F401"]
 
-[tool.isort]
-profile = "black"
-skip_glob = ["*/__init__.py"]
+[tool.ruff.format]
+preview = true

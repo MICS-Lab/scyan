@@ -2,7 +2,7 @@
 
 """Color palettes in addition to matplotlib's palettes."""
 
-from typing import Mapping, Sequence
+from collections.abc import Mapping, Sequence
 
 from matplotlib import cm, colors
 
@@ -187,7 +187,7 @@ default_102 = godsnot_102
 def _plot_color_cycle(clists: Mapping[str, Sequence[str]]):
     import matplotlib.pyplot as plt
     import numpy as np
-    from matplotlib.colors import BoundaryNorm, ListedColormap
+    from matplotlib.colors import BoundaryNorm, listedColormap
 
     fig, axes = plt.subplots(nrows=len(clists))
     fig.subplots_adjust(top=0.95, bottom=0.01, left=0.3, right=0.99)
@@ -198,7 +198,7 @@ def _plot_color_cycle(clists: Mapping[str, Sequence[str]]):
         ax.imshow(
             np.arange(n)[None, :].repeat(2, 0),
             aspect="auto",
-            cmap=ListedColormap(clist),
+            cmap=listedColormap(clist),
             norm=BoundaryNorm(np.arange(n + 1) - 0.5, n),
         )
         pos = list(ax.get_position().bounds)
@@ -250,6 +250,4 @@ additional_colors = {
 }
 
 if __name__ == "__main__":
-    _plot_color_cycle(
-        {name: colors for name, colors in globals().items() if isinstance(colors, list)}
-    )
+    _plot_color_cycle({name: colors for name, colors in globals().items() if isinstance(colors, list)})

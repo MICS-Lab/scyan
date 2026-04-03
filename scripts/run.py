@@ -41,9 +41,7 @@ def main(config: DictConfig) -> float:
             wandb.init(
                 project=config.project.wandb_project_name,
                 mode=config.wandb.mode,
-                config=OmegaConf.to_container(
-                    config, resolve=True, throw_on_missing=True
-                ),
+                config=OmegaConf.to_container(config, resolve=True, throw_on_missing=True),
                 reinit=True,
             )
             wandb_logger = WandbLogger()
@@ -53,9 +51,7 @@ def main(config: DictConfig) -> float:
         model: Scyan = utils.init_and_fit_model(adata, table, config, wandb_logger)
 
         if config.save_predictions:
-            adata.obs[["scyan_pop"]].reset_index().to_csv(
-                f"pred_{config.project.name}_{i}.csv"
-            )
+            adata.obs[["scyan_pop"]].reset_index().to_csv(f"pred_{config.project.name}_{i}.csv")
 
         # Runs only when W&B is enabled and when save UMAP is True
         utils.compute_umap(model, config)

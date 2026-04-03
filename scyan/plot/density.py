@@ -1,5 +1,3 @@
-from typing import List, Optional, Union
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -14,11 +12,11 @@ from .utils import check_population, get_palette_others, plot_decorator, select_
 @check_population(return_list=True)
 def kde(
     adata: AnnData,
-    population: Union[str, List[str], None],
-    markers: Optional[List[str]] = None,
+    population: str | list[str] | None,
+    markers: list[str] | None = None,
     key: str = "scyan_pop",
-    n_markers: Optional[int] = 3,
-    n_cells: Optional[int] = 100_000,
+    n_markers: int | None = 3,
+    n_cells: int | None = 100_000,
     ncols: int = 2,
     var_name: str = "Marker",
     value_name: str = "Expression",
@@ -29,7 +27,7 @@ def kde(
     Args:
         adata: An `AnnData` object.
         population: One population, or a list of population to be analyzed, or `None`. If not `None`, the population name(s) has to be in `adata.obs[key]`.
-        markers: List of markers to plot. If `None`, the list is chosen automatically.
+        markers: list of markers to plot. If `None`, the list is chosen automatically.
         key: Key to look for populations in `adata.obs`. By default, uses the model predictions.
         n_markers: Number of markers to choose automatically if `markers is None`.
         n_cells: Number of cells to be considered for the heatmap (to accelerate it when $N$ is very high). If `None`, consider all cells.
@@ -60,7 +58,7 @@ def kde(
             col_wrap=ncols,
             kind="kde",
             common_norm=False,
-            facet_kws=dict(sharey=False),
+            facet_kws={"sharey": False},
         )
         return
 
@@ -83,7 +81,7 @@ def kde(
         col_wrap=ncols,
         kind="kde",
         common_norm=False,
-        facet_kws=dict(sharey=False),
+        facet_kws={"sharey": False},
         palette=get_palette_others(df, key),
         hue_order=sorted(df[key].unique(), key="Others".__eq__),
     )
@@ -100,9 +98,7 @@ def log_prob_threshold(adata: AnnData, show: bool = True):
         adata: The `AnnData` object used during the model training.
         show: Whether or not to display the figure.
     """
-    assert (
-        "scyan_log_probs" in adata.obs
-    ), f"Cannot find 'scyan_log_probs' in adata.obs. Have you run model.predict()?"
+    assert "scyan_log_probs" in adata.obs, "Cannot find 'scyan_log_probs' in adata.obs. Have you run model.predict()?"
 
     x = np.sort(adata.obs["scyan_log_probs"])
     y = 1 - np.arange(len(x)) / float(len(x))

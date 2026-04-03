@@ -1,5 +1,4 @@
 import logging
-from typing import List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -29,13 +28,13 @@ def leiden(
         import leidenalg
     except:
         raise ImportError(
-            """To run leiden, you need to have 'leidenalg' installed. You can install the population discovery extra with "pip install 'scyan[discovery]'", or directly install leidenalg with "conda install -c conda-forge leidenalg"."""
+            """To run leiden, you need to have 'leidenalg' installed. You can install it with "pip install leidenalg", or  "conda install -c conda-forge leidenalg"."""
         )
 
     import igraph as ig
     from sklearn.neighbors import kneighbors_graph
 
-    if not "knn_graph" in adata.obsp:
+    if "knn_graph" not in adata.obsp:
         adata.obsp["knn_graph"] = kneighbors_graph(
             adata.X, n_neighbors=n_neighbors, metric="euclidean", include_self=False
         )
@@ -54,7 +53,7 @@ def leiden(
 def subcluster(
     adata: AnnData,
     population: str,
-    markers: Optional[List[str]] = None,
+    markers: list[str] | None = None,
     key: str = "scyan_pop",
     resolution: float = 0.2,
     size_ratio_th: float = 0.02,
@@ -81,9 +80,7 @@ def subcluster(
     markers = list(adata.var_names if markers is None else markers)
 
     if leiden_key in adata.obs and adata.uns.get(leiden_key, []) == markers:
-        log.info(
-            "Found leiden labels with the same resolution. Skipping leiden clustering."
-        )
+        log.info("Found leiden labels with the same resolution. Skipping leiden clustering.")
         indices = np.where(~adata.obs[leiden_key].isna())[0]
         adata_sub = adata[indices, markers].copy()
     else:
@@ -113,13 +110,9 @@ def subcluster(
     counts = adata_sub.obs[leiden_key].value_counts()
     remove = counts < max(counts.sum() * size_ratio_th, min_cells_th)
 
-    assert (
-        not remove.all()
-    ), "All subclusters where filtered. Consider updating size_ratio_th and/or min_cells_th."
+    assert not remove.all(), "All subclusters where filtered. Consider updating size_ratio_th and/or min_cells_th."
 
-    adata_sub.obs.loc[
-        np.isin(adata_sub.obs[leiden_key], remove[remove].index), leiden_key
-    ] = np.nan
+    adata_sub.obs.loc[np.isin(adata_sub.obs[leiden_key], remove[remove].index), leiden_key] = np.nan
 
     series = pd.Series(index=np.arange(adata.n_obs), dtype=str)
     series[indices] = adata_sub.obs[leiden_key].values
@@ -134,12 +127,12 @@ def subcluster(
 
 def umap(
     adata: AnnData,
-    markers: Optional[List[str]] = None,
-    obsm: Optional[str] = None,
-    n_cells: Optional[int] = 200_000,
+    markers: list[str] | None = None,
+    obsm: str | None = None,
+    n_cells: int | None = 200_000,
     min_dist: float = 0.5,
     obsm_key: str = "X_umap",
-    filter: Optional[Tuple] = None,
+    filter: tuple | None = None,  # noqa: A002
     **umap_kwargs: int,
 ) -> UMAP:
     """Run a [UMAP](https://umap-learn.readthedocs.io/en/latest/) on a specific set of markers (or all markers by default). It can be useful to show differences that are due to some markers of interest, instead of using the whole panel.
@@ -154,7 +147,7 @@ def umap(
 
     Args:
         adata: An `AnnData` object.
-        markers: List marker names. By default, use all the panel markers, i.e., `adata.var_names`.
+        markers: list marker names. By default, use all the panel markers, i.e., `adata.var_names`.
         obsm: Name of the obsm to consider to train the UMAP. By default, uses `adata.X`.
         n_cells: Number of cells to be considered for the UMAP (to accelerate it when $N$ is very high). If `None`, consider all cells.
         min_dist: Min dist UMAP parameter.

@@ -1,6 +1,5 @@
 import logging
 from pathlib import Path
-from typing import List, Optional, Tuple, Union
 
 import anndata
 import numpy as np
@@ -17,7 +16,7 @@ log = logging.getLogger(__name__)
 def _download(url, filepath):
     import requests
 
-    r = requests.get(url, stream=True)
+    r = requests.get(url, stream=True)  # noqa: S113
 
     if r.status_code == 404:
         raise FileNotFoundError(f"File at url {url} was not found")
@@ -38,7 +37,7 @@ def _download(url, filepath):
 
 def get_local_file(
     dataset_path: Path, dataset_name: str, name: str, ext: str
-) -> Union[AnnData, pd.DataFrame, umap.UMAP]:
+) -> tuple[AnnData, pd.DataFrame, umap.UMAP]:
     """Get an `anndata` or a `csv` file into memory. If the file does not exist locally, it is downloaded from Gitlab.
 
     Args:
@@ -68,21 +67,19 @@ def get_local_file(
         base_url = "https://github.com/MICS-Lab/scyan_data"
         url = f"{base_url}/raw/main/data/{dataset_name}/{filename}"
 
-        log.info(
-            f"File not found locally. Trying to load {filename} from dataset {dataset_name} on github."
-        )
+        log.info(f"File not found locally. Trying to load {filename} from dataset {dataset_name} on github.")
         try:
             _download(url, filepath)
         except KeyboardInterrupt as e:
             filepath.unlink()
-            raise e
+            raise e  # noqa: TRY201
         log.info(f"Successfully downloaded and saved locally at {filepath}")
 
     if ext == "csv":
         df = pd.read_csv(filepath, index_col=0)
         level_indices = np.where(df.columns.str.lower().str.contains("level"))[0]
         if level_indices.size:
-            return pd.read_csv(filepath, index_col=[0] + list(1 + level_indices))
+            return pd.read_csv(filepath, index_col=[0, *list(1 + level_indices)])
         return df
 
     if ext == "h5ad":
@@ -104,15 +101,15 @@ def get_data_path() -> Path:
 
 
 def _check_can_write(path: Path, overwrite: bool) -> None:
-    assert (
-        overwrite or not path.exists()
-    ), f"File {path} already exists and 'overwrite' is False. You can either change the 'filename' argument, or set 'overwrite=True' to force its creation."
+    assert overwrite or not path.exists(), (
+        f"File {path} already exists and 'overwrite' is False. You can either change the 'filename' argument, or set 'overwrite=True' to force its creation."
+    )
 
 
 def add(
     dataset_name: str,
-    *objects: List[Union[AnnData, pd.DataFrame, umap.UMAP]],
-    filename: Union[str, List[str]] = "default",
+    *objects: list[AnnData | pd.DataFrame | umap.UMAP],
+    filename: str | list[str] = "default",
     overwrite: bool = False,
 ) -> None:
     """Add an object to a dataset (or create it if not existing). Objects can be `AnnData` objects, a knowledge-table (i.e. a `pd.DataFrame`), or a `UMAP` reducer. The provided filenames are the one you use when loading data with [scyan.data.load][].
@@ -154,7 +151,7 @@ def add(
 
             joblib.dump(obj, path)
         else:
-            raise ValueError(
+            raise ValueError(  # noqa: TRY004
                 f"Can't save object of type {type(obj)}. It must be an AnnData object, a DataFrame or a UMAP."
             )
 
@@ -174,7 +171,7 @@ def list_path(dataset_path: Path) -> None:
     names = {".h5ad": set(), ".csv": set(), ".umap": set()}
 
     for file_path in dataset_path.iterdir():
-        if file_path.suffix in names.keys():
+        if file_path.suffix in names:
             names[file_path.suffix].add(file_path.stem)
 
     if dataset_name == "aml":
@@ -200,7 +197,7 @@ def list_path(dataset_path: Path) -> None:
             print(f"""    {kind}: '{"', '".join(list(values))}'""")
 
 
-def _list(dataset_name: Optional[str] = None) -> None:
+def _list(dataset_name: str | None = None) -> None:
     """Show existing datasets and their different versions/table names.
 
     Args:
@@ -229,9 +226,9 @@ def _list(dataset_name: Optional[str] = None) -> None:
 
 def remove(
     dataset_name: str,
-    version: Optional[str] = None,
-    table: Optional[str] = None,
-    reducer: Optional[str] = None,
+    version: str | None = None,
+    table: str | None = None,
+    reducer: str | None = None,
 ) -> None:
     """Remove file(s) from a dataset folder.
 
@@ -253,10 +250,10 @@ def remove(
 
 def load(
     dataset_name: str,
-    version: Optional[str] = "default",
-    table: Optional[str] = "default",
-    reducer: Optional[str] = None,
-) -> Tuple[AnnData, pd.DataFrame]:
+    version: str | None = "default",
+    table: str | None = "default",
+    reducer: str | None = None,
+) -> tuple[AnnData, pd.DataFrame]:
     """Load a dataset, i.e. its `AnnData` object and its knowledge table. Public datasets available are `"poised"`, `"aml"`, `"bmmc"`, and `"debarcoding"`; note that, if the dataset was not loaded yet, it is automatically downloaded (requires internet connection). Existing dataset names and versions/tables can be listed using [scyan.data.list][].
 
     !!! note
@@ -273,9 +270,9 @@ def load(
     Returns:
         Tuple containing the requested data, i.e. by default a tuple `(adata, table)` is returned (the adata instance and the knowledge table). But, for instance, if `version is None` and `reducer` is provided, then it returns a tuple `(table, reducer)`.
     """
-    assert any(
-        arg is not None for arg in [version, table, reducer]
-    ), "Provide at least one argument that is not `None` among 'version', 'table', and 'reducer'."
+    assert any(arg is not None for arg in [version, table, reducer]), (
+        "Provide at least one argument that is not `None` among 'version', 'table', and 'reducer'."
+    )
 
     data_path = get_data_path()
 

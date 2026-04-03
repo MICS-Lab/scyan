@@ -1,5 +1,4 @@
 import logging
-from typing import Tuple, Union
 
 import pytorch_lightning as pl
 import torch
@@ -39,7 +38,7 @@ class ScyanModule(pl.LightningModule):
             hidden_size: MLP (`s` and `t`) hidden size.
             n_hidden_layers: Number of hidden layers for the MLP (`s` and `t`).
             n_layers: Number of coupling layers.
-            prior_std: Standard deviation $\sigma$ of the cell-specific random variable $H$.
+            prior_std: Standard deviation $\\sigma$ of the cell-specific random variable $H$.
             temperature: Temperature to favour small populations.
         """
         super().__init__()
@@ -57,25 +56,23 @@ class ScyanModule(pl.LightningModule):
             self.hparams.n_layers,
         )
 
-        self.prior = PriorDistribution(
-            rho, is_continuum_marker, self.hparams.prior_std, self.n_markers
-        )
+        self.prior = PriorDistribution(rho, is_continuum_marker, self.hparams.prior_std, self.n_markers)
 
-    def forward(self, x: Tensor, covariates: Tensor) -> Tuple[Tensor, Tensor, Tensor]:
-        """Forward implementation, going through the complete flow $f_{\phi}$.
+    def forward(self, x: Tensor, covariates: Tensor) -> tuple[Tensor, Tensor, Tensor]:
+        r"""Forward implementation, going through the complete flow $f_{\phi}$.
 
         Args:
             x: Inputs of size $(B, M)$.
             covariates: Covariates of size $(B, M_c)$
 
         Returns:
-            Tuple of (outputs, covariates, lod_det_jacobian sum)
+            tuple of (outputs, covariates, lod_det_jacobian sum)
         """
         return self.real_nvp(x, covariates)
 
     @torch.no_grad()
     def inverse(self, u: Tensor, covariates: Tensor) -> Tensor:
-        """Go through the flow in reverse direction, i.e. $f_{\phi}^{-1}$.
+        r"""Go through the flow in reverse direction, i.e. $f_{\phi}^{-1}$.
 
         Args:
             u: Latent expressions of size $(B, M)$.
@@ -88,7 +85,7 @@ class ScyanModule(pl.LightningModule):
 
     @property
     def prior_z(self) -> distributions.Distribution:
-        """Population prior, i.e. $Categorical(\pi)$.
+        r"""Population prior, i.e. $Categorical(\pi)$.
 
         Returns:
             Distribution of the population index.
@@ -97,16 +94,16 @@ class ScyanModule(pl.LightningModule):
 
     @property
     def log_pi(self) -> Tensor:
-        """Log population weights $log \; \pi$."""
+        r"""Log population weights $log \; \pi$."""
         return torch.log_softmax(self.pi_logit_ratio * self.pi_logit, dim=0)
 
     @property
     def pi(self) -> Tensor:
-        """Population weights $\pi$"""
+        r"""Population weights $\pi$"""
         return torch.exp(self.log_pi)
 
     def log_pi_temperature(self, T: float) -> Tensor:
-        """Compute the log weights with temperature $log \; \pi^{(-T)}$
+        r"""Compute the log weights with temperature $log \; \pi^{(-T)}$
 
         Args:
             T: Temperature.
@@ -121,9 +118,9 @@ class ScyanModule(pl.LightningModule):
         self,
         n_samples: int,
         covariates: Tensor,
-        z: Union[int, Tensor, None] = None,
+        z: int | Tensor | None = None,
         return_z: bool = False,
-    ) -> Tuple[Tensor, Tensor]:
+    ) -> tuple[Tensor, Tensor]:
         """Sampling cell-marker expressions.
 
         Args:
@@ -142,9 +139,7 @@ class ScyanModule(pl.LightningModule):
         elif isinstance(z, torch.Tensor):
             z = z.to(int)
         else:
-            raise ValueError(
-                f"z has to be 'None', an 'int' or a 'torch.Tensor'. Found type {type(z)}."
-            )
+            raise ValueError(f"z has to be 'None', an 'int' or a 'torch.Tensor'. Found type {type(z)}.")
 
         u = self.prior.sample(z)
         x = self.inverse(u, covariates)
@@ -153,7 +148,7 @@ class ScyanModule(pl.LightningModule):
 
     def compute_probabilities(
         self, x: Tensor, covariates: Tensor, use_temp: bool = False
-    ) -> Tuple[Tensor, Tensor, Tensor]:
+    ) -> tuple[Tensor, Tensor, Tensor]:
         """Compute probabilities used in the loss function.
 
         Args:
@@ -165,11 +160,7 @@ class ScyanModule(pl.LightningModule):
         """
         u, _, ldj_sum = self(x, covariates)
 
-        log_pi = (
-            self.log_pi_temperature(-self.hparams.temperature)
-            if use_temp
-            else self.log_pi
-        )
+        log_pi = self.log_pi_temperature(-self.hparams.temperature) if use_temp else self.log_pi
 
         log_probs = self.prior.log_prob(u) + log_pi  # size N x P
 
@@ -180,7 +171,7 @@ class ScyanModule(pl.LightningModule):
         x: Tensor,
         covariates: Tensor,
         use_temp: bool,
-    ) -> Tuple[Tensor, Tensor]:
+    ) -> tuple[Tensor, Tensor]:
         """Compute the module loss for one mini-batch.
 
         Args:

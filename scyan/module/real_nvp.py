@@ -1,5 +1,3 @@
-from typing import Tuple
-
 import pytorch_lightning as pl
 import torch
 from torch import Tensor, nn
@@ -8,7 +6,7 @@ from . import CouplingLayer
 
 
 class RealNVP(pl.LightningModule):
-    """Normalizing flow module (more specifically the RealNVP transformation $f_{\phi}$).
+    r"""Normalizing flow module (more specifically the RealNVP transformation $f_{\phi}$).
 
     Attributes:
         module (nn.Sequential): Sequence of [coupling layers][scyan.module.CouplingLayer].
@@ -31,37 +29,35 @@ class RealNVP(pl.LightningModule):
             n_layers: Number of coupling layers.
         """
         super().__init__()
-        self.module_list = nn.ModuleList(
-            [
-                CouplingLayer(
-                    input_size,
-                    hidden_size,
-                    output_size,
-                    n_hidden_layers,
-                    self._mask(output_size, i),
-                )
-                for i in range(n_layers)
-            ]
-        )
+        self.module_list = nn.ModuleList([
+            CouplingLayer(
+                input_size,
+                hidden_size,
+                output_size,
+                n_hidden_layers,
+                self._mask(output_size, i),
+            )
+            for i in range(n_layers)
+        ])
         self.module = nn.Sequential(*self.module_list)
 
     def _mask(self, output_size: int, shift: int):
         return (((torch.arange(output_size) - shift) % 3) > 0).to(int)
 
-    def forward(self, x: Tensor, covariates: Tensor) -> Tuple[Tensor, Tensor, Tensor]:
-        """Forward implementation, i.e. $f_{\phi}$.
+    def forward(self, x: Tensor, covariates: Tensor) -> tuple[Tensor, Tensor, Tensor]:
+        r"""Forward implementation, i.e. $f_{\phi}$.
 
         Args:
             x: Inputs of size $(B, M)$.
             covariates: Covariates of size $(B, M_c)$
 
         Returns:
-            Tuple of (outputs, covariates, lod_det_jacobian sum)
+            tuple of (outputs, covariates, lod_det_jacobian sum)
         """
         return self.module((x, covariates, None))
 
     def inverse(self, u: Tensor, covariates: Tensor) -> Tensor:
-        """Go through the RealNVP in reverse direction, i.e. $f_{\phi}^{-1}$.
+        r"""Go through the RealNVP in reverse direction, i.e. $f_{\phi}^{-1}$.
 
         Args:
             u: Latent expressions of size $(B, M)$.

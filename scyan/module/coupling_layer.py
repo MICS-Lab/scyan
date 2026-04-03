@@ -1,5 +1,3 @@
-from typing import List, Optional, Tuple
-
 import pytorch_lightning as pl
 import torch
 from torch import Tensor, nn
@@ -45,16 +43,14 @@ class CouplingLayer(pl.LightningModule):
         )
         self.register_buffer("mask", mask)
 
-    def _hidden_layers(self, hidden_size: int, n_hidden_layers: int) -> List[nn.Module]:
+    def _hidden_layers(self, hidden_size: int, n_hidden_layers: int) -> list[nn.Module]:
         return [
             module
             for _ in range(n_hidden_layers)
             for module in [nn.Linear(hidden_size, hidden_size), nn.ReLU(inplace=True)]
         ]
 
-    def forward(
-        self, inputs: Tuple[Tensor, Tensor, Optional[Tensor]]
-    ) -> Tuple[Tensor, Tensor, Tensor]:
+    def forward(self, inputs: tuple[Tensor, Tensor, Tensor | None]) -> tuple[Tensor, Tensor, Tensor]:
         """Coupling layer forward function.
 
         Args:
@@ -90,6 +86,4 @@ class CouplingLayer(pl.LightningModule):
         y_m = y * self.mask
         st_input = torch.cat([y_m, 100 * covariates], dim=1)
 
-        return y_m + (1 - self.mask) * (
-            y * (1 - self.mask) - self.tfun(st_input)
-        ) * torch.exp(-self.sfun(st_input))
+        return y_m + (1 - self.mask) * (y * (1 - self.mask) - self.tfun(st_input)) * torch.exp(-self.sfun(st_input))

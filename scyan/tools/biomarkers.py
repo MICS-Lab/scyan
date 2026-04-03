@@ -1,5 +1,4 @@
 import logging
-from typing import List, Optional, Union
 
 import pandas as pd
 from anndata import AnnData
@@ -17,10 +16,10 @@ def _get_counts(adata: AnnData, groupby, key, normalize) -> pd.DataFrame:
 
 def cell_type_ratios(
     adata: AnnData,
-    groupby: Union[str, List[str], None] = None,
+    groupby: int | str | list[int | str] | None = None,
     normalize: bool = True,
     key: str = "scyan_pop",
-    among: str = None,
+    among: str | None = None,
 ) -> pd.DataFrame:
     """Computes the ratio of cells per population. This ratio can be provided for each patient (or for any kind of 'group').
 
@@ -34,13 +33,9 @@ def cell_type_ratios(
     Returns:
         A DataFrame of ratios or counts (one row per group, one column per population). If `normalize=False`, then each row sums to 1 (for `among=None`).
     """
-    assert (
-        among is None or normalize
-    ), "If 'among' is `None`, then normalize can't be `False`"
+    assert among is None or normalize, "If 'among' is `None`, then normalize can't be `False`"
 
-    column_suffix = (
-        ("percentage" if normalize == "%" else "ratio") if normalize else "count"
-    )
+    column_suffix = ("percentage" if normalize == "%" else "ratio") if normalize else "count"
 
     counts = _get_counts(adata, groupby, key, normalize)
 
@@ -51,26 +46,24 @@ def cell_type_ratios(
     parents_count = _get_counts(adata, groupby, among, normalize)
 
     df_parent = adata.obs.groupby(among)[key].apply(lambda s: s.value_counts()).unstack()
-    assert (
-        (df_parent > 0).sum(0) <= 1
-    ).all(), f"Each population from adata.obs['{key}'] should have only one parent population in adata.obs['{among}']"
+    assert ((df_parent > 0).sum(0) <= 1).all(), (
+        f"Each population from adata.obs['{key}'] should have only one parent population in adata.obs['{among}']"
+    )
     to_parent_dict = dict(df_parent.idxmax())
 
     counts /= parents_count[[to_parent_dict[pop] for pop in counts.columns]].values
-    counts.columns = [
-        f"{pop} {column_suffix} among {to_parent_dict[pop]}" for pop in counts.columns
-    ]
+    counts.columns = [f"{pop} {column_suffix} among {to_parent_dict[pop]}" for pop in counts.columns]
     return counts.mul(100) if normalize == "%" else counts
 
 
 def mean_intensities(
     adata: AnnData,
-    groupby: Union[str, List[str], None] = None,
-    layer: Optional[str] = None,
+    groupby: str | list[str] | None = None,
+    layer: str | None = None,
     key: str = "scyan_pop",
-    unstack_join: Optional[str] = " mean intensity on ",
-    obsm: Optional[str] = None,
-    obsm_names: Optional[List[str]] = None,
+    unstack_join: str | None = " mean intensity on ",
+    obsm: str | None = None,
+    obsm_names: list[str] | None = None,
 ) -> pd.DataFrame:
     """Compute the Mean Metal Intensity (MMI) or Mean Fluorescence Intensity (MFI) per population. If needed, mean intensities can be computed per group (e.g., per patient) by providing the `groupby` argument.
 
@@ -91,12 +84,10 @@ def mean_intensities(
     elif isinstance(groupby, str):
         groupby = [groupby, key]
     else:
-        groupby = list(groupby) + [key]
+        groupby = [*list(groupby), key]
 
     if obsm is not None:
-        assert (
-            layer is None
-        ), "You must choose between 'obsm' and 'layer', do not use both."
+        assert layer is None, "You must choose between 'obsm' and 'layer', do not use both."
 
         df = pd.DataFrame(data=adata.obsm[obsm], columns=obsm_names)
     else:

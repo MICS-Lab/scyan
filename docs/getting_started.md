@@ -1,8 +1,6 @@
 ## Installation
 
-Scyan can be installed on every OS with `pip` or [`poetry`](https://python-poetry.org/docs/).
-
-On macOS / Linux, `python>=3.8,<3.11` is required, while `python>=3.8,<3.10` is required on Windows. The preferred Python version is `3.9`.
+Scyan can be installed on every OS with `pip` for `python>=3.11`.
 
 !!! note "Advice (optional)"
 
@@ -11,7 +9,7 @@ On macOS / Linux, `python>=3.8,<3.11` is required, while `python>=3.8,<3.10` is 
     For instance, you can create a new `conda` environment:
 
     ```bash
-    conda create --name scyan python=3.9
+    conda create --name scyan python=3.12
     conda activate scyan
     ```
 
@@ -39,15 +37,6 @@ Choose one of the following, depending on your needs (it should take at most a f
     cd scyan
 
     pip install -e '.[dev,hydra,discovery]'
-    ```
-
-=== "Poetry (dev mode)"
-
-    ``` bash
-    git clone https://github.com/MICS-Lab/scyan.git
-    cd scyan
-
-    poetry install -E 'dev hydra discovery'
     ```
 
 ## Usage

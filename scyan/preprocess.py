@@ -1,5 +1,4 @@
 import logging
-from typing import List, Optional
 
 import flowutils
 import numpy as np
@@ -11,9 +10,7 @@ from .utils import _subset
 log = logging.getLogger(__name__)
 
 
-def auto_logicle_transform(
-    adata: AnnData, q: float = 0.05, m: float = 4.5, quantile_clip: Optional[float] = 1e-5
-) -> None:
+def auto_logicle_transform(adata: AnnData, q: float = 0.05, m: float = 4.5, quantile_clip: float | None = 1e-5) -> None:
     """[Auto-logicle transformation](https://pubmed.ncbi.nlm.nih.gov/16604519/) implementation.
     We recommend it for flow cytometry or spectral flow cytometry data.
 
@@ -33,9 +30,7 @@ def auto_logicle_transform(
         negative_values = column[column < 0]
 
         if negative_values.size:
-            threshold = np.quantile(negative_values, 0.25) - 1.5 * scipy.stats.iqr(
-                negative_values
-            )
+            threshold = np.quantile(negative_values, 0.25) - 1.5 * scipy.stats.iqr(negative_values)
             negative_values = negative_values[negative_values >= threshold]
 
             if negative_values.size:
@@ -61,7 +56,7 @@ def auto_logicle_transform(
         )
 
 
-def _logicle_inverse_one(adata: AnnData, obsm: Optional[str], marker: str) -> np.ndarray:
+def _logicle_inverse_one(adata: AnnData, obsm: str | None, marker: str) -> np.ndarray:
     column = adata[:, marker].X if obsm is None else adata[:, marker].obsm[obsm]
     column = column.flatten()
     t, m, w = adata.uns["scyan_logicle"][marker]
@@ -82,9 +77,9 @@ def asinh_transform(adata: AnnData, translation: float = 0, cofactor: float = 5)
 
 def inverse_transform(
     adata: AnnData,
-    obsm: Optional[str] = None,
-    obsm_names: Optional[List[str]] = None,
-    transformation: Optional[str] = None,
+    obsm: str | None = None,
+    obsm_names: list[str] | None = None,
+    transformation: str | None = None,
 ) -> np.ndarray:
     """Inverses the transformation function, i.e. either [scyan.preprocess.auto_logicle_transform][] or [scyan.preprocess.asinh_transform][]. It requires to have run have of these before.
 
@@ -110,16 +105,14 @@ def inverse_transform(
 
     if transformation == "logicle":
         log.info("Performing inverse logicle transform")
-        assert (
-            "scyan_logicle" in adata.uns
-        ), "You need to run 'auto_logicle_transform' before to inverse it."
+        assert "scyan_logicle" in adata.uns, "You need to run 'auto_logicle_transform' before to inverse it."
 
         if obsm is None:
             obsm_names = adata.var_names
         elif obsm_names is None:
-            assert (
-                adata.obsm[obsm].shape[1] != adata.n_vars
-            ), f"When the number of var in adata.obsm['{obsm}'] is not `adata.n_vars`, use `obs_names`"
+            assert adata.obsm[obsm].shape[1] != adata.n_vars, (
+                f"When the number of var in adata.obsm['{obsm}'] is not `adata.n_vars`, use `obs_names`"
+            )
             obsm_names = adata.var_names
 
         return np.stack(
@@ -129,21 +122,17 @@ def inverse_transform(
 
     if transformation == "asinh":
         log.info("Performing inverse asinh transform")
-        assert (
-            "scyan_asinh" in adata.uns
-        ), "You need to run 'asinh_transform' before to inverse it."
+        assert "scyan_asinh" in adata.uns, "You need to run 'asinh_transform' before to inverse it."
 
         X = adata.X if obsm is None else adata.obsm[obsm]
         translation, cofactor = adata.uns["scyan_asinh"]
 
         return np.sinh(X) * cofactor + translation
 
-    raise NameError(
-        f"Parameter 'transformation' has to be 'logicle' or 'asinh'. Found {transformation}."
-    )
+    raise NameError(f"Parameter 'transformation' has to be 'logicle' or 'asinh'. Found {transformation}.")
 
 
-def scale(adata: AnnData, max_value: float = 10, center: Optional[bool] = None) -> None:
+def scale(adata: AnnData, max_value: float = 10, center: bool | None = None) -> None:
     """Tranforms the data such as (i) `std=1`, and (ii) either `0` is sent to `-1` (for CyTOF data) or `means=0` (for flow or spectral flow data); except if `center` is set (which overwrites the default behavior).
 
     Args:
@@ -168,9 +157,7 @@ def scale(adata: AnnData, max_value: float = 10, center: Optional[bool] = None) 
         adata.uns["scyan_scaling_means"] = means
 
 
-def unscale(
-    adata: AnnData, obsm: Optional[str] = None, obsm_names: Optional[List[str]] = None
-) -> np.ndarray:
+def unscale(adata: AnnData, obsm: str | None = None, obsm_names: list[str] | None = None) -> np.ndarray:
     """Reverse standardisation. It requires to have run [scyan.preprocess.scale][] before.
 
     Args:
@@ -181,17 +168,15 @@ def unscale(
     Returns:
         Unscaled numpy array of shape $(N, M)$.
     """
-    assert (
-        "scyan_scaling_stds" in adata.uns
-    ), "It seems you haven't run 'scyan.preprocess.scale' before."
+    assert "scyan_scaling_stds" in adata.uns, "It seems you haven't run 'scyan.preprocess.scale' before."
 
     X = adata.X if obsm is None else adata.obsm[obsm]
     stds = adata.uns["scyan_scaling_stds"]
 
     if obsm is not None and X.shape[1] != adata.n_vars:
-        assert (
-            obsm_names is not None
-        ), f"Found {X.shape[1]} markers in adata.obsm['{obsm}'], but 'adata' has {adata.n_vars} vars. Please use the 'obsm_names' argument to provide the ordered names of the markers used in adata.obsm['{obsm}']."
+        assert obsm_names is not None, (
+            f"Found {X.shape[1]} markers in adata.obsm['{obsm}'], but 'adata' has {adata.n_vars} vars. Please use the 'obsm_names' argument to provide the ordered names of the markers used in adata.obsm['{obsm}']."
+        )
 
         indices = [adata.var_names.get_loc(marker) for marker in obsm_names]
         stds = stds[indices]
@@ -216,19 +201,16 @@ def subsample(adata: AnnData, n_obs: int) -> AnnData:
     return adata[indices]
 
 
-def compensate(adata: AnnData, key_added: Optional[str] = None):
+def compensate(adata: AnnData, key_added: str | None = None):
     """Use the spillover matrix in `adata.varp["spillover_matrix"]` to correct spillover from `adata.X`
 
     Args:
         adata: An `AnnData` object
         key_added: Optional key in `adata.layers` information is saved to. By default, saved in `adata.X`
     """
-    assert "spillover_matrix" in adata.varp, f"No 'spillover_matrix' found in adata.varp"
+    assert "spillover_matrix" in adata.varp, "No 'spillover_matrix' found in adata.varp"
 
-    if any(
-        name in adata.uns
-        for name in ["scyan_asinh", "scyan_logicle", "scyan_scaling_means"]
-    ):
+    if any(name in adata.uns for name in ["scyan_asinh", "scyan_logicle", "scyan_scaling_means"]):
         log.warn("It is recommended to apply spillover only on raw data (unprocessed)")
 
     S = adata.varp["spillover_matrix"]
