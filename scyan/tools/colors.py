@@ -17,9 +17,9 @@ class GroupPalette:
         self.max_size = self.k_l * self.k_s
 
     def get_ls(self, i: int, j: int):
-        l = 1 - self.alpha_l - i * self.step_l
+        _l = 1 - self.alpha_l - i * self.step_l
         s = 1 - self.alpha_s - j * self.step_s
-        return l, s
+        return _l, s
 
     def get_block(self, h: float, size: int) -> List[Tuple[float]]:
         assert (
@@ -68,7 +68,7 @@ def palette_level(
     """
     assert isinstance(
         table.index, pd.MultiIndex
-    ), f"The provided table has no multi-index. To work with hierarchical populations, consider reading https://mics-lab.github.io/scyan/tutorials/usage/#working-with-hierarchical-populations"
+    ), "The provided table has no multi-index. To work with hierarchical populations, consider reading https://mics-lab.github.io/scyan/tutorials/usage/#working-with-hierarchical-populations"
 
     pops = table.index.get_level_values(population_index).values
     level = table.index.get_level_values(level_index)

@@ -87,7 +87,7 @@ class PolygonGatingUMAP:
         self.selector = _SelectFromCollection(ax, pts, self.x_umap[self.has_umap])
 
         log.info(
-            f"Enclose cells within a polygon. Helper:\n    - Click on the plot to add a polygon vertex\n    - Press the 'esc' key to start a new polygon\n    - Try holding the 'ctrl' key to move a single vertex\n    - Once the polygon is finished and overlaid in red, you can close the window"
+            "Enclose cells within a polygon. Helper:\n    - Click on the plot to add a polygon vertex\n    - Press the 'esc' key to start a new polygon\n    - Try holding the 'ctrl' key to move a single vertex\n    - Once the polygon is finished and overlaid in red, you can close the window"
         )
         plt.show()
 
@@ -99,9 +99,9 @@ class PolygonGatingUMAP:
         """
         self.adata.obs[key_added] = "unselected"
         col_index = self.adata.obs.columns.get_loc(key_added)
-        self.adata.obs.iloc[
-            np.where(self.has_umap)[0][self.selector.ind], col_index
-        ] = "selected"
+        self.adata.obs.iloc[np.where(self.has_umap)[0][self.selector.ind], col_index] = (
+            "selected"
+        )
         self.adata.obs[key_added] = self.adata.obs[key_added].astype("category")
 
         self.selector.disconnect()
@@ -174,7 +174,7 @@ class PolygonGatingScatter:
         self.selector = _SelectFromCollection(ax, pts, xy)
 
         log.info(
-            f"Enclose cells within a polygon. Helper:\n    - Click on the plot to add a polygon vertex\n    - Press the 'esc' key to start a new polygon\n    - Try holding the 'ctrl' key to move a single vertex\n    - Once the polygon is finished and overlaid in red, you can close the window"
+            "Enclose cells within a polygon. Helper:\n    - Click on the plot to add a polygon vertex\n    - Press the 'esc' key to start a new polygon\n    - Try holding the 'ctrl' key to move a single vertex\n    - Once the polygon is finished and overlaid in red, you can close the window"
         )
         plt.show()
 

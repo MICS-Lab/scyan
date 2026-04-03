@@ -17,7 +17,7 @@ def _check_exlude_markers(
     exclude_markers = exclude_markers if exclude_markers is not None else []
     if not all(c in df.columns for c in exclude_markers):
         log.warning(
-            f"Among the marker columns to exclude, the following were not found: {', '.join([c for c in exclude_markers if not c in df.columns])}"
+            f"Among the marker columns to exclude, the following were not found: {', '.join([c for c in exclude_markers if c not in df.columns])}"
         )
     return exclude_markers
 

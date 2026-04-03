@@ -3,12 +3,12 @@ import logging
 import random
 from typing import Callable, List, Optional, Tuple, Union
 
+import lightning.pytorch as L
 import numpy as np
 import pandas as pd
-import pytorch_lightning as pl
 import torch
 from anndata import AnnData
-from pytorch_lightning.callbacks.early_stopping import EarlyStopping
+from lightning.pytorch.callbacks.early_stopping import EarlyStopping
 from torch import Tensor
 from torch.utils.data import DataLoader, TensorDataset
 
@@ -20,7 +20,7 @@ from .utils import _requires_fit
 log = logging.getLogger(__name__)
 
 
-class Scyan(pl.LightningModule):
+class Scyan(L.LightningModule):
     """
     Scyan, a.k.a Single-cell Cytometry Annotation Network.
     It is a wrapper to the ScyanModule that contains the core logic (the loss implementation, the forward function, ...).
@@ -498,10 +498,10 @@ class Scyan(pl.LightningModule):
         patience: int = 4,
         num_workers: int = 0,
         log_every_n_steps: int = 10,
-        callbacks: Optional[List[pl.Callback]] = None,
-        logger: Union[bool, "pl.Logger"] = False,
+        callbacks: Optional[List[L.Callback]] = None,
+        logger: Union[bool, "L.Logger"] = False,
         enable_checkpointing: bool = False,
-        trainer: Optional[pl.Trainer] = None,
+        trainer: Optional[L.Trainer] = None,
         **trainer_args: int,
     ) -> "Scyan":
         """Train the `Scyan` model. On interactive Python (e.g., Jupyter Notebooks), training can be interrupted at any time without crashing.
@@ -541,7 +541,7 @@ class Scyan(pl.LightningModule):
             )
 
             log_every_n_steps = min(log_every_n_steps, len(self.x) // self._batch_size)
-            trainer = pl.Trainer(
+            trainer = L.Trainer(
                 max_epochs=max_epochs,
                 accelerator=accelerator,
                 callbacks=[esc] + (callbacks or []),

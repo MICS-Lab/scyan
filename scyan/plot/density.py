@@ -102,7 +102,7 @@ def log_prob_threshold(adata: AnnData, show: bool = True):
     """
     assert (
         "scyan_log_probs" in adata.obs
-    ), f"Cannot find 'scyan_log_probs' in adata.obs. Have you run model.predict()?"
+    ), "Cannot find 'scyan_log_probs' in adata.obs. Have you run model.predict()?"
 
     x = np.sort(adata.obs["scyan_log_probs"])
     y = 1 - np.arange(len(x)) / float(len(x))

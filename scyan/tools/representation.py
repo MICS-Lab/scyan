@@ -29,13 +29,13 @@ def leiden(
         import leidenalg
     except:
         raise ImportError(
-            """To run leiden, you need to have 'leidenalg' installed. You can install the population discovery extra with "pip install 'scyan[discovery]'", or directly install leidenalg with "conda install -c conda-forge leidenalg"."""
+            """To run leiden, you need to have 'leidenalg' installed. You can install it with "pip install leidenalg", or  "conda install -c conda-forge leidenalg"."""
         )
 
     import igraph as ig
     from sklearn.neighbors import kneighbors_graph
 
-    if not "knn_graph" in adata.obsp:
+    if "knn_graph" not in adata.obsp:
         adata.obsp["knn_graph"] = kneighbors_graph(
             adata.X, n_neighbors=n_neighbors, metric="euclidean", include_self=False
         )

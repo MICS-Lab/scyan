@@ -129,16 +129,16 @@ def select_markers(
     populations: List[str],
     min_markers: int = 2,
 ):
+    MIN_MARKERS_ERROR = (
+        f"Provide at least {min_markers} marker(s) to plot or use 'scyan.plot.kde'"
+    )
+
     if populations is None:
         assert (
             markers is not None
         ), "If no population is provided, you should choose the list of markers by providing the 'markers' argument."
         assert len(markers) >= min_markers, MIN_MARKERS_ERROR
         return markers
-
-    MIN_MARKERS_ERROR = (
-        f"Provide at least {min_markers} marker(s) to plot or use 'scyan.plot.kde'"
-    )
 
     if markers is None:
         assert (

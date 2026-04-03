@@ -223,7 +223,7 @@ def compensate(adata: AnnData, key_added: Optional[str] = None):
         adata: An `AnnData` object
         key_added: Optional key in `adata.layers` information is saved to. By default, saved in `adata.X`
     """
-    assert "spillover_matrix" in adata.varp, f"No 'spillover_matrix' found in adata.varp"
+    assert "spillover_matrix" in adata.varp, "No 'spillover_matrix' found in adata.varp"
 
     if any(
         name in adata.uns
