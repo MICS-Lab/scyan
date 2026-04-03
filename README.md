@@ -2,15 +2,23 @@
   <img src="https://github.com/MICS-Lab/scyan/raw/master/docs/assets/logo.png" alt="scyan_logo" width="400"/>
 </p>
 
+<div align="center">
+
 [![PyPI](https://img.shields.io/pypi/v/scyan.svg)](https://pypi.org/project/scyan)
 [![Downloads](https://static.pepy.tech/badge/scyan)](https://pepy.tech/project/scyan)
 [![Docs](https://img.shields.io/badge/docs-mkdocs-blue)](https://mics-lab.github.io/scyan/)
 ![Build](https://github.com/MICS-Lab/scyan/workflows/ci/badge.svg)
-[![Code Style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/python/black)
 [![License](https://img.shields.io/pypi/l/scyan.svg)](https://github.com/MICS-Lab/scyan/blob/master/LICENSE)
-[![Imports: isort](https://img.shields.io/badge/imports-isort-blueviolet)](https://pycqa.github.io/isort/)
+[![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
-Scyan stands for **S**ingle-cell **Cy**tometry **A**nnotation **N**etwork. Based on biological knowledge prior, it provides a fast cell population annotation without requiring any training label. Scyan is an interpretable model that also corrects batch-effect and can be used for debarcoding, cell sampling, and population discovery.
+</div>
+
+<p align="center"><b><i>
+  🧬 **S**ingle-cell **Cy**tometry **A**nnotation **N**etwork
+</b></i></p>
+
+Based on biological knowledge prior, Scyan provides a fast cell population annotation without requiring any training label. It is an interpretable model that also corrects batch-effect and can be used for debarcoding, cell sampling, and population discovery.
 
 # Documentation
 
