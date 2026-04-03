@@ -34,36 +34,12 @@ Scyan is a Bayesian probabilistic model composed of a deep invertible neural net
 
 # Getting started
 
-Scyan can be installed on every OS with `pip` for `python>=3.11`.
+## Installation
 
-## Install from PyPI (recommended)
+Scyan can be installed on every OS with `pip` for `python>=3.11`:
 
 ```bash
 pip install scyan
-```
-
-## Install locally (if you want to contribute)
-
-> Advice (optional): We advise creating a new environment via a package manager. For instance, you can create a new `conda` environment:
->
-> ```bash
-> conda create --name scyan python=12
-> conda activate scyan
-> ```
-
-Clone the repository and move to its root:
-
-```bash
-git clone https://github.com/MICS-Lab/scyan.git
-cd scyan
-```
-
-Choose one of the following, depending on your needs (it should take at most a few minutes):
-
-```bash
-pip install .                            # pip minimal installation (library only)
-pip install -e .                         # pip installation in editable mode
-pip install -e '.[dev,hydra,discovery]'  # pip installation with all the extras
 ```
 
 ## Basic usage / Demo
@@ -80,18 +56,6 @@ model.predict()
 
 This code should run in approximately 40 seconds (once the dataset is loaded).
 For more usage demo, read the [tutorials](https://mics-lab.github.io/scyan/tutorials/usage/) or the complete [documentation](https://mics-lab.github.io/scyan/).
-
-# Technical description
-
-Scyan is a **Python** library based on:
-
-- [_AnnData_](https://anndata.readthedocs.io/en/latest/), a data library that works nicely with single-cell data
-- [_Pytorch_](https://pytorch.org/), a deep learning framework
-- [_Pytorch Lightning_](https://www.pytorchlightning.ai/), for model training
-
-Optionally, it also supports:
-- [_Hydra_](https://hydra.cc/docs/intro/), for project configuration
-- [_Weight & Biases_](https://wandb.ai/site), for model monitoring
 
 # Cite us
 
