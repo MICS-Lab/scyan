@@ -14,7 +14,7 @@
 
 </div>
 
-<p align="center"><b><i>
+<p align="center"><i>
   🧬 <b>S</b>ingle-cell <b>Cy</b>tometry <b>A</b>nnotation <b>N</b>etwork
 </i></p>
 
