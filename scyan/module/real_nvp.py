@@ -29,18 +29,16 @@ class RealNVP(pl.LightningModule):
             n_layers: Number of coupling layers.
         """
         super().__init__()
-        self.module_list = nn.ModuleList(
-            [
-                CouplingLayer(
-                    input_size,
-                    hidden_size,
-                    output_size,
-                    n_hidden_layers,
-                    self._mask(output_size, i),
-                )
-                for i in range(n_layers)
-            ]
-        )
+        self.module_list = nn.ModuleList([
+            CouplingLayer(
+                input_size,
+                hidden_size,
+                output_size,
+                n_hidden_layers,
+                self._mask(output_size, i),
+            )
+            for i in range(n_layers)
+        ])
         self.module = nn.Sequential(*self.module_list)
 
     def _mask(self, output_size: int, shift: int):
