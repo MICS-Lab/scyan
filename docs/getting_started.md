@@ -1,6 +1,6 @@
 ## Installation
 
-Scyan can be installed on every OS with `pip` or [`poetry`](https://python-poetry.org/docs/), for `python>=3.11`.
+Scyan can be installed on every OS with `pip` for `python>=3.11`.
 
 !!! note "Advice (optional)"
 
@@ -37,15 +37,6 @@ Choose one of the following, depending on your needs (it should take at most a f
     cd scyan
 
     pip install -e '.[dev,hydra,discovery]'
-    ```
-
-=== "Poetry (dev mode)"
-
-    ``` bash
-    git clone https://github.com/MICS-Lab/scyan.git
-    cd scyan
-
-    poetry install -E 'dev hydra discovery'
     ```
 
 ## Usage

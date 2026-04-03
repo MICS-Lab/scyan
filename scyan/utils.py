@@ -91,9 +91,9 @@ def _wandb_plt_image(fun: Callable, figsize: tuple[int, int] = [7, 5]):
 
 def _has_umap(adata: AnnData) -> np.ndarray:
     """Returns an ndarray telling on which cells the UMAP coordinates have been computed."""
-    assert "X_umap" in adata.obsm_keys(), (
-        "Before plotting a UMAP, its coordinates need to be computed using 'scyan.tools.umap(...)' (see https://mics-lab.github.io/scyan/api/representation/#scyan.tools.umap)"
-    )
+    assert (
+        "X_umap" in adata.obsm_keys()
+    ), "Before plotting a UMAP, its coordinates need to be computed using 'scyan.tools.umap(...)' (see https://mics-lab.github.io/scyan/api/tools/#scyan.tools.umap)"
     return adata.obsm["X_umap"].sum(1) != 0
 
 
@@ -139,7 +139,9 @@ def _requires_fit(f: Callable) -> Callable:
 
     @wraps(f)
     def wrapper(model, *args, **kwargs):
-        assert model._is_fitted, "The model has to be trained first, consider running 'model.fit()'"
+        assert (
+            model._is_fitted
+        ), "The model has to be trained first, consider running 'model.fit()'"
         return f(model, *args, **kwargs)
 
     return wrapper
@@ -155,7 +157,9 @@ def _add_level_predictions(model, key: str) -> None:
     for i, new_key in enumerate(keys):
         pop_dict = {pop: levels_pops[i] for pop, *levels_pops in mpm.index}
         categories = model.table.index.get_level_values(1 + i).unique()
-        adata.obs[new_key] = pd.Categorical(adata.obs[key].map(pop_dict), categories=categories)
+        adata.obs[new_key] = pd.Categorical(
+            adata.obs[key].map(pop_dict), categories=categories
+        )
 
 
 def _get_pop_index(pop: str, table: pd.DataFrame):
@@ -166,9 +170,9 @@ def _get_pop_index(pop: str, table: pd.DataFrame):
 
 
 def _check_is_processed(X: np.ndarray) -> None:
-    assert np.abs(X).max() < 1e3, (
-        "The provided values are very high: have you run preprocessing first? E.g., consider running 'scyan.preprocess.asinh_transform' or 'scyan.preprocess.auto_logicle_transform' (see our tutorial: https://mics-lab.github.io/scyan/tutorials/preprocessing/)"
-    )
+    assert (
+        np.abs(X).max() < 1e3
+    ), "The provided values are very high: have you run preprocessing first? E.g., consider running 'scyan.preprocess.asinh_transform' or 'scyan.preprocess.auto_logicle_transform' (see our tutorial: https://mics-lab.github.io/scyan/tutorials/preprocessing/)"
 
 
 def _corr_mode_required(f: Callable) -> Callable:
@@ -176,7 +180,9 @@ def _corr_mode_required(f: Callable) -> Callable:
 
     @wraps(f)
     def wrapper(model, *args, **kwargs):
-        assert model._corr_mode, "Scyan model was trained with no batch_key, thus not correcting batch effect"
+        assert (
+            model._corr_mode
+        ), "Scyan model was trained with no batch_key, thus not correcting batch effect"
         return f(model, *args, **kwargs)
 
     return wrapper
@@ -191,9 +197,9 @@ def _check_batch_arg(adata, batch_key, batch_ref):
         return batch_ref
 
     possible_batches = set(batches)
-    assert batch_ref in possible_batches, (
-        f"Batch reference '{batch_ref}' is not an existing batch. Choose one among: {', '.join(list(possible_batches))}."
-    )
+    assert (
+        batch_ref in possible_batches
+    ), f"Batch reference '{batch_ref}' is not an existing batch. Choose one among: {', '.join(list(possible_batches))}."
 
     return batch_ref
 
@@ -213,28 +219,34 @@ def grouped_mean(model, key: str) -> Tensor:
     means = df.groupby(["batch", "ct"]).mean().groupby("ct").mean()
     means = means.fillna(0)  # unpredicted populations: fill NA with 0
 
-    return torch.tensor(means.loc[model.pop_names, model.var_names].values, dtype=torch.float32)
-
-
-def _validate_inputs(adata: AnnData, df: pd.DataFrame, continuum_markers: list[str] | None):
-    assert isinstance(adata, AnnData), (
-        f"The provided adata has to be an AnnData object (https://anndata.readthedocs.io/en/latest/), found {type(adata)}."
+    return torch.tensor(
+        means.loc[model.pop_names, model.var_names].values, dtype=torch.float32
     )
 
-    assert isinstance(df, pd.DataFrame), f"The marker-population matrix has to be a pandas DataFrame, found {type(df)}"
+
+def _validate_inputs(
+    adata: AnnData, df: pd.DataFrame, continuum_markers: list[str] | None
+):
+    assert isinstance(
+        adata, AnnData
+    ), f"The provided adata has to be an AnnData object (https://anndata.readthedocs.io/en/latest/), found {type(adata)}."
+
+    assert isinstance(
+        df, pd.DataFrame
+    ), f"The marker-population matrix has to be a pandas DataFrame, found {type(df)}"
 
     # Sanity check on the table columns
     not_found_columns = [c for c in df.columns if c not in adata.var_names]
-    assert not not_found_columns, (
-        f"All column names from the marker-population table have to be a known marker from adata.var_names. Missing {not_found_columns}."
-    )
+    assert (
+        not not_found_columns
+    ), f"All column names from the marker-population table have to be a known marker from adata.var_names. Missing {not_found_columns}."
 
     # Sanity check on continuum_markers
     continuum_markers = _default_list(continuum_markers)
     not_found_markers = [c for c in continuum_markers if c not in df.columns]
-    assert not not_found_markers, (
-        f"All markers from the list 'continuum_markers' have to be inside the knowledge table. Missing {not_found_markers}."
-    )
+    assert (
+        not not_found_markers
+    ), f"All markers from the list 'continuum_markers' have to be inside the knowledge table. Missing {not_found_markers}."
 
     # Sanity check on the table
     if not df.dtypes.apply(is_numeric_dtype).all():
@@ -266,9 +278,9 @@ def _validate_inputs(adata: AnnData, df: pd.DataFrame, continuum_markers: list[s
         )
 
     if isinstance(df.index, pd.MultiIndex):
-        assert not df.index.to_frame().isna().any().any(), (
-            "One or multiple population name(s) are NaN, you have to name them."
-        )
+        assert (
+            not df.index.to_frame().isna().any().any()
+        ), "One or multiple population name(s) are NaN, you have to name them."
 
     ratio_non_standard = 1 - ((df**2 == 1) | df.isna()).values.mean()
     if ratio_non_standard > 0.15:
