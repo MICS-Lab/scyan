@@ -15,8 +15,8 @@
 </div>
 
 <p align="center"><b><i>
-  🧬 **S**ingle-cell **Cy**tometry **A**nnotation **N**etwork
-</b></i></p>
+  🧬 <b>S</b>ingle-cell <b>Cy</b>tometry <b>A</b>nnotation <b>N</b>etwork
+</i></p>
 
 Based on biological knowledge prior, Scyan provides a fast cell population annotation without requiring any training label. It is an interpretable model that also corrects batch-effect and can be used for debarcoding, cell sampling, and population discovery.
 
