@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://github.com/MICS-Lab/scyan/raw/master/docs/assets/logo.png" alt="scyan_logo" width="400"/>
+  <img src="https://github.com/MICS-Lab/scyan/raw/main/docs/assets/logo.png" alt="scyan_logo" width="400"/>
 </p>
 
 <div align="center">
@@ -8,7 +8,7 @@
 [![Downloads](https://static.pepy.tech/badge/scyan)](https://pepy.tech/project/scyan)
 [![Docs](https://img.shields.io/badge/docs-mkdocs-blue)](https://mics-lab.github.io/scyan/)
 ![Build](https://github.com/MICS-Lab/scyan/workflows/ci/badge.svg)
-[![License](https://img.shields.io/pypi/l/scyan.svg)](https://github.com/MICS-Lab/scyan/blob/master/LICENSE)
+[![License](https://img.shields.io/pypi/l/scyan.svg)](https://github.com/MICS-Lab/scyan/blob/main/LICENSE)
 [![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
@@ -29,7 +29,7 @@ The [complete documentation can be found here](https://mics-lab.github.io/scyan/
 Scyan is a Bayesian probabilistic model composed of a deep invertible neural network called a normalizing flow (the function $f_{\phi}$). It maps a latent distribution of cell expressions into the empirical distribution of cell expressions. This cell distribution is a mixture of gaussian-like distributions representing the sum of a cell-specific and a population-specific term. Also, interpretability and batch effect correction are based on the model latent space — more details in the article's Methods section.
 
 <p align="center">
-  <img src="https://github.com/MICS-Lab/scyan/raw/master/docs/assets/overview.png" alt="overview_image"/>
+  <img src="https://github.com/MICS-Lab/scyan/raw/main/docs/assets/overview.png" alt="overview_image"/>
 </p>
 
 # Getting started
