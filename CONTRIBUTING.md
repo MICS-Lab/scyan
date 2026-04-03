@@ -16,12 +16,12 @@ Especially if you have any questions about the usage of the library or difficult
 
 ## Contributing to the code
 
-1. Install the library in editable mode (see [Getting Started](https://mics-lab.github.io/scyan/getting_started/)). Using `poetry` is recommended.
+1. Install the library in editable mode (see [Getting Started](https://mics-lab.github.io/scyan/getting_started/)). Using `uv` is recommended.
 2. Create your personal branch from `dev`.
 3. Make sure you read the coding guidelines below.
 4. Implement your changes.
-5. Run the tests via `pytest` (or `poetry run pytest`).
-6. If needed, you can update the documentation. To do so, update the files in `./docs/` and run `mkdocs serve` (or `poetry run mkdocs serve`) to see your changes.
+5. Run the tests via `pytest` (or `uv run pytest`).
+6. If needed, you can update the documentation. To do so, update the files in `./docs/` and run `mkdocs serve` (or `uv run mkdocs serve`) to see your changes.
 7. Create a pull request with explanations about your developed features. Then, wait for discussion and validation of your pull request.
 
 ## Coding guidelines
@@ -66,7 +66,7 @@ This layout helps understanding the structure of the repository.
     CONTRIBUTING.md   # To read before contributing
     LICENSE
     mkdocs.yml        # The docs configuration file
-    poetry.lock
+    uv.lock
     pyproject.toml    # Dependencies, project metadata, and more
     README.md
     setup.py          # Setup file, see `pyproject.toml`

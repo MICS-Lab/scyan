@@ -4,7 +4,7 @@ Scyan can be installed on every OS with `pip` for `python>=3.11`.
 
 !!! note "Advice (optional)"
 
-    We advise creating a new environment via a package manager (except if you use Poetry, which will automatically create the environment).
+    We advise creating a new environment via a package manager.
 
     For instance, you can create a new `conda` environment:
 

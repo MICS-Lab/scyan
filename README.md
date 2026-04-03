@@ -44,7 +44,7 @@ pip install scyan
 
 ## Install locally (if you want to contribute)
 
-> Advice (optional): We advise creating a new environment via a package manager (except if you use Poetry, which will automatically create the environment). For instance, you can create a new `conda` environment:
+> Advice (optional): We advise creating a new environment via a package manager. For instance, you can create a new `conda` environment:
 >
 > ```bash
 > conda create --name scyan python=12
