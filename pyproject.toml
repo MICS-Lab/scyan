@@ -32,11 +32,11 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
+  "ruff>=0.11.4",
+  "pre-commit>=3.8.0",
   "pytest>=7.1.2",
   "ipykernel>=6.15.0",
   "ipywidgets>=7.7.1",
-  "isort>=5.10.1",
-  "black>=22.6.0",
   "mkdocs-material>=8.5.0",
   "mkdocstrings>=0.19.0",
   "mkdocstrings-python>=0.7.1",
@@ -55,38 +55,79 @@ Homepage = "https://mics-lab.github.io/scyan/"
 Repository = "https://github.com/MICS-Lab/scyan"
 Documentation = "https://mics-lab.github.io/scyan/"
 
-[tool.uv.build-backend]
-module-name = ["scyan"]
-module-root = ""
+[tool.hatch.build.targets.sdist]
+include = ["scyan"]
+
+[tool.hatch.build.targets.wheel]
+include = ["scyan"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
 
 [build-system]
-requires = ["uv_build>=0.10.0,<0.11.0"]
-build-backend = "uv_build"
-
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = "test_*.py"
-filterwarnings = ["ignore::DeprecationWarning", "ignore::UserWarning", "ignore:::.*anndata*"]
 
-[tool.black]
-line-length = 90
-include = '\.pyi?$'
-exclude = '''
-/(
-      \.eggs         # exclude a few common directories in the
-    | \.git          # root of the project
-    | \.hg
-    | \.mypy_cache
-    | \.tox
-    | \.venv
-    | _build
-    | buck-out
-    | build
-    | dist
-  )/
-'''
+[tool.ruff]
+target-version = "py39"
+line-length = 120
+fix = true
 
-[tool.isort]
-profile = "black"
-skip_glob = ["*/__init__.py"]
+[tool.ruff.lint]
+select = [
+  # flake8-2020
+  "YTT",
+  # flake8-bandit
+  "S",
+  # flake8-bugbear
+  "B",
+  # flake8-builtins
+  "A",
+  # flake8-comprehensions
+  "C4",
+  # flake8-debugger
+  "T10",
+  # flake8-simplify
+  "SIM",
+  # isort
+  "I",
+  # mccabe
+  "C90",
+  # pycodestyle
+  "E",
+  "W",
+  # pyflakes
+  "F",
+  # pygrep-hooks
+  "PGH",
+  # pyupgrade
+  "UP",
+  # ruff
+  "RUF",
+  # tryceratops
+  "TRY",
+]
+ignore = [
+  # LineTooLong
+  "E501",
+  # DoNotAssignLambda
+  "E731",
+  # DoNotUseAssert
+  "S101",
+  "TRY003",
+  "RUF012",
+  "B904",
+  "E722",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101"]
+"__init__.py" = ["F401", "I001"]
+"*.ipynb" = ["F401"]
+
+[tool.ruff.format]
+preview = true

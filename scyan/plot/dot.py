@@ -1,5 +1,3 @@
-from typing import List, Optional, Union
-
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -15,9 +13,9 @@ from .utils import check_population, get_palette_others, plot_decorator, select_
 @check_population(return_list=True)
 def scatter(
     adata: AnnData,
-    population: Union[str, List[str], None],
-    markers: Optional[List[str]] = None,
-    n_markers: Optional[int] = 3,
+    population: str | list[str] | None,
+    markers: list[str] | None = None,
+    n_markers: int | None = 3,
     key: str = "scyan_pop",
     max_obs: int = 2000,
     s: float = 1.0,
@@ -29,7 +27,7 @@ def scatter(
     Args:
         adata: An `AnnData` object.
         population: One population, or a list of population to be colored, or `None`. If not `None`, the population name(s) has to be in `adata.obs[key]`.
-        markers: List of markers to plot. If `None`, the list is chosen automatically.
+        markers: list of markers to plot. If `None`, the list is chosen automatically.
         n_markers: Number of markers to choose automatically if `markers is None`.
         key: Key to look for populations in `adata.obs`. By default, uses the model predictions.
         max_obs: Maximum number of cells per population to be displayed. If population is None, then this number is multiplied by 10.
@@ -51,7 +49,7 @@ def scatter(
     keys = adata.obs[key].astype(str)
     data["Population"] = np.where(~np.isin(keys, population), "Others", keys)
 
-    pops = list(population) + ["Others"]
+    pops = [*list(population), "Others"]
     if max_obs is not None:
         groups = data.groupby("Population").groups
         data = data.loc[[i for pop in pops[::-1] for i in _subset(groups[pop], max_obs)]]
@@ -67,9 +65,9 @@ def scatter(
 @plot_decorator(adata=True)
 def umap(
     adata: AnnData,
-    color: Union[str, List[str]] = None,
-    vmax: Union[str, float] = "p95",
-    vmin: Union[str, float] = "p05",
+    color: str | list[str] | None = None,
+    vmax: str | float = "p95",
+    vmin: str | float = "p05",
     show: bool = True,
     **scanpy_kwargs: int,
 ):
@@ -86,9 +84,7 @@ def umap(
         show: Whether or not to display the figure.
         **scanpy_kwargs: Optional kwargs provided to `scanpy.pl.umap`.
     """
-    assert isinstance(
-        adata, AnnData
-    ), f"umap first argument has to be an AnnData object. Received type {type(adata)}."
+    assert isinstance(adata, AnnData), f"umap first argument has to be an AnnData object. Received type {type(adata)}."
 
     has_umap = _has_umap(adata)
     if not has_umap.all():
@@ -118,28 +114,20 @@ def pop_level(
     adata = model.adata
     table = model.table
 
-    assert isinstance(
-        table.index, pd.MultiIndex
-    ), "To use this function, you need a MultiIndex DataFrame, see: https://mics-lab.github.io/scyan/tutorials/usage/#working-with-hierarchical-populations"
+    assert isinstance(table.index, pd.MultiIndex), (
+        "To use this function, you need a MultiIndex DataFrame, see: https://mics-lab.github.io/scyan/tutorials/usage/#working-with-hierarchical-populations"
+    )
 
     level_names = table.index.names[1:]
-    assert (
-        level_name in level_names
-    ), f"Level '{level_name}' unknown. Choose one of: {level_names}"
+    assert level_name in level_names, f"Level '{level_name}' unknown. Choose one of: {level_names}"
 
     base_pops = table.index.get_level_values(0)
     group_pops = table.index.get_level_values(level_name)
-    assert (
-        group_name in group_pops
-    ), f"Invalid group name '{group_name}'. It has to be one of: {', '.join(group_pops)}."
+    assert group_name in group_pops, f"Invalid group name '{group_name}'. It has to be one of: {', '.join(group_pops)}."
 
-    valid_populations = [
-        pop for pop, group in zip(base_pops, group_pops) if group == group_name
-    ]
+    valid_populations = [pop for pop, group in zip(base_pops, group_pops) if group == group_name]
     key_name = f"{key}_one_level"
-    adata.obs[key_name] = pd.Categorical(
-        [pop if pop in valid_populations else np.nan for pop in adata.obs[key]]
-    )
+    adata.obs[key_name] = pd.Categorical([pop if pop in valid_populations else np.nan for pop in adata.obs[key]])
     umap(
         adata,
         color=key_name,

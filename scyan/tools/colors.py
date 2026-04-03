@@ -1,5 +1,4 @@
 import colorsys
-from typing import Dict, List, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -21,17 +20,17 @@ class GroupPalette:
         s = 1 - self.alpha_s - j * self.step_s
         return _l, s
 
-    def get_block(self, h: float, size: int) -> List[Tuple[float]]:
-        assert (
-            size <= self.max_size
-        ), f"Too many categories ({size}): can define at most {self.max_size} colors per group. Consider lowering these arguments: step_l, step_s, alpha_l, alpha_s."
+    def get_block(self, h: float, size: int) -> list[tuple[float, float]]:
+        assert size <= self.max_size, (
+            f"Too many categories ({size}): can define at most {self.max_size} colors per group. Consider lowering these arguments: step_l, step_s, alpha_l, alpha_s."
+        )
 
         indices = [(i % self.k_l, i // self.k_l) for i in range(size)]
         indices = sorted(indices)
 
         return [colorsys.hls_to_rgb(h, *self.get_ls(i, j)) for i, j in indices]
 
-    def __call__(self, sizes: List[int], hue_shift: float) -> List:
+    def __call__(self, sizes: list[int], hue_shift: float) -> list:
         hues = sorted(range(len(sizes)), key=lambda x: [x % 3, x])
         hues = np.array(hues) / len(sizes) + hue_shift
 
@@ -40,14 +39,14 @@ class GroupPalette:
 
 def palette_level(
     table: pd.DataFrame,
-    population_index: Union[int, str] = 0,
-    level_index: Union[int, str] = 1,
+    population_index: int | str = 0,
+    level_index: int | str = 1,
     hue_shift: float = 0.4,
     alpha_l: float = 0.25,
     step_l: float = 0.15,
     alpha_s: float = 0.3,
     step_s: float = 0.4,
-) -> Dict[str, Tuple[float]]:
+) -> dict[str, tuple[float, float]]:
     """Computes a color palette that in grouped by the hierarchical main populations. It improves the UMAP readability when many populations are defined.
 
     !!! info
@@ -66,9 +65,9 @@ def palette_level(
     Returns:
         A dictionnary whose keys are population names and values are RGB colors.
     """
-    assert isinstance(
-        table.index, pd.MultiIndex
-    ), "The provided table has no multi-index. To work with hierarchical populations, consider reading https://mics-lab.github.io/scyan/tutorials/usage/#working-with-hierarchical-populations"
+    assert isinstance(table.index, pd.MultiIndex), (
+        "The provided table has no multi-index. To work with hierarchical populations, consider reading https://mics-lab.github.io/scyan/tutorials/usage/#working-with-hierarchical-populations"
+    )
 
     pops = table.index.get_level_values(population_index).values
     level = table.index.get_level_values(level_index)

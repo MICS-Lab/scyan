@@ -9,7 +9,7 @@ Here we briefly describe the maths behind Scyan. For more details, refer to the 
 | $M$ | $\mathbb{N}^*$ | Number of markers |
 | $M_{c}$ | $\mathbb{N}^*$ | Number of covariates per cell |
 | $\pmb{\pi} = (\pi_z)_{1 \leq z \leq P}$ | $]0, 1[^P$ | Population size ratios (i.e., $\sum_z \pi_z = 1$). This parameter is learned during training. |
-| $\pmb{\rho}$ | $(\mathbb{R} \cup \{NA\})^{P \times M}$ | Knowledge table. For a population $z$ and a marker $m$, the value $\rho_{z,m}$ describes the expected expression of $m$ by population $z$. Typical values are: $-1$ for negative, $1$ for positive, NA when not known. | 
+| $\pmb{\rho}$ | $(\mathbb{R} \cup \{NA\})^{P \times M}$ | Knowledge table. For a population $z$ and a marker $m$, the value $\rho_{z,m}$ describes the expected expression of $m$ by population $z$. Typical values are: $-1$ for negative, $1$ for positive, NA when not known. |
 | $\pmb{x_i}$ | $\mathbb{R}^M$ | Each $\pmb{x_i}$ is the vector of preprocessed marker expression of the cell $i \in [1\cdots N]$|
 | $\pmb{c_i}$ | $\mathbb{R}^{M_c}$ | Each $\pmb{c_i}$ is the vector of covariates associated to the cell $i \in [1\cdots N]$|
 
@@ -60,7 +60,7 @@ The normalizing flow is a stack of multiple coupling layers: $f_{\pmb{\phi}} := 
     \begin{cases}
       \pmb{y^{(1)}} = \pmb{x^{(1)}}\\
       \pmb{y^{(2)}} = \pmb{x^{(2)}} \odot exp\Big(s([\pmb{x^{(1)}}; \pmb{c}])\Big) + t([\pmb{x^{(1)}}; \pmb{c}]).
-    \end{cases}  
+    \end{cases}
 \]
 
 On the equation above, $s$ and $t$ are Multi-Layer-Perceptrons (MLPs). The coupling layer architecture is illustrated below:

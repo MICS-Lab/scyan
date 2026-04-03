@@ -1,5 +1,3 @@
-from typing import List, Tuple, Union
-
 import numpy as np
 import pandas as pd
 import torch
@@ -31,11 +29,11 @@ class RandomSampler(torch.utils.data.Sampler):
 
 def _prepare_data(
     adata: AnnData,
-    markers: List[str],
-    batch_key: Union[str, int, None],
-    categorical_covariates: List[str],
-    continuous_covariates: List[str],
-) -> Tuple[Tensor, Tensor, Tensor]:
+    markers: list[str],
+    batch_key: int | str | None,
+    categorical_covariates: list[str],
+    continuous_covariates: list[str],
+) -> tuple[Tensor, Tensor, Tensor]:
     """Initialize the data and the covariates"""
     x = torch.tensor(adata[:, markers].X, dtype=torch.float32)
 
@@ -55,9 +53,7 @@ def _prepare_data(
     )
 
     continuous_covariate_embedding = (
-        adata.obs[continuous_covariates].values
-        if continuous_covariates
-        else np.empty((adata.n_obs, 0))
+        adata.obs[continuous_covariates].values if continuous_covariates else np.empty((adata.n_obs, 0))
     )
 
     covariates = np.concatenate(

@@ -99,15 +99,11 @@ class PolygonGatingUMAP:
         """
         self.adata.obs[key_added] = "unselected"
         col_index = self.adata.obs.columns.get_loc(key_added)
-        self.adata.obs.iloc[np.where(self.has_umap)[0][self.selector.ind], col_index] = (
-            "selected"
-        )
+        self.adata.obs.iloc[np.where(self.has_umap)[0][self.selector.ind], col_index] = "selected"
         self.adata.obs[key_added] = self.adata.obs[key_added].astype("category")
 
         self.selector.disconnect()
-        log.info(
-            f"Selected {len(self.selector.ind)} cells and saved the selection in adata.obs['{key_added}']"
-        )
+        log.info(f"Selected {len(self.selector.ind)} cells and saved the selection in adata.obs['{key_added}']")
 
     def extract_adata(self) -> AnnData:
         """Returns an anndata objects whose cells where inside the polygon"""
@@ -141,9 +137,7 @@ class PolygonGatingScatter:
         """
         self.adata = adata
 
-    def select(
-        self, x: str, y: str, s: float = 0.05, max_cells_display: int = 100_000
-    ) -> None:
+    def select(self, x: str, y: str, s: float = 0.05, max_cells_display: int = 100_000) -> None:
         """Open a scatter plot on which you can draw a polygon to select cells.
 
         Args:
@@ -155,9 +149,7 @@ class PolygonGatingScatter:
 
         indices = np.arange(self.adata.n_obs)
         if max_cells_display is not None and max_cells_display < self.adata.n_obs:
-            indices = np.random.choice(
-                np.arange(self.adata.n_obs), size=max_cells_display, replace=False
-            )
+            indices = np.random.choice(np.arange(self.adata.n_obs), size=max_cells_display, replace=False)
 
         x = self.adata.obs_vector(x)
         y = self.adata.obs_vector(y)
@@ -190,9 +182,7 @@ class PolygonGatingScatter:
         self.adata.obs[key_added] = self.adata.obs[key_added].astype("category")
 
         self.selector.disconnect()
-        log.info(
-            f"Selected {len(self.selector.ind)} cells and saved the selection in adata.obs['{key_added}']"
-        )
+        log.info(f"Selected {len(self.selector.ind)} cells and saved the selection in adata.obs['{key_added}']")
 
     def extract_adata(self) -> AnnData:
         """Returns an anndata objects whose cells where inside the polygon"""

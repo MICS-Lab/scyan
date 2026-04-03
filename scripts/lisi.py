@@ -17,7 +17,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -29,7 +28,7 @@ import scyan
 def compute_lisi(
     adata,
     label: str,
-    obsm_key: Optional[str] = None,
+    obsm_key: str | None = None,
     max_cells: int = 100_000,
     perplexity: float = 30,
 ):
@@ -68,7 +67,7 @@ def compute_lisi(
     return (1 / simpson).mean()
 
 
-def compute_simpson(
+def compute_simpson(  # noqa: C901
     distances: np.ndarray,
     indices: np.ndarray,
     labels: pd.Categorical,
@@ -95,7 +94,7 @@ def compute_simpson(
             P = P / P_sum
         Hdiff = H - logU
         n_tries = 50
-        for t in range(n_tries):
+        for _ in range(n_tries):
             # Stop when we reach the tolerance
             if abs(Hdiff) < tol:
                 break

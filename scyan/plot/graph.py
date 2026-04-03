@@ -21,9 +21,9 @@ def pops_hierarchy(model: Scyan, figsize: tuple = (18, 5), show: bool = True) ->
 
     table = model.table
 
-    assert isinstance(
-        table.index, pd.MultiIndex
-    ), "To plot population hierarchy, you need a MultiIndex DataFrame. See the documentation for more details."
+    assert isinstance(table.index, pd.MultiIndex), (
+        "To plot population hierarchy, you need a MultiIndex DataFrame. See the documentation for more details."
+    )
 
     root = "All populations"
 
@@ -40,7 +40,7 @@ def pops_hierarchy(model: Scyan, figsize: tuple = (18, 5), show: bool = True) ->
             dict_indices[index[i]].append(i)
 
         for name, indices in dict_indices.items():
-            if not name == parent:
+            if name != parent:
                 G.add_node(name)
                 G.add_edge(parent, name)
             add_nodes(table, indices, level - 1, name)
@@ -62,7 +62,11 @@ def pops_hierarchy(model: Scyan, figsize: tuple = (18, 5), show: bool = True) ->
             ha="center",
             va="center",
             rotation=90,
-            bbox=dict(facecolor="wheat", edgecolor="black", boxstyle="round,pad=0.5"),
+            bbox={
+                "facecolor": "wheat",
+                "edgecolor": "black",
+                "boxstyle": "round,pad=0.5",
+            },
         )
 
     plt.grid(False)

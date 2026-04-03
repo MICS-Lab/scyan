@@ -30,7 +30,7 @@
         - select
         - save_selection
         - extract_adata
-  
+
 ::: scyan.tools.PolygonGatingScatter
     options:
       show_root_heading: true

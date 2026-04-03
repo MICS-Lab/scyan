@@ -10,13 +10,11 @@ pop_names = ["a1", "a2", "b", "c"]
 
 @pytest.fixture
 def adata() -> AnnData:
-    obs = pd.DataFrame(
-        {
-            "id": [1, 1, 1, 1, 1, 2, 1, 2],
-            "scyan_pop": ["a1", "a2", "a2", "a2", "b", "b", "c", "c"],
-            "scyan_pop_level": ["A", "A", "A", "A", "B", "B", "C", "C"],
-        }
-    )
+    obs = pd.DataFrame({
+        "id": [1, 1, 1, 1, 1, 2, 1, 2],
+        "scyan_pop": ["a1", "a2", "a2", "a2", "b", "b", "c", "c"],
+        "scyan_pop_level": ["A", "A", "A", "A", "B", "B", "C", "C"],
+    })
     values = np.array([[1, 2], [0, 0], [1, 4], [0, 0], [1, 0], [0, 0], [0, 0], [2, 1]])
     return AnnData(values, obs=obs, dtype=np.float32)
 
@@ -24,17 +22,13 @@ def adata() -> AnnData:
 def test_count_cell_types(adata: AnnData):
     df = scyan.tools.cell_type_ratios(adata, normalize=False)
 
-    assert all(
-        df[f"{pop} count"][0] == count for pop, count in zip(pop_names, [1, 3, 2, 2])
-    )
+    assert all(df[f"{pop} count"][0] == count for pop, count in zip(pop_names, [1, 3, 2, 2]))
 
 
 def test_normalize_cell_populations(adata: AnnData):
     df = scyan.tools.cell_type_ratios(adata)
 
-    assert all(
-        df[f"{pop} ratio"][0] == count / 8 for pop, count in zip(pop_names, [1, 3, 2, 2])
-    )
+    assert all(df[f"{pop} ratio"][0] == count / 8 for pop, count in zip(pop_names, [1, 3, 2, 2]))
 
 
 def test_group_cell_populations(adata: AnnData):
@@ -61,7 +55,7 @@ def test_mean_intensities(adata: AnnData):
     assert series["1 mean intensity on c"] == 0.5
 
 
-def test_mean_intensities(adata: AnnData):
+def test_mean_intensities2(adata: AnnData):
     df = scyan.tools.mean_intensities(adata, groupby="id")
 
     assert df.loc[1, "0 mean intensity on a1"] == 1

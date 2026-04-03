@@ -1,5 +1,4 @@
 import logging
-from typing import List, Optional
 
 import hydra
 import numpy as np
@@ -22,7 +21,7 @@ def init_and_fit_model(
     adata: AnnData,
     table: pd,
     config: DictConfig,
-    wandb_logger: Optional[WandbLogger] = None,
+    wandb_logger: WandbLogger | None = None,
 ) -> Scyan:
     """Initialize Scyan with the Hydra config, fit the model and run predictions.
     NB: if not using Hydra, then do **not** use this function.
@@ -46,10 +45,8 @@ def init_and_fit_model(
         _convert_="partial",
     )
 
-    callbacks: List[Callback] = (
-        [hydra.utils.instantiate(cb_conf) for cb_conf in config.callbacks.values()]
-        if "callbacks" in config
-        else []
+    callbacks: list[Callback] = (
+        [hydra.utils.instantiate(cb_conf) for cb_conf in config.callbacks.values()] if "callbacks" in config else []
     )
 
     trainer: Trainer = hydra.utils.instantiate(
@@ -149,9 +146,7 @@ def metric_to_optimize(all_metrics: dict, config: DictConfig) -> float:
     if len(all_metrics[config.optimized_metric]):
         return np.array(all_metrics[config.optimized_metric]).mean()
 
-    log.info(
-        f"Metric used for hyperparamsearch ({config.optimized_metric}) was not computed. Returning 0 instead."
-    )
+    log.info(f"Metric used for hyperparamsearch ({config.optimized_metric}) was not computed. Returning 0 instead.")
     return 0
 
 
@@ -166,12 +161,8 @@ def compute_umap(model: Scyan, config: DictConfig, key: str = "scyan_pop") -> No
     palette = model.adata.uns.get("palette", None)  # Get color palette if existing
 
     if config.wandb.mode != "disabled" and config.wandb.save_umap:
-        wandb.log(
-            {
-                "umap": scyan.utils._wandb_plt_image(
-                    lambda: scyan.plot.umap(
-                        model.adata, color=key, show=False, palette=palette
-                    )
-                )
-            }
-        )
+        wandb.log({
+            "umap": scyan.utils._wandb_plt_image(
+                lambda: scyan.plot.umap(model.adata, color=key, show=False, palette=palette)
+            )
+        })

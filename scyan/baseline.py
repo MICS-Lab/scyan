@@ -1,5 +1,4 @@
 import logging
-from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -22,16 +21,14 @@ class Baseline:
         table: pd.DataFrame,
         prior_std: float = 0.3,
     ):
-        """
+        r"""
         Args:
             adata: `AnnData` object containing the FCS data of $N$ cells. **Warning**: it has to be preprocessed (e.g. `asinh` or `logicle`) and scaled (see https://mics-lab.github.io/scyan/tutorials/preprocessing/).
             table: Dataframe of shape $(P, M)$ representing the biological knowledge about markers and populations. The columns names corresponds to marker that must be in `adata.var_names`.
             prior_std: Standard deviation $\sigma$ of the cell-specific random variable $H$.
         """
         super().__init__()
-        self.adata, self.table, self.continuum_markers = utils._validate_inputs(
-            adata, table, []
-        )
+        self.adata, self.table, self.continuum_markers = utils._validate_inputs(adata, table, [])
         self.prior_std = prior_std
         self.n_pops, self.n_markers = self.table.shape
 
@@ -71,7 +68,7 @@ class Baseline:
 
     def predict(
         self,
-        key_added: Optional[str] = "baseline_pop",
+        key_added: str | None = "baseline_pop",
         add_levels: bool = True,
         log_prob_th: float = -50,
     ) -> pd.Series:
@@ -94,9 +91,7 @@ class Baseline:
         populations[df["max_log_prob"] < log_prob_th] = np.nan
 
         if key_added is not None:
-            self.adata.obs[key_added] = pd.Categorical(
-                populations, categories=self.pop_names
-            )
+            self.adata.obs[key_added] = pd.Categorical(populations, categories=self.pop_names)
             if add_levels and isinstance(self.table.index, pd.MultiIndex):
                 utils._add_level_predictions(self, key_added)
 

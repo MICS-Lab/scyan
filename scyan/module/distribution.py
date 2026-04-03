@@ -17,7 +17,7 @@ class PriorDistribution(pl.LightningModule):
         Args:
             rho: Tensor $\rho$ representing the knowledge table (size $P$ x $M$)
             is_continuum_marker: tensor of size $M$ whose values tell if the marker is a continuum of expressions.
-            prior_std: Standard deviation $\sigma$ for $H$.
+            prior_std: Standard deviation $\\sigma$ for $H$.
             n_markers: Number of markers in the table.
         """
         super().__init__()
@@ -25,7 +25,7 @@ class PriorDistribution(pl.LightningModule):
         self.is_continuum_marker = is_continuum_marker
 
         self.register_buffer("rho", rho)
-        self.register_buffer("loc", torch.zeros((n_markers)))
+        self.register_buffer("loc", torch.zeros(n_markers))
         self.set_rho_mask()
 
         self.prior_std = prior_std
@@ -38,7 +38,7 @@ class PriorDistribution(pl.LightningModule):
     @prior_std.setter
     def prior_std(self, std: float) -> None:
         self._prior_std = std
-        cov = torch.eye((self.n_markers)) * std**2
+        cov = torch.eye(self.n_markers) * std**2
         self.register_buffer("cov", cov.to(self.device))
         self.normal = distributions.Normal(0, std)
         self.compute_constant_terms()
@@ -70,11 +70,7 @@ class PriorDistribution(pl.LightningModule):
     def compute_constant_terms(self) -> None:
         self.uniform_law_radius = 1 - self.prior_std
 
-        _gamma = (
-            self.uniform_law_radius
-            / self.prior_std
-            * torch.sqrt(2 / torch.tensor(torch.pi))
-        )
+        _gamma = self.uniform_law_radius / self.prior_std * torch.sqrt(2 / torch.tensor(torch.pi))
         self.gamma = 1 / (1 + _gamma)
 
         na_constant_term = self.rho_mask.sum(dim=1) * torch.log(self.gamma)
@@ -134,9 +130,7 @@ class PriorDistribution(pl.LightningModule):
         """
         (n_samples,) = z.shape
 
-        e = self.rho[z] + self.rho_mask[z] * self.uniform.sample(
-            (n_samples, self.n_markers)
-        )
+        e = self.rho[z] + self.rho_mask[z] * self.uniform.sample((n_samples, self.n_markers))
         h = self.prior_h.sample((n_samples,))
 
         return e + h

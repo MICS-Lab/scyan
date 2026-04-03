@@ -1,5 +1,4 @@
 import logging
-from typing import Dict, List, Optional, Union
 
 import fcsparser
 import fcswrite
@@ -11,9 +10,7 @@ from pandas.api.types import is_numeric_dtype
 log = logging.getLogger(__name__)
 
 
-def _check_exlude_markers(
-    df: pd.DataFrame, exclude_markers: Optional[List[str]]
-) -> List[str]:
+def _check_exlude_markers(df: pd.DataFrame, exclude_markers: list[str] | None) -> list[str]:
     exclude_markers = exclude_markers if exclude_markers is not None else []
     if not all(c in df.columns for c in exclude_markers):
         log.warning(
@@ -25,8 +22,8 @@ def _check_exlude_markers(
 def read_fcs(
     path: str,
     marker_regex: str = "^cd|^hla|epcam|^ccr",
-    exclude_markers: Optional[List[str]] = None,
-    channel_suffix: Optional[str] = "S",
+    exclude_markers: list[str] | None = None,
+    channel_suffix: str | None = "S",
 ) -> AnnData:
     """Read a FCS file and return an `AnnData` object.
 
@@ -41,16 +38,12 @@ def read_fcs(
     """
     meta, data = fcsparser.parse(path)
 
-    names = pd.Series(
-        [meta.get(f"$P{i + 1}{channel_suffix}") for i in range(data.shape[1])]
-    )
+    names = pd.Series([meta.get(f"$P{i + 1}{channel_suffix}") for i in range(data.shape[1])])
     fallback_names = pd.Series([meta[f"$P{i + 1}N"] for i in range(data.shape[1])])
     data.columns = np.where(names.isna() | names.duplicated(False), fallback_names, names)
 
     exclude_markers = _check_exlude_markers(data, exclude_markers)
-    is_marker = data.columns.str.lower().str.contains(marker_regex) & ~np.isin(
-        data.columns, exclude_markers
-    )
+    is_marker = data.columns.str.lower().str.contains(marker_regex) & ~np.isin(data.columns, exclude_markers)
 
     adata = AnnData(
         X=data.loc[:, is_marker].values.astype(np.float32),
@@ -63,9 +56,7 @@ def read_fcs(
         fallback_var_names = fallback_names[is_marker].values
         is_in = np.isin(fallback_var_names, df_spillover.index)
         if is_in.all():
-            adata.varp["spillover_matrix"] = df_spillover.loc[
-                fallback_var_names, fallback_var_names
-            ]
+            adata.varp["spillover_matrix"] = df_spillover.loc[fallback_var_names, fallback_var_names]
         else:
             log.warn(
                 f"Missing var names inside spillover matrix: {fallback_var_names[~is_in]}. The spillover matrix will be saved in adata.uns instead of adata.varp"
@@ -88,7 +79,7 @@ def _read_spillover_matrix(spillover_string):
 def read_csv(
     path: str,
     marker_regex: str = "^cd|^hla|epcam|^ccr",
-    exclude_markers: Optional[List[str]] = None,
+    exclude_markers: list[str] | None = None,
     **pandas_kwargs: int,
 ) -> AnnData:
     """Read a CSV file and return an `AnnData` object.
@@ -108,17 +99,15 @@ def read_csv(
     df = pd.read_csv(path, **pandas_kwargs)
 
     exclude_markers = _check_exlude_markers(df, exclude_markers)
-    is_marker = df.columns.str.lower().str.contains(marker_regex) & ~np.isin(
-        df.columns, exclude_markers
-    )
+    is_marker = df.columns.str.lower().str.contains(marker_regex) & ~np.isin(df.columns, exclude_markers)
     return AnnData(df.loc[:, is_marker], obs=df.loc[:, ~is_marker], dtype=np.float32)
 
 
-def _to_df(adata: AnnData, layer: Optional[str] = None) -> pd.DataFrame:
+def _to_df(adata: AnnData, layer: str | None = None) -> pd.DataFrame:
     df = pd.concat([adata.to_df(layer), adata.obs], axis=1)
 
     for key in adata.obsm:
-        names = [f"{key}{i+1}" for i in range(adata.obsm[key].shape[1])]
+        names = [f"{key}{i + 1}" for i in range(adata.obsm[key].shape[1])]
         df[names] = np.array(adata.obsm[key])
 
     return df
@@ -127,10 +116,10 @@ def _to_df(adata: AnnData, layer: Optional[str] = None) -> pd.DataFrame:
 def write_fcs(
     adata: AnnData,
     path: str,
-    layer: Optional[str] = None,
-    columns_to_numeric: Optional[List] = None,
+    layer: str | None = None,
+    columns_to_numeric: list | None = None,
     **fcswrite_kwargs: int,
-) -> Union[None, Dict]:
+) -> dict | None:
     """Based on a `AnnData` object, it writes a FCS file that contains (i) all the markers intensities, (ii) every numeric column of `adata.obs`, and (iii) all `adata.obsm` variables.
 
     !!! note
@@ -140,7 +129,7 @@ def write_fcs(
         adata: `AnnData` object to save.
         path: Path to write the file.
         layer: Name of the `adata` layer from which intensities will be extracted. If `None`, uses `adata.X`.
-        columns_to_numeric: List of **non-numerical** column names from `adata.obs` that should be kept, by transforming them into integers. Note that you don't need to list the numerical columns, that are written inside the FCS by default.
+        columns_to_numeric: list of **non-numerical** column names from `adata.obs` that should be kept, by transforming them into integers. Note that you don't need to list the numerical columns, that are written inside the FCS by default.
         **fcswrite_kwargs: Optional kwargs provided to `fcswrite.write_fcs`.
 
     Returns:
@@ -185,8 +174,8 @@ def write_fcs(
 def write_csv(
     adata: AnnData,
     path: str,
-    layer: Optional[str] = None,
-) -> Union[None, Dict]:
+    layer: str | None = None,
+) -> dict | None:
     """Based on a `AnnData` object, it writes a CSV file that contains (i) all the markers intensities, (ii) every numeric column of `adata.obs`, and (iii) all `adata.obsm` variables.
 
     Args:

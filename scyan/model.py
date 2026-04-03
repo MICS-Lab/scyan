@@ -1,7 +1,7 @@
 import importlib
 import logging
 import random
-from typing import Callable, List, Optional, Tuple, Union
+from collections.abc import Callable
 
 import lightning.pytorch as L
 import numpy as np
@@ -9,6 +9,7 @@ import pandas as pd
 import torch
 from anndata import AnnData
 from lightning.pytorch.callbacks.early_stopping import EarlyStopping
+from lightning.pytorch.loggers.logger import Logger
 from torch import Tensor
 from torch.utils.data import DataLoader, TensorDataset
 
@@ -39,22 +40,22 @@ class Scyan(L.LightningModule):
         self,
         adata: AnnData,
         table: pd.DataFrame,
-        continuous_covariates: Optional[List[str]] = None,
-        categorical_covariates: Optional[List[str]] = None,
-        continuum_markers: Optional[List[str]] = None,
+        continuous_covariates: list[str] | None = None,
+        categorical_covariates: list[str] | None = None,
+        continuum_markers: list[str] | None = None,
         hidden_size: int = 16,
         n_hidden_layers: int = 6,
         n_layers: int = 7,
         prior_std: float = 0.3,
-        warm_up: Optional[tuple[float, int]] = (0.35, 4),
+        warm_up: tuple[float, int] | None = (0.35, 4),
         lr: float = 5e-4,
         batch_size: int = 8_192,
         temperature: float = 0.5,
         modulo_temp: int = 3,
-        max_samples: Optional[int] = 200_000,
-        batch_key: Optional[str] = None,
+        max_samples: int | None = 200_000,
+        batch_key: str | None = None,
     ):
-        """
+        r"""
         Args:
             adata: `AnnData` object containing the FCS data of $N$ cells. **Warning**: it has to be preprocessed (e.g. `asinh` or `logicle`) and scaled (see https://mics-lab.github.io/scyan/tutorials/preprocessing/).
             table: Dataframe of shape $(P, M)$ representing the biological knowledge about markers and populations. The columns names corresponds to marker that must be in `adata.var_names`.
@@ -74,9 +75,7 @@ class Scyan(L.LightningModule):
             batch_key: Key in `adata.obs` referring to the cell batch variable.
         """
         super().__init__()
-        self.adata, self.table, self.continuum_markers = utils._validate_inputs(
-            adata, table, continuum_markers
-        )
+        self.adata, self.table, self.continuum_markers = utils._validate_inputs(adata, table, continuum_markers)
         self.continuous_covariates = utils._default_list(continuous_covariates)
         self.categorical_covariates = utils._default_list(categorical_covariates)
         self.n_pops = len(self.table)
@@ -140,10 +139,10 @@ class Scyan(L.LightningModule):
 
     def pops(
         self,
-        level: Union[str, int, None] = None,
-        parent_of: Optional[str] = None,
-        children_of: Optional[str] = None,
-    ) -> Union[List, str]:
+        level: str | int | None = None,
+        parent_of: str | None = None,
+        children_of: str | None = None,
+    ) -> list[str] | str:
         """Get the name of the populations that match a given contraint (only available if a hierarchical populations are provided, see [this tutorial](../../tutorials/usage/#working-with-hierarchical-populations)). If `level` is provided, returns all populations at this level. If `parent_of`, returns the parent of the given pop. If `children_of`, returns the children of the given pop.
 
         !!! note
@@ -155,21 +154,19 @@ class Scyan(L.LightningModule):
             children_of: name of the population of which we want to get the children populations in the tree.
 
         Returns:
-            List of all populations that match the contraint, or one name if `parent_of` is not `None`.
+            list of all populations that match the contraint, or one name if `parent_of` is not `None`.
         """
 
-        assert (
-            self.level_names
-        ), "The provided knowledge table has no population hierarchical level. See the doc."
+        assert self.level_names, "The provided knowledge table has no population hierarchical level. See the doc."
 
-        assert (
-            sum(arg is not None for arg in [level, parent_of, children_of]) == 1
-        ), "One and exactly one argument has to be provided. Choose one among 'level', 'parent_of', and 'children_of'."
+        assert sum(arg is not None for arg in [level, parent_of, children_of]) == 1, (
+            "One and exactly one argument has to be provided. Choose one among 'level', 'parent_of', and 'children_of'."
+        )
 
         if level is not None:
-            assert (
-                isinstance(level, int) or level in self.level_names
-            ), f"Level has to be one of [{', '.join(self.level_names)}]. Found {level}."
+            assert isinstance(level, int) or level in self.level_names, (
+                f"Level has to be one of [{', '.join(self.level_names)}]. Found {level}."
+            )
 
             return list(set(self.table.index.get_level_values(level)))
 
@@ -182,9 +179,7 @@ class Scyan(L.LightningModule):
                 return []
             return list(set(self.table.index.get_level_values(index - 1)[where]))
 
-        assert (
-            index < self.table.index.nlevels - 1
-        ), "Can not get parent of highest level population."
+        assert index < self.table.index.nlevels - 1, "Can not get parent of highest level population."
 
         return self.table.index.get_level_values(index + 1)[where][0]
 
@@ -202,13 +197,11 @@ class Scyan(L.LightningModule):
         self.register_buffer("covariates", covariates)
 
         self._n_samples = (
-            min(self.hparams.max_samples or self.adata.n_obs, self.adata.n_obs)
-            // self._batch_size
-            * self._batch_size
+            min(self.hparams.max_samples or self.adata.n_obs, self.adata.n_obs) // self._batch_size * self._batch_size
         )
 
     @_requires_fit
-    def forward(self, indices: Optional[np.ndarray] = None) -> Tensor:
+    def forward(self, indices: np.ndarray | None = None) -> Tensor:
         """Model forward function (not used during training, see `training_step`instead).
 
         !!! note
@@ -228,7 +221,7 @@ class Scyan(L.LightningModule):
 
         return self.dataset_apply(lambda *batch: self.module(*batch)[0], (x, cov))
 
-    def _repeat_ref_covariates(self, batch_ref: str, k: Optional[int] = None) -> Tensor:
+    def _repeat_ref_covariates(self, batch_ref: str, k: int | None = None) -> Tensor:
         """Repeat the covariates from the reference batch along axis 0.
 
         Args:
@@ -239,9 +232,7 @@ class Scyan(L.LightningModule):
         """
         n_repetitions = self.adata.n_obs if k is None else k
 
-        ref_covariate = self.covariates[
-            self.adata.obs[self.hparams.batch_key] == batch_ref
-        ][0]
+        ref_covariate = self.covariates[self.adata.obs[self.hparams.batch_key] == batch_ref][0]
         return ref_covariate.repeat((n_repetitions, 1))
 
     @torch.no_grad()
@@ -249,16 +240,16 @@ class Scyan(L.LightningModule):
     def sample(
         self,
         n_samples: int,
-        covariates_sample: Optional[Tensor] = None,
-        pop: Union[str, List[str], int, Tensor, None] = None,
+        covariates_sample: Tensor | None = None,
+        pop: str | list[str] | int | Tensor | None = None,
         return_z: bool = False,
-    ) -> Tuple[Tensor, Tensor]:
+    ) -> tuple[Tensor, Tensor]:
         """Sampling cells by sampling from the prior distribution and going into the normalizing flow.
 
         Args:
             n_samples: Number of cells to sample.
             covariates_sample: Optional tensor of covariates. If not provided: if the model was trained for batch correction then the reference covariates are repeated, else we sample from all the covariates.
-            pop: Optional population to sample from (by default, sample from all populations). If `str`, then a population name. If `int`, a population index. If `List[str]`, a list of population names. If `Tensor`, a tensor of population indices.
+            pop: Optional population to sample from (by default, sample from all populations). If `str`, then a population name. If `int`, a population index. If `list[str]`, a list of population names. If `Tensor`, a tensor of population indices.
             return_z: Whether to return the population `Tensor` (i.e., a tensor of population indices, whose order corresponds to `model.pop_names`).
 
         Returns:
@@ -278,7 +269,7 @@ class Scyan(L.LightningModule):
     @torch.no_grad()
     @_requires_fit
     @utils._corr_mode_required
-    def batch_effect_correction(self, batch_ref: Optional[str] = None) -> Tensor:
+    def batch_effect_correction(self, batch_ref: str | None = None) -> Tensor:
         """Correct batch effect by going into the latent space, setting the reference covariate to all cells, and then reversing the flow.
 
         !!! info
@@ -310,10 +301,7 @@ class Scyan(L.LightningModule):
         return loss
 
     def on_train_epoch_end(self):
-        if (
-            self.hparams.warm_up is not None
-            and self.current_epoch == self.hparams.warm_up[1] - 1
-        ):
+        if self.hparams.warm_up is not None and self.current_epoch == self.hparams.warm_up[1] - 1:
             log.info("Ended warm up epochs")
             self.module.prior.prior_std = self.hparams.prior_std
 
@@ -321,7 +309,7 @@ class Scyan(L.LightningModule):
     @torch.no_grad()
     def predict(
         self,
-        key_added: Optional[str] = "scyan_pop",
+        key_added: str | None = "scyan_pop",
         add_levels: bool = True,
         log_prob_th: float = -50,
     ) -> pd.Series:
@@ -345,9 +333,7 @@ class Scyan(L.LightningModule):
         populations[df["max_log_prob_u"] < log_prob_th] = np.nan
 
         if key_added is not None:
-            self.adata.obs[key_added] = pd.Categorical(
-                populations, categories=self.pop_names
-            )
+            self.adata.obs[key_added] = pd.Categorical(populations, categories=self.pop_names)
             if add_levels and isinstance(self.table.index, pd.MultiIndex):
                 utils._add_level_predictions(self, key_added)
 
@@ -367,9 +353,7 @@ class Scyan(L.LightningModule):
         Returns:
             Dataframe of shape `(N, P)` with probabilities for each population.
         """
-        log_probs = self.dataset_apply(
-            lambda *data: self.module.compute_probabilities(*data)[0]
-        )
+        log_probs = self.dataset_apply(lambda *data: self.module.compute_probabilities(*data)[0])
         probs = torch.softmax(log_probs, dim=1)
 
         df = pd.DataFrame(probs.numpy(force=True), columns=self.pop_names)
@@ -430,12 +414,12 @@ class Scyan(L.LightningModule):
             num_workers=self._num_workers,
         )
 
-    def dataset_apply(self, func: Callable, data: Tuple[Tensor] = None) -> Tensor:
+    def dataset_apply(self, func: Callable, data: list[Tensor] | None = None) -> Tensor:
         """Apply a function on a dataset using a PyTorch DataLoader and with a progress bar display. It concatenates the results along the first axis.
 
         Args:
             func: Function to be applied. It takes a batch, and returns a Tensor.
-            data: Optional tuple of tensors to load from (we create a TensorDataset). By default, uses the main dataset.
+            data: Optional list of tensors to load from (we create a TensorDataset). By default, uses the main dataset.
 
         Returns:
             Tensor of concatenated results.
@@ -454,9 +438,7 @@ class Scyan(L.LightningModule):
                 num_workers=self._num_workers,
             )
 
-        return torch.cat(
-            [func(*batch) for batch in tqdm(loader, desc="DataLoader")], dim=0
-        )
+        return torch.cat([func(*batch) for batch in tqdm(loader, desc="DataLoader")], dim=0)
 
     @torch.no_grad()
     @utils._corr_mode_required
@@ -477,14 +459,10 @@ class Scyan(L.LightningModule):
             min_delta: min_delta parameters used for `EarlyStopping`. See Pytorch Lightning docs.
             key: Column name used to save the predictions in `adata.obs`.
         """
-        assert (
-            key in self.adata.obs
-        ), f"Column {key} not found in 'adata.obs'. Have you run 'model.predict()' first?"
+        assert key in self.adata.obs, f"Column {key} not found in 'adata.obs'. Have you run 'model.predict()' first?"
 
         if self.module.prior.rho_mask.any():
-            log.info(
-                f"Filling {self.module.prior.rho_mask.sum()} NA values in the table."
-            )
+            log.info(f"Filling {self.module.prior.rho_mask.sum()} NA values in the table.")
             means = utils.grouped_mean(self, key)
             self.module.prior.fill_rho(means)
 
@@ -498,10 +476,10 @@ class Scyan(L.LightningModule):
         patience: int = 4,
         num_workers: int = 0,
         log_every_n_steps: int = 10,
-        callbacks: Optional[List[L.Callback]] = None,
-        logger: Union[bool, "L.Logger"] = False,
+        callbacks: list[L.Callback] | None = None,
+        logger: bool | Logger = False,
         enable_checkpointing: bool = False,
-        trainer: Optional[L.Trainer] = None,
+        trainer: L.Trainer | None = None,
         **trainer_args: int,
     ) -> "Scyan":
         """Train the `Scyan` model. On interactive Python (e.g., Jupyter Notebooks), training can be interrupted at any time without crashing.

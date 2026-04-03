@@ -1,5 +1,3 @@
-from typing import Tuple
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -19,7 +17,7 @@ def probs_per_marker(
     key: str = "scyan_pop",
     prob_name: str = "Prob",
     vmin_threshold: int = -100,
-    figsize: Tuple[float] = (10, 6),
+    figsize: tuple[float, float] = (10, 6),
     show: bool = True,
 ):
     """Interpretability tool: get a group of cells and plot a heatmap of marker probabilities for each population.
@@ -43,9 +41,7 @@ def probs_per_marker(
         columns=model.var_names,
         index=model.pop_names,
     )
-    df_probs = df_probs.reindex(
-        df_probs.mean().sort_values(ascending=False).index, axis=1
-    )
+    df_probs = df_probs.reindex(df_probs.mean().sort_values(ascending=False).index, axis=1)
     means = df_probs.mean(axis=1)
     means = means / means.min() * df_probs.values.min()
     df_probs.insert(0, prob_name, means)

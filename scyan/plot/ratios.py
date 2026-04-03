@@ -1,6 +1,5 @@
 import logging
 from math import ceil
-from typing import List, Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -18,9 +17,9 @@ log = logging.getLogger(__name__)
 @plot_decorator(adata=True)
 def pop_percentage(
     adata: AnnData,
-    groupby: Union[str, List[str], None] = None,
+    groupby: str | list[str] | None = None,
     key: str = "scyan_pop",
-    figsize: tuple[float, float] = None,
+    figsize: tuple[float, float] | None = None,
     dendogram: bool = False,
     show: bool = True,
 ):
@@ -46,9 +45,7 @@ def pop_percentage(
             df = df.iloc[dendrogram["leaves"]]
 
         df.plot.bar(stacked=True, figsize=figsize)
-        plt.legend(
-            bbox_to_anchor=(1.04, 0.5), loc="center left", borderaxespad=0, frameon=False
-        )
+        plt.legend(bbox_to_anchor=(1.04, 0.5), loc="center left", borderaxespad=0, frameon=False)
 
     plt.ylabel(f"{key} percentage")
     sns.despine(offset=10, trim=True)
@@ -59,12 +56,12 @@ def pop_percentage(
 def pop_dynamics(
     adata: AnnData,
     time_key: str,
-    groupby: Union[str, List[str], None] = None,
+    groupby: str | list[str] | None = None,
     key: str = "scyan_pop",
-    among: str = None,
+    among: str | None = None,
     n_cols: int = 4,
-    size_mul: Optional[float] = None,
-    figsize: tuple[float, float] = None,
+    size_mul: float | None = None,
+    figsize: tuple[float, float] | None = None,
     show: bool = True,
 ):
     """Show populations percentages dynamics for different timepoints. Depending on `groupby`, this is either done globally, or for each group.
@@ -80,20 +77,15 @@ def pop_dynamics(
         figsize: matplotlib figure size.
         show: Whether or not to display the figure.
     """
-    if not adata.obs[time_key].dtype.name == "category":
+    if adata.obs[time_key].dtype.name != "category":
         log.info(f"Converting adata.obs['{time_key}'] to categorical")
         adata.obs[time_key] = adata.obs[time_key].astype("category")
 
-    if groupby is None:
-        groupby = [time_key]
-    else:
-        groupby = ([groupby] if isinstance(groupby, str) else groupby) + [time_key]
+    groupby = [time_key] if groupby is None else ([groupby] if isinstance(groupby, str) else groupby) + [time_key]
 
     df = cell_type_ratios(adata, groupby=groupby, key=key, normalize="%", among=among)
     df.index = df.index.set_levels(df.index.levels[-1].codes, level=-1)
-    df_log_count = np.log(
-        1 + cell_type_ratios(adata, groupby=groupby, key=key, normalize=False)
-    )
+    df_log_count = np.log(1 + cell_type_ratios(adata, groupby=groupby, key=key, normalize=False))
 
     n_pops = df.shape[1]
     n_rows = ceil(n_pops / n_cols)
@@ -105,7 +97,7 @@ def pop_dynamics(
     axes = axes.flatten()
 
     if len(groupby) == 1:
-        for i, pop in enumerate(df.columns):
+        for i, _ in enumerate(df.columns):
             axes[i].plot(df.index, df.iloc[:, i])
             axes[i].scatter(df.index, df.iloc[:, i], s=df_log_count.iloc[:, i] * size_mul)
     else:
@@ -116,7 +108,7 @@ def pop_dynamics(
             group_df = group_df.droplevel(drop_levels)
             group_df_log_count = df_log_count.loc[group]
 
-            for i, pop in enumerate(group_df.columns):
+            for i, _ in enumerate(group_df.columns):
                 axes[i].plot(group_df.index, group_df.iloc[:, i], label=label)
                 axes[i].scatter(
                     group_df.index,
@@ -139,9 +131,7 @@ def pop_dynamics(
         axes[i].set_xticks(range(len(timepoints)), timepoints)
 
     sizes = [1, 10, 25, 40, 60]
-    legend_markers = [
-        Line2D([0], [0], linewidth=0, marker="o", markersize=np.sqrt(s)) for s in sizes
-    ]
+    legend_markers = [Line2D([0], [0], linewidth=0, marker="o", markersize=np.sqrt(s)) for s in sizes]
     legend2 = fig.legend(
         legend_markers,
         [f" {ceil(np.exp(s / size_mul) - 1):,} cells" for s in sizes],

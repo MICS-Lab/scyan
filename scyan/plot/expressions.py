@@ -1,5 +1,3 @@
-from typing import Optional, Tuple
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -18,11 +16,11 @@ def pops_expressions(
     model: Scyan,
     latent: bool = True,
     key: str = "scyan_pop",
-    n_cells: Optional[int] = 200_000,
+    n_cells: int | None = 200_000,
     vmax: float = 1.2,
     vmin: float = -1.2,
-    cmap: Optional[str] = None,
-    figsize: Tuple[float] = (10, 6),
+    cmap: str | None = None,
+    figsize: tuple[float, float] = (10, 6),
     show: bool = True,
 ):
     """Heatmap that shows (latent or standardized) cell expressions for all populations.
@@ -84,9 +82,9 @@ def boxplot_expressions(
         show: Whether or not to display the figure.
     """
     if latent:
-        assert (
-            marker in model.var_names
-        ), f"Marker {marker} was not used during the model training, impossible to use 'latent=True'."
+        assert marker in model.var_names, (
+            f"Marker {marker} was not used during the model training, impossible to use 'latent=True'."
+        )
 
         u = model()
         y = u[:, model.var_names.get_loc(marker)].numpy(force=True)
@@ -112,7 +110,7 @@ def pop_expressions(
     max_value: float = 1.5,
     num_pieces: int = 100,
     radius: float = 0.05,
-    figsize: Tuple[float] = (2, 6),
+    figsize: tuple[float, float] = (2, 6),
     show: bool = True,
 ):
     """Plot latent cell expressions for one population. Contrary to `scyan.plot.pops_expressions`, in displays expressions on a vertical bar, from `Neg` to `Pos`.
@@ -144,11 +142,7 @@ def pop_expressions(
     plt.annotate("Neg", (-0.7, -1), fontsize=15)
 
     for v in np.arange(-max_value, max_value, 2 * radius):
-        labels = [
-            label
-            for value, label in zip(values, model.var_names)
-            if abs(v - value) < radius
-        ]
+        labels = [label for value, label in zip(values, model.var_names) if abs(v - value) < radius]
         if labels:
             plt.plot([0, 0.1], [v, v], "k")
             plt.annotate(", ".join(labels), (0.2, v - 0.03))
