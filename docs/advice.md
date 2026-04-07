@@ -5,7 +5,7 @@
 - Before to run batch effect correction, check if you really have a significant batch effect (else, you could simply run Scyan without batch-effect correction). You can check that by plotting the batch observation on the umap (see [scyan.plot.umap][]) and see if the different batches overlap or not.
 
 ### Advice for the creation of the table
-> Some table examples can be found [here](https://github.com/MICS-Lab/scyan_data/blob/main/public_tables.md).
+> Some table examples can be found [here](https://github.com/prism-oncology/scyan_data/blob/main/public_tables.md).
 
 !!! important
 

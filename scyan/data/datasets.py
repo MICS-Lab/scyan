@@ -64,7 +64,7 @@ def get_local_file(
             "poised",
         ], f"File {filepath} not existing."
 
-        base_url = "https://github.com/MICS-Lab/scyan_data"
+        base_url = "https://github.com/prism-oncology/scyan_data"
         url = f"{base_url}/raw/main/data/{dataset_name}/{filename}"
 
         log.info(f"File not found locally. Trying to load {filename} from dataset {dataset_name} on github.")
