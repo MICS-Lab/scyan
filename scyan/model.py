@@ -3,7 +3,7 @@ import logging
 import random
 from collections.abc import Callable
 
-import lightning.pytorch as L
+import lightning as L
 import numpy as np
 import pandas as pd
 import torch
@@ -501,7 +501,7 @@ class Scyan(L.LightningModule):
             logger: Pytorch Lightning logger argument (see their Trainer API).
             enable_checkpointing: If `True`, enables Pytorch Lightning checkpointing.
             trainer: Optional Pytorch Lightning Trainer. **Warning**: it will replace the default Trainer, and every other argument will be unused.
-            **trainer_args: Optional kwargs to provide to the `pytorch_lightning.Trainer` initialization.
+            **trainer_args: Optional kwargs to provide to the pytorch lightning `Trainer` initialization.
 
         Returns:
             The trained model itself.

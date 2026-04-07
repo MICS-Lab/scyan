@@ -1,7 +1,7 @@
 import importlib.metadata
 import logging
 
-import pytorch_lightning as pl
+import lightning as L
 
 from .model import Scyan
 from ._io import read_fcs, read_csv, write_fcs, write_csv
@@ -15,4 +15,4 @@ utils.configure_logger(log)
 
 plot.reset_plot_settings()
 
-pl.seed_everything(0)  # Set seed to 0 (using pytorch lightning)
+L.seed_everything(0)  # Set seed to 0 (using pytorch lightning)

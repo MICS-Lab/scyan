@@ -1,11 +1,11 @@
 from collections import defaultdict
 
 import hydra
+import lightning as L
 import numpy as np
-import pytorch_lightning as pl
 import wandb
+from lightning.pytorch.loggers import WandbLogger
 from omegaconf import DictConfig, OmegaConf
-from pytorch_lightning.loggers import WandbLogger
 
 import scyan
 from scyan.model import Scyan
@@ -34,7 +34,7 @@ def main(config: DictConfig) -> float:
     all_metrics = defaultdict(list)
 
     for i in range(config.n_run):
-        pl.seed_everything(i)
+        L.seed_everything(i)
 
         ### Init Weight & Biases (if config.wandb.mode="online")
         if config.wandb.mode != "disabled":

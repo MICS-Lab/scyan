@@ -1,6 +1,6 @@
 [project]
 name = "scyan"
-version = "1.7.2"
+version = "1.7.3"
 description = "Single-cell Cytometry Annotation Network"
 authors = [{ name = "Blampey Quentin", email = "quentin.blampey@gmail.com" }]
 requires-python = ">=3.11"
@@ -31,6 +31,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+discovery = ["leidenalg>=0.8.10"]
+
+[dependency-groups]
 dev = [
   "ruff>=0.11.4",
   "pre-commit>=3.8.0",
@@ -41,14 +44,11 @@ dev = [
   "mkdocstrings>=0.19.0",
   "mkdocstrings-python>=0.7.1",
   "mkdocs-jupyter>=0.21.0",
-]
-hydra = [
   "wandb>=0.13.7",
   "hydra-core>=1.2.0",
   "hydra-colorlog>=1.2.0",
   "hydra-optuna-sweeper>=1.2.0",
 ]
-discovery = ["leidenalg>=0.8.10"]
 
 [project.urls]
 Homepage = "https://prism-oncology.github.io/scyan/"
@@ -60,9 +60,6 @@ include = ["scyan"]
 
 [tool.hatch.build.targets.wheel]
 include = ["scyan"]
-
-[tool.hatch.metadata]
-allow-direct-references = true
 
 [build-system]
 requires = ["hatchling"]

@@ -1,9 +1,9 @@
-import pytorch_lightning as pl
+import lightning as L
 import torch
 from torch import Tensor, nn
 
 
-class CouplingLayer(pl.LightningModule):
+class CouplingLayer(L.LightningModule):
     """One single coupling layer module.
 
     Attributes:

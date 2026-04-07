@@ -6,9 +6,9 @@ import numpy.typing as npt
 import pandas as pd
 import wandb
 from anndata import AnnData
+from lightning.pytorch import Callback, Trainer
+from lightning.pytorch.loggers import WandbLogger
 from omegaconf import DictConfig
-from pytorch_lightning import Callback, Trainer
-from pytorch_lightning.loggers import WandbLogger
 from sklearn import metrics
 
 import scyan

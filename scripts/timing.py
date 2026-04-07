@@ -1,7 +1,7 @@
 import time
 
 import hydra
-import pytorch_lightning as pl
+import lightning as L
 from omegaconf import DictConfig
 
 import scyan
@@ -17,7 +17,7 @@ def main(config: DictConfig) -> None:
     Args:
         config: Hydra generated configuration (automatic).
     """
-    pl.seed_everything(config.seed)
+    L.seed_everything(config.seed)
 
     adata, table = scyan.data.load(config.project.name)
     n_obs = config.project.get("n_obs", None)

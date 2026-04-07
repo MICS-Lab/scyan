@@ -1,11 +1,11 @@
-import pytorch_lightning as pl
+import lightning as L
 import torch
 from torch import Tensor, nn
 
 from . import CouplingLayer
 
 
-class RealNVP(pl.LightningModule):
+class RealNVP(L.LightningModule):
     r"""Normalizing flow module (more specifically the RealNVP transformation $f_{\phi}$).
 
     Attributes:

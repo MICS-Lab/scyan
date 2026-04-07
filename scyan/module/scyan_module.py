@@ -1,6 +1,6 @@
 import logging
 
-import pytorch_lightning as pl
+import lightning as L
 import torch
 from torch import Tensor, distributions, nn
 
@@ -9,7 +9,7 @@ from . import PriorDistribution, RealNVP
 log = logging.getLogger(__name__)
 
 
-class ScyanModule(pl.LightningModule):
+class ScyanModule(L.LightningModule):
     """Core logic contained inside the main class [Scyan][scyan.Scyan]. Do not use this class directly.
 
     Attributes:
