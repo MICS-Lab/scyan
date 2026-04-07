@@ -3738,7 +3738,7 @@ wheels = [
 
 [[package]]
 name = "scyan"
-version = "1.7.2"
+version = "1.7.3"
 source = { editable = "." }
 dependencies = [
     { name = "anndata" },
@@ -3747,6 +3747,7 @@ dependencies = [
     { name = "flowutils" },
     { name = "lightning" },
     { name = "llvmlite" },
+    { name = "requests" },
     { name = "seaborn" },
     { name = "torch" },
     { name = "umap-learn" },
@@ -3783,6 +3784,7 @@ requires-dist = [
     { name = "leidenalg", marker = "extra == 'discovery'", specifier = ">=0.8.10" },
     { name = "lightning", specifier = ">=2.2.0" },
     { name = "llvmlite", specifier = ">=0.38.1" },
+    { name = "requests", specifier = ">=2.33.1" },
     { name = "seaborn", specifier = ">=0.12.2" },
     { name = "torch", specifier = ">=2.2.0" },
     { name = "umap-learn", specifier = ">=0.5.3" },

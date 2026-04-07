@@ -1,6 +1,6 @@
 [project]
 name = "scyan"
-version = "1.7.3"
+version = "1.7.4"
 description = "Single-cell Cytometry Annotation Network"
 authors = [{ name = "Blampey Quentin", email = "quentin.blampey@gmail.com" }]
 requires-python = ">=3.11"
@@ -28,6 +28,7 @@ dependencies = [
   "FlowUtils>=1.2.0",
   "fcsparser>=0.2.4",
   "fcswrite>=0.6.2",
+  "requests>=2.33.1",
 ]
 
 [project.optional-dependencies]
