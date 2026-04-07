@@ -1,72 +1,78 @@
-# Contributing to Scyan
+# Contributing to *Scyan*
 
-Contributions are welcome as we aim to continue improving the library. For instance, you can contribute by:
+Contributions are welcome as we aim to continue improving `scyan`. For instance, you can contribute by:
 
-- Reporting a bug
-- Reporting some difficulties in using the library
+- Opening an issue
 - Discussing the current state of the code
-- Submitting a fix
-- Proposing new features
+- Making a Pull Request (PR)
 
-## Opening an issue
+If you want to open a PR, follow the following instructions.
 
-If you have difficulty installing the library, if you discovered a bug, or need a new feature, then you can **open an issue**.
-We will try to discuss it with you and resolve your issue as soon as possible.
-Especially if you have any questions about the usage of the library or difficulties having satisfying results, don't hesitate to ask.
+## Making a Pull Request (PR)
 
-## Contributing to the code
+To add some new code to **scyan**, you should:
 
-1. Install the library in editable mode (see [Getting Started](https://mics-lab.github.io/scyan/getting_started/)). Using `uv` is recommended.
-2. Create your personal branch from `dev`.
-3. Make sure you read the coding guidelines below.
-4. Implement your changes.
-5. Run the tests via `pytest` (or `uv run pytest`).
-6. If needed, you can update the documentation. To do so, update the files in `./docs/` and run `mkdocs serve` (or `uv run mkdocs serve`) to see your changes.
-7. Create a pull request with explanations about your developed features. Then, wait for discussion and validation of your pull request.
+1. Fork the repository
+2. Install `scyan` in editable mode with the `dev` dependencies (see next section)
+3. Create your personal branch from `main`
+4. Implement your changes according to the 'Coding guidelines' below
+5. Create a pull request on the `main` branch of the original repository. Add explanations about your developed features, and wait for discussion and validation of your pull request
+
+## Installing `scyan` in editable mode
+
+When contributing, installing `scyan` in editable mode is recommended. We also recommend installing the `dev` dependencies.
+
+For that, you can use [`uv`](https://docs.astral.sh/uv/getting-started/installation/) as below:
+
+```sh
+git clone https://github.com/MICS-Lab/scyan.git
+cd scyan
+
+uv sync --all-extras --dev   # all extras and dev dependencies
+```
 
 ## Coding guidelines
 
-- Use the `black` formatter and `isort`. Their usage should be automatic as they are in the `pyproject.toml` file. Depending on your IDE, you can choose to format your code on save.
-- Follow the [PEP8](https://peps.python.org/pep-0008/) style guide. In particular, use snake_case notations (and PascalCase for classes).
+### Styling and formatting
+
+We use [`pre-commit`](https://pre-commit.com/) to run code quality controls before the commits. This will run `ruff` and others minor checks.
+
+
+You can set it up at the root of the repository like this:
+```sh
+pre-commit install
+```
+
+Then, it will run the pre-commit automatically before each commit.
+
+You can also run the pre-commit manually:
+```sh
+pre-commit run --all-files
+```
+
+Apart from this, we recommend to follow the standard styling conventions:
+- Follow the [PEP8](https://peps.python.org/pep-0008/) style guide.
 - Provide meaningful names to all your variables and functions.
-- Use relative imports to `scyan`.
-- Document your functions and type your function inputs/outputs.
-- Create your functions in the intended file, or create one if needed. See the project layout.
-- Try as much as possible to follow the same coding style as the rest of the library.
+- Provide type hints to your function inputs/outputs.
+- Add docstrings in the Google style.
+- Try as much as possible to follow the same coding style as the rest of the repository.
 
-## Project layout
+### Testing
 
-This layout helps understanding the structure of the repository.
+When create a pull request, tests are run automatically. But you can also run the tests yourself before making the PR. For that, run `pytest` at the root of the repository. You can also add new tests in the `./tests` directory.
 
-    .github/      # Github CI and templates
-    config/       # Hydra configuration folder (optional use)
-    data/         # Data folder containing adata files and csv tables
-    docs/         # The folder used to build the documentation
-    scripts/      # Scripts to reproduce the results from the article
-    tests/        # Folder containing tests
-    scyan/                    # Library source code
-        data/                 # Folder with data-related functions and classes
-            datasets.py       # Load and save datasets
-            tensors.py        # Pytorch data-related classes for training
-        module/               # Folder containing neural network modules
-            coupling_layer.py # Coupling layer
-            distribution.py   # Prior distribution (called U in the article)
-            real_nvp.py       # Normalizing Flow
-            scyan_module      # Core module
-        plot/                 # Plots
-            ...
-        tools/
-            ...               # Tools (umap, subclustering, ...)
-        model.py              # Scyan model class
-        _io.py                # Input / output functions
-        preprocess.py         # Preprocessing functions
-        utils.py              # Misc functions
-    .gitattributes
-    .gitignore
-    CONTRIBUTING.md   # To read before contributing
-    LICENSE
-    mkdocs.yml        # The docs configuration file
-    uv.lock
-    pyproject.toml    # Dependencies, project metadata, and more
-    README.md
-    setup.py          # Setup file, see `pyproject.toml`
+To run the tests locally:
+
+```sh
+uv run pytest
+```
+
+### Documentation
+
+You can update the documentation in the `./docs` directory. Refer to the [mkdocs-material documentation](https://squidfunk.github.io/mkdocs-material/) for more help.
+
+To serve the documentation locally:
+
+```sh
+uv run mkdocs serve
+```
