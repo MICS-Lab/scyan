@@ -1,6 +1,6 @@
 [project]
 name = "scyan"
-version = "1.7.0"
+version = "1.7.1"
 description = "Single-cell Cytometry Annotation Network"
 authors = [{ name = "Blampey Quentin", email = "quentin.blampey@gmail.com" }]
 requires-python = ">=3.11"
