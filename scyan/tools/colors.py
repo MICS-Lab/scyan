@@ -66,7 +66,7 @@ def palette_level(
         A dictionnary whose keys are population names and values are RGB colors.
     """
     assert isinstance(table.index, pd.MultiIndex), (
-        "The provided table has no multi-index. To work with hierarchical populations, consider reading https://mics-lab.github.io/scyan/tutorials/usage/#working-with-hierarchical-populations"
+        "The provided table has no multi-index. To work with hierarchical populations, consider reading https://prism-oncology.github.io/scyan/tutorials/usage/#working-with-hierarchical-populations"
     )
 
     pops = table.index.get_level_values(population_index).values

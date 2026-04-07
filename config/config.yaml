@@ -1,5 +1,5 @@
 ### --- Hydra config file ---
-### A usage guide can be found here: https://mics-lab.github.io/scyan/advanced/hydra_wandb/
+### A usage guide can be found here: https://prism-oncology.github.io/scyan/advanced/hydra_wandb/
 ### The main parameters to update are the commented one, the others can remain as such
 
 defaults:
@@ -11,13 +11,12 @@ defaults:
   - override hydra/job_logging: colorlog
   - override hydra/hydra_logging: colorlog
 
-n_run: 5                # Number or run (if hyperoptimization is run, its the number of run per trial)
+n_run: 5 # Number or run (if hyperoptimization is run, its the number of run per trial)
 save_predictions: false # If true, then saves the predictions in the hydra log directory
 
 wandb:
-  mode: disabled   # online, offline, disabled
+  mode: disabled # online, offline, disabled
   save_umap: false # save the umap on Weight & Biases
-
 
 ### --- Model default parameters ---
 ### You can either modify the parameters directly, or via the command line

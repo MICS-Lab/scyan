@@ -1,6 +1,6 @@
 site_name: Scyan
-repo_url: https://github.com/MICS-Lab/scyan
-repo_name: MICS-Lab/scyan
+repo_url: https://github.com/prism-oncology/scyan
+repo_name: prism-oncology/scyan
 copyright: Copyright &copy; 2021 - 2022 Quentin Blampey
 theme:
   name: material
@@ -11,29 +11,29 @@ nav:
   - Getting Started: getting_started.md
   - Usage advices: advice.md
   - Tutorials:
-    - tutorials/preprocessing.ipynb
-    - tutorials/usage.ipynb
-    - tutorials/batch_effect_correction.ipynb
-    - tutorials/debarcoding.ipynb
-    - tutorials/population_discovery.ipynb
+      - tutorials/preprocessing.ipynb
+      - tutorials/usage.ipynb
+      - tutorials/batch_effect_correction.ipynb
+      - tutorials/debarcoding.ipynb
+      - tutorials/population_discovery.ipynb
   - Math background: math.md
   - API:
-    - scyan.Scyan: api/model.md
-    - IO (read/write): api/io.md
-    - Preprocessing: api/preprocess.md
-    - Tools: api/tools.md
-    - Plots: api/plots.md
-    - Loading/adding datasets: api/datasets.md
-    - Modules (advanced):
-      - scyan.module.ScyanModule: api/module.md
-      - scyan.module.PriorDistribution: api/prior.md
-      - scyan.module.RealNVP: api/real_nvp.md
-      - scyan.module.CouplingLayer: api/coupling_layer.md
+      - scyan.Scyan: api/model.md
+      - IO (read/write): api/io.md
+      - Preprocessing: api/preprocess.md
+      - Tools: api/tools.md
+      - Plots: api/plots.md
+      - Loading/adding datasets: api/datasets.md
+      - Modules (advanced):
+          - scyan.module.ScyanModule: api/module.md
+          - scyan.module.PriorDistribution: api/prior.md
+          - scyan.module.RealNVP: api/real_nvp.md
+          - scyan.module.CouplingLayer: api/coupling_layer.md
   - Advanced usage:
-    - Save your dataset: advanced/data.md
-    - Hyperparameters: advanced/parameters.md
-    - Configuration and monitoring: advanced/hydra_wandb.md
-    - CLI/Running scripts: advanced/scripts.md
+      - Save your dataset: advanced/data.md
+      - Hyperparameters: advanced/parameters.md
+      - Configuration and monitoring: advanced/hydra_wandb.md
+      - CLI/Running scripts: advanced/scripts.md
   - Cite us: cite.md
 plugins:
   - search

@@ -24,7 +24,7 @@ Choose one of the following, depending on your needs (it should take at most a f
 === "Local install (pip)"
 
     ``` bash
-    git clone https://github.com/MICS-Lab/scyan.git
+    git clone https://github.com/prism-oncology/scyan.git
     cd scyan
 
     pip install .
@@ -33,7 +33,7 @@ Choose one of the following, depending on your needs (it should take at most a f
 === "Local install (pip, dev mode)"
 
     ``` bash
-    git clone https://github.com/MICS-Lab/scyan.git
+    git clone https://github.com/prism-oncology/scyan.git
     cd scyan
 
     pip install -e '.[dev,hydra,discovery]'

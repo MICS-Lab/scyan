@@ -92,7 +92,7 @@ def _wandb_plt_image(fun: Callable, figsize: tuple[int, int] = [7, 5]):
 def _has_umap(adata: AnnData) -> np.ndarray:
     """Returns an ndarray telling on which cells the UMAP coordinates have been computed."""
     assert "X_umap" in adata.obsm_keys(), (
-        "Before plotting a UMAP, its coordinates need to be computed using 'scyan.tools.umap(...)' (see https://mics-lab.github.io/scyan/api/tools/#scyan.tools.umap)"
+        "Before plotting a UMAP, its coordinates need to be computed using 'scyan.tools.umap(...)' (see https://prism-oncology.github.io/scyan/api/tools/#scyan.tools.umap)"
     )
     return adata.obsm["X_umap"].sum(1) != 0
 
@@ -167,7 +167,7 @@ def _get_pop_index(pop: str, table: pd.DataFrame):
 
 def _check_is_processed(X: np.ndarray) -> None:
     assert np.abs(X).max() < 1e3, (
-        "The provided values are very high: have you run preprocessing first? E.g., consider running 'scyan.preprocess.asinh_transform' or 'scyan.preprocess.auto_logicle_transform' (see our tutorial: https://mics-lab.github.io/scyan/tutorials/preprocessing/)"
+        "The provided values are very high: have you run preprocessing first? E.g., consider running 'scyan.preprocess.asinh_transform' or 'scyan.preprocess.auto_logicle_transform' (see our tutorial: https://prism-oncology.github.io/scyan/tutorials/preprocessing/)"
     )
 
 

@@ -57,7 +57,7 @@ class Scyan(L.LightningModule):
     ):
         r"""
         Args:
-            adata: `AnnData` object containing the FCS data of $N$ cells. **Warning**: it has to be preprocessed (e.g. `asinh` or `logicle`) and scaled (see https://mics-lab.github.io/scyan/tutorials/preprocessing/).
+            adata: `AnnData` object containing the FCS data of $N$ cells. **Warning**: it has to be preprocessed (e.g. `asinh` or `logicle`) and scaled (see https://prism-oncology.github.io/scyan/tutorials/preprocessing/).
             table: Dataframe of shape $(P, M)$ representing the biological knowledge about markers and populations. The columns names corresponds to marker that must be in `adata.var_names`.
             continuous_covariates: Optional list of keys in `adata.obs` that refers to continuous variables to use during the training.
             categorical_covariates: Optional list of keys in `adata.obs` that refers to categorical variables to use during the training.
@@ -131,7 +131,7 @@ class Scyan(L.LightningModule):
         """All population hierarchical level names, if existing."""
         if not isinstance(self.table.index, pd.MultiIndex):
             log.warning(
-                "The provided knowledge table has no population hierarchical level. See: https://mics-lab.github.io/scyan/tutorials/usage/#working-with-hierarchical-populations"
+                "The provided knowledge table has no population hierarchical level. See: https://prism-oncology.github.io/scyan/tutorials/usage/#working-with-hierarchical-populations"
             )
             return []
 
@@ -340,7 +340,7 @@ class Scyan(L.LightningModule):
         missing_pops = self.n_pops - len(populations.cat.categories)
         if missing_pops:
             log.warning(
-                f"{missing_pops} population(s) were not predicted. It may be due to:\n  - Errors in the knowledge table (see https://mics-lab.github.io/scyan/advice/#advice-for-the-creation-of-the-table)\n  - The model hyperparameters choice (see https://mics-lab.github.io/scyan/advanced/parameters/)\n  - Or maybe these populations are really absent from this dataset."
+                f"{missing_pops} population(s) were not predicted. It may be due to:\n  - Errors in the knowledge table (see https://prism-oncology.github.io/scyan/advice/#advice-for-the-creation-of-the-table)\n  - The model hyperparameters choice (see https://prism-oncology.github.io/scyan/advanced/parameters/)\n  - Or maybe these populations are really absent from this dataset."
             )
 
         return populations

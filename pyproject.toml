@@ -51,9 +51,9 @@ hydra = [
 discovery = ["leidenalg>=0.8.10"]
 
 [project.urls]
-Homepage = "https://mics-lab.github.io/scyan/"
-Repository = "https://github.com/MICS-Lab/scyan"
-Documentation = "https://mics-lab.github.io/scyan/"
+Homepage = "https://prism-oncology.github.io/scyan/"
+Repository = "https://github.com/prism-oncology/scyan"
+Documentation = "https://prism-oncology.github.io/scyan/"
 
 [tool.hatch.build.targets.sdist]
 include = ["scyan"]

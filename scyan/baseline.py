@@ -23,7 +23,7 @@ class Baseline:
     ):
         r"""
         Args:
-            adata: `AnnData` object containing the FCS data of $N$ cells. **Warning**: it has to be preprocessed (e.g. `asinh` or `logicle`) and scaled (see https://mics-lab.github.io/scyan/tutorials/preprocessing/).
+            adata: `AnnData` object containing the FCS data of $N$ cells. **Warning**: it has to be preprocessed (e.g. `asinh` or `logicle`) and scaled (see https://prism-oncology.github.io/scyan/tutorials/preprocessing/).
             table: Dataframe of shape $(P, M)$ representing the biological knowledge about markers and populations. The columns names corresponds to marker that must be in `adata.var_names`.
             prior_std: Standard deviation $\sigma$ of the cell-specific random variable $H$.
         """
@@ -98,7 +98,7 @@ class Baseline:
         missing_pops = self.n_pops - len(populations.cat.categories)
         if missing_pops:
             log.warning(
-                f"{missing_pops} population(s) were not predicted. It may be due to:\n  - Errors in the knowledge table (see https://mics-lab.github.io/scyan/advice/#advice-for-the-creation-of-the-table)\n  - The model hyperparameters choice (see https://mics-lab.github.io/scyan/advanced/parameters/)\n  - Or maybe these populations are really absent from this dataset."
+                f"{missing_pops} population(s) were not predicted. It may be due to:\n  - Errors in the knowledge table (see https://prism-oncology.github.io/scyan/advice/#advice-for-the-creation-of-the-table)\n  - The model hyperparameters choice (see https://prism-oncology.github.io/scyan/advanced/parameters/)\n  - Or maybe these populations are really absent from this dataset."
             )
 
         return populations

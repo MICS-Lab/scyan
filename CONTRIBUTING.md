@@ -25,7 +25,7 @@ When contributing, installing `scyan` in editable mode is recommended. We also r
 For that, you can use [`uv`](https://docs.astral.sh/uv/getting-started/installation/) as below:
 
 ```sh
-git clone https://github.com/MICS-Lab/scyan.git
+git clone https://github.com/prism-oncology/scyan.git
 cd scyan
 
 uv sync --all-extras --dev   # all extras and dev dependencies
