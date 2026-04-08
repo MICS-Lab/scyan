@@ -1,6 +1,6 @@
 [project]
 name = "scyan"
-version = "1.7.4"
+version = "1.7.5"
 description = "Single-cell Cytometry Annotation Network"
 authors = [{ name = "Blampey Quentin", email = "quentin.blampey@gmail.com" }]
 requires-python = ">=3.11"
@@ -60,7 +60,7 @@ Documentation = "https://prism-oncology.github.io/scyan/"
 include = ["scyan"]
 
 [tool.hatch.build.targets.wheel]
-include = ["scyan"]
+packages = ["scyan"]
 
 [build-system]
 requires = ["hatchling"]
