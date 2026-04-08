@@ -1,31 +1,14 @@
 # OS related
 .DS_Store
 
-# Documentation
-site
+# Ruche related
+jobs/
 
-# Code Ocean related
-code
-results
+# Tests related
+tests/*
+!tests/*.py
 
-# Logs
-outputs
-multirun
-lightning_logs
-checkpoints
-run.log
-
-# Data files
-data
-
-# Jupyter Notebook
-.ipynb_checkpoints
-exploration/*
-
-# pyenv
-.python-version
-
-# VisualStudioCode
+# IDE related
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
@@ -34,11 +17,43 @@ exploration/*
 *.code-workspace
 **/.vscode
 
-# Lightning-Hydra-Template
+# Documentation
+site
+
+# Logs
+outputs
+multirun
+lightning_logs
+novae_*
+checkpoints
+
+# Data files
+data/*
+!data/_scripts
+!data/README.md
+!data/*.py
+!data/*.sh
+
+# Results files
+results/*
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+!docs/tutorials/*.ipynb
+
+# Misc
 logs/
+test.h5ad
+test.ckpt
 wandb/
 .env
 .autoenv
+!**/.gitkeep
+exploration
+
+# pyenv
+.python-version
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -92,6 +107,3 @@ coverage.xml
 *.py,cover
 .hypothesis/
 .pytest_cache/
-
-# Misc
-jobs/
